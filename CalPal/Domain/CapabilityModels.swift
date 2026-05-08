@@ -1,0 +1,36 @@
+import Foundation
+
+enum PermissionStatus: String, Codable, Equatable {
+    case unknown
+    case notDetermined
+    case allowed
+    case denied
+    case restricted
+    case unavailable
+}
+
+struct CapabilitySummary: Equatable, Codable {
+    var calendar: PermissionStatus
+    var speech: PermissionStatus
+    var model: PermissionStatus
+    var preferredLocales: [String]
+    var runsOnDevice: Bool
+
+    static let optimistic = CapabilitySummary(calendar: .unknown, speech: .unknown, model: .allowed, preferredLocales: ["en-US", "zh-Hans"], runsOnDevice: true)
+}
+
+enum AutomationMode: String, CaseIterable, Identifiable, Codable {
+    case autoReview = "Auto Review"
+    case fullAccess = "Full Access"
+
+    var id: String { rawValue }
+}
+
+enum SettingsSection: String, Identifiable, CaseIterable {
+    case privacy
+    case diagnostics
+    case language
+    case automation
+
+    var id: String { rawValue }
+}

@@ -1,0 +1,126 @@
+import Foundation
+
+final class NaturalLanguageCalendarParser {
+    private let calendar: Calendar
+    private let now: () -> Date
+
+    init(calendar: Calendar = .autoupdatingCurrent, timeZone: TimeZone = .autoupdatingCurrent, now: @escaping () -> Date = Date.init) {
+        var calendar = calendar
+        calendar.timeZone = timeZone
+        self.calendar = calendar
+        self.now = now
+    }
+
+    func parse(_ text: String) -> ParsedCalendarCommand {
+        let source = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let lower = source.lowercased()
+        let locale = containsChinese(source) ? "zh-Hans" : Locale.current.identifier
+        guard !source.isEmpty else {
+            return ParsedCalendarCommand(originalText: text, localeIdentifier: locale, intent: nil, confidence: 0, missingFields: ["title", "time"], warnings: [])
+        }
+
+        if lower.contains("delete") || source.contains("删除") || source.contains("取消") {
+            return ParsedCalendarCommand(originalText: source, localeIdentifier: locale, intent: .delete(query: query(from: source)), confidence: 0.82, missingFields: [], warnings: [])
+        }
+        if lower.contains("move") || lower.contains("change") || lower.contains("reschedule") || source.contains("改到") || source.contains("修改") {
+            let patchDates = extractDateRange(from: source)
+            let patch = EventPatch(title: nil, startDate: patchDates?.start, endDate: patchDates?.end, location: nil, notes: nil)
+            return ParsedCalendarCommand(originalText: source, localeIdentifier: locale, intent: .modify(query: query(from: source), patch: patch), confidence: patchDates == nil ? 0.68 : 0.82, missingFields: patchDates == nil ? ["new time"] : [], warnings: [])
+        }
+
+        let dates = extractDateRange(from: source)
+        let draft = EventDraft(title: extractTitle(from: source), startDate: dates?.start ?? now(), endDate: dates?.end ?? now().addingTimeInterval(3600), calendarID: nil, calendarName: nil, location: nil, notes: nil)
+        let missing = missingFields(for: draft, hasDate: dates != nil)
+        let confidence = missing.isEmpty ? 0.9 : 0.55
+        let warnings = dateWarnings(for: draft)
+        return ParsedCalendarCommand(originalText: source, localeIdentifier: locale, intent: .create(draft), confidence: confidence, missingFields: missing, warnings: warnings)
+    }
+
+    private func query(from text: String) -> EventQuery {
+        EventQuery(phrase: text, day: extractDay(from: text), titleHint: extractTitleHint(from: text), boundedDays: 14)
+    }
+
+    private func missingFields(for draft: EventDraft, hasDate: Bool) -> [String] {
+        var fields: [String] = []
+        if draft.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { fields.append("title") }
+        if !hasDate { fields.append("time") }
+        return fields
+    }
+
+    private func dateWarnings(for draft: EventDraft) -> [String] {
+        let max = calendar.date(byAdding: .day, value: 14, to: now()) ?? now().addingTimeInterval(14*86400)
+        let min = calendar.date(byAdding: .day, value: -14, to: now()) ?? now().addingTimeInterval(-14*86400)
+        if draft.startDate > max { return ["date is outside the normal two-week window"] }
+        if draft.startDate < min { return ["date is too far in the past"] }
+        return []
+    }
+
+    private func extractDateRange(from text: String) -> (start: Date, end: Date)? {
+        guard let day = extractDay(from: text) else { return nil }
+        let hour = extractHour(from: text) ?? 9
+        let minute = (text.contains("半") || text.contains(":30")) ? 30 : 0
+        guard let start = calendar.date(bySettingHour: hour, minute: minute, second: 0, of: day) else { return nil }
+        let duration: TimeInterval = text.lowercased().contains("30 min") || text.contains("半小时") ? 1800 : 3600
+        return (start, start.addingTimeInterval(duration))
+    }
+
+    private func extractDay(from text: String) -> Date? {
+        let lower = text.lowercased()
+        let today = calendar.startOfDay(for: now())
+        if lower.contains("tomorrow") || text.contains("明天") { return calendar.date(byAdding: .day, value: 1, to: today) }
+        if lower.contains("today") || text.contains("今天") { return today }
+        if lower.contains("yesterday") || text.contains("昨天") { return calendar.date(byAdding: .day, value: -1, to: today) }
+        if lower.contains("next week") || text.contains("下周") { return calendar.date(byAdding: .day, value: 7, to: today) }
+        if lower.contains("100 years") || text.contains("100年") { return calendar.date(byAdding: .year, value: 100, to: today) }
+        return nil
+    }
+
+    private func extractHour(from text: String) -> Int? {
+        let lower = text.lowercased()
+        let patterns = ["(\\d{1,2})\\s*(am|pm)", "(\\d{1,2}):(\\d{2})", "(\\d{1,2})\\s*点"]
+        for pattern in patterns {
+            if let match = lower.firstMatch(pattern: pattern), let hour = Int(match[1]) {
+                if match.count > 2, match[2] == "pm", hour < 12 { return hour + 12 }
+                return normalizeHour(hour, source: lower)
+            }
+        }
+        let chineseHours: [(String, Int)] = [("一点",1),("两点",2),("二点",2),("三点",3),("四点",4),("五点",5),("六点",6),("七点",7),("八点",8),("九点",9),("十点",10)]
+        for (token, value) in chineseHours where text.contains(token) { return normalizeHour(value, source: lower + text) }
+        return nil
+    }
+
+    private func normalizeHour(_ hour: Int, source: String) -> Int {
+        if (source.contains("afternoon") || source.contains("evening") || source.contains("下午") || source.contains("晚上")), hour < 12 { return hour + 12 }
+        return hour
+    }
+
+    private func extractTitle(from text: String) -> String {
+        let lower = text.lowercased()
+        if lower.contains("alex") || text.contains("Alex") { return lower.contains("meeting") || text.contains("会") ? "Meeting with Alex" : "Alex 1:1" }
+        if lower.contains("standup") { return "Standup" }
+        let cleaned = text.replacingOccurrences(of: "我要", with: "").replacingOccurrences(of: "安排", with: "").replacingOccurrences(of: "schedule", with: "", options: .caseInsensitive).trimmingCharacters(in: .whitespacesAndNewlines)
+        return cleaned.isEmpty ? "New Event" : String(cleaned.prefix(48))
+    }
+
+    private func extractTitleHint(from text: String) -> String? {
+        if text.lowercased().contains("alex") || text.contains("Alex") { return "Alex" }
+        if text.lowercased().contains("standup") { return "standup" }
+        return nil
+    }
+
+    private func containsChinese(_ text: String) -> Bool {
+        text.unicodeScalars.contains { $0.value >= 0x4E00 && $0.value <= 0x9FFF }
+    }
+}
+
+private extension String {
+    func firstMatch(pattern: String) -> [String]? {
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else { return nil }
+        let ns = self as NSString
+        guard let match = regex.firstMatch(in: self, range: NSRange(location: 0, length: ns.length)) else { return nil }
+        return (0..<match.numberOfRanges).map { i in
+            let range = match.range(at: i)
+            return range.location == NSNotFound ? "" : ns.substring(with: range)
+        }
+    }
+}
