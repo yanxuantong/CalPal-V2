@@ -6,7 +6,7 @@ final class EventKitCalendarRepository: CalendarRepositoryProtocol {
     private let store = EKEventStore()
     private let calendar: Calendar
 
-    init(calendar: Calendar = .current) { self.calendar = calendar }
+    init(calendar: Calendar = .autoupdatingCurrent) { self.calendar = calendar }
 
     func authorizationStatus() -> PermissionStatus {
         switch EKEventStore.authorizationStatus(for: .event) {
@@ -76,11 +76,10 @@ final class EventKitCalendarRepository: CalendarRepositoryProtocol {
         guard let eventIdentifier = event.eventIdentifier, !eventIdentifier.isEmpty else {
             throw CalendarRepositoryError.invalidDraft("Calendar save did not return a persistent event identifier.")
         }
-        let savedEvent = store.event(withIdentifier: eventIdentifier) ?? event
-        guard savedEvent.calendar.calendarIdentifier == event.calendar.calendarIdentifier else {
-            throw CalendarRepositoryError.invalidDraft("Calendar save target could not be verified.")
+        guard let verifiedEvent = verifiedSavedEvent(for: event, identifier: eventIdentifier) else {
+            throw CalendarRepositoryError.invalidDraft("Calendar save could not be verified in the target calendar.")
         }
-        return mapEvent(savedEvent)
+        return mapEvent(verifiedEvent)
     }
 
     func updateEvent(id: String, patch: EventPatch, recurrenceScope: RecurrenceChangeScope?) async throws -> CalendarEvent {
@@ -113,6 +112,26 @@ final class EventKitCalendarRepository: CalendarRepositoryProtocol {
         if let defaultCalendar = store.defaultCalendarForNewEvents, defaultCalendar.allowsContentModifications { return defaultCalendar }
         guard let first = calendars.first(where: { $0.allowsContentModifications }) else { throw CalendarRepositoryError.noWritableCalendar }
         return first
+    }
+
+    private func verifiedSavedEvent(for event: EKEvent, identifier: String) -> EKEvent? {
+        if let savedEvent = store.event(withIdentifier: identifier), matches(savedEvent, savedDraft: event) {
+            return savedEvent
+        }
+
+        let interval = DateInterval(
+            start: event.startDate.addingTimeInterval(-60),
+            end: event.endDate.addingTimeInterval(60)
+        )
+        let predicate = store.predicateForEvents(withStart: interval.start, end: interval.end, calendars: [event.calendar])
+        return store.events(matching: predicate).first { matches($0, savedDraft: event) }
+    }
+
+    private func matches(_ candidate: EKEvent, savedDraft event: EKEvent) -> Bool {
+        candidate.calendar.calendarIdentifier == event.calendar.calendarIdentifier
+            && candidate.title == event.title
+            && abs(candidate.startDate.timeIntervalSince(event.startDate)) < 1
+            && abs(candidate.endDate.timeIntervalSince(event.endDate)) < 1
     }
 
     private func mapEvent(_ event: EKEvent) -> CalendarEvent {

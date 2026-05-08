@@ -180,7 +180,7 @@ struct NowIndicator: View {
 struct EmptyAgendaView: View {
     let onManualCreate: () -> Void
     var body: some View {
-        ContentUnavailableView("No events today", systemImage: "calendar", description: Text("Hold the orb to speak, double-tap to type, or create manually when AI is unavailable."))
+        ContentUnavailableView("No events today", systemImage: "calendar", description: Text("Tap the orb to speak, double-tap to type, or create manually when AI is unavailable."))
             .foregroundStyle(CalPalTheme.Colors.textSecondary)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

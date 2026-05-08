@@ -10,6 +10,7 @@ final class CommandHomeModel: ObservableObject {
     @Published var latestError: ErrorPresentation?
     @Published var calendars: [CalendarInfo] = []
     @Published var selectedCalendar: CalendarInfo?
+    @Published var showsCommandHint = true
 
     let dependencies: DependencyContainer
     var sheetPresenter: ((AppSheet) -> Void)?
@@ -48,9 +49,14 @@ final class CommandHomeModel: ObservableObject {
         Task { await loadAgenda() }
     }
 
+    func hideCommandHint() {
+        showsCommandHint = false
+    }
+
     func beginRecording() {
         guard !commandState.isProcessing else { return }
         if case .recording = commandState { return }
+        hideCommandHint()
         recordingFinishTask?.cancel()
         latestError = nil
         let recordingID = UUID()
@@ -59,7 +65,7 @@ final class CommandHomeModel: ObservableObject {
         Task {
             let status = await dependencies.speechService.requestAuthorization()
             guard status == .allowed else {
-                commandState = .failed(ErrorPresentation(title: "Speech Permission Needed", message: "Allow speech recognition to use press-and-hold voice commands.", recovery: "Double-tap the orb to type instead."))
+                commandState = .failed(ErrorPresentation(title: "Speech Permission Needed", message: "Allow speech recognition to use voice commands.", recovery: "Double-tap the orb to type instead."))
                 sheetPresenter?(.speechUnavailable(UnavailableContext(title: "Speech Permission Needed", message: "Speech recognition was not authorized. Text input remains available.", primaryAction: .openTextEntry, secondaryAction: .openManualCreate)))
                 return
             }
@@ -182,6 +188,18 @@ final class CommandHomeModel: ObservableObject {
     func dismissLatestResult() {
         resultDismissTask?.cancel()
         latestResult = nil
+    }
+
+    func focusLatestResultDate() {
+        resultDismissTask?.cancel()
+        guard let event = latestResult?.event else {
+            latestResult = nil
+            return
+        }
+        latestResult = nil
+        guard !calendar.isDate(selectedDay, inSameDayAs: event.startDate) else { return }
+        selectedDay = event.startDate
+        Task { await loadAgenda() }
     }
 
     private func scheduleResultDismissal() {

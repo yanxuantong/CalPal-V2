@@ -41,37 +41,41 @@ final class FoundationModelsCalendarParser: CalendarCommandParsing {
     private let fallback: NaturalLanguageCalendarParser
     private let modelProvider: ModelProviderProtocol
     private let isoFormatter: ISO8601DateFormatter
+    private let localTimeZone: TimeZone
 
-    init(fallback: NaturalLanguageCalendarParser, modelProvider: ModelProviderProtocol = LocalFoundationModelProvider()) {
+    init(fallback: NaturalLanguageCalendarParser, modelProvider: ModelProviderProtocol = LocalFoundationModelProvider(), timeZone: TimeZone = .autoupdatingCurrent) {
         self.fallback = fallback
         self.modelProvider = modelProvider
+        self.localTimeZone = timeZone
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         self.isoFormatter = formatter
     }
 
     func parseCommand(_ text: String) async -> ParsedCalendarCommand {
+        let localParsed = fallback.parse(text)
         guard modelProvider.availability() == .allowed else {
-            return fallback.parse(text)
+            return localParsed
         }
         #if canImport(FoundationModels)
         if #available(iOS 26.0, *) {
             do {
                 let session = LanguageModelSession(instructions: Self.instructions)
                 let response = try await session.respond(
-                    to: Self.prompt(for: text),
+                    to: Self.prompt(for: text, timeZone: localTimeZone),
                     generating: FoundationCalendarCommand.self,
                     options: GenerationOptions(temperature: 0.0)
                 )
-                return map(response.content, originalText: text) ?? fallback.parse(text)
+                guard let modelParsed = map(response.content, originalText: text) else { return localParsed }
+                return preservingLocalDateRange(from: localParsed, in: modelParsed)
             } catch {
-                var parsed = fallback.parse(text)
+                var parsed = localParsed
                 parsed.warnings.append("Foundation Models parsing unavailable; used local fallback")
                 return parsed
             }
         }
         #endif
-        return fallback.parse(text)
+        return localParsed
     }
 
     #if canImport(FoundationModels)
@@ -126,7 +130,34 @@ final class FoundationModelsCalendarParser: CalendarCommandParsing {
 
     private func date(from text: String) -> Date? {
         guard !text.isEmpty else { return nil }
-        return isoFormatter.date(from: text) ?? ISO8601DateFormatter().date(from: text)
+        return isoFormatter.date(from: text)
+            ?? ISO8601DateFormatter().date(from: text)
+            ?? localFloatingDateFormatter.date(from: text)
+    }
+
+    private var localFloatingDateFormatter: DateFormatter {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.timeZone = localTimeZone
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+        return formatter
+    }
+
+    private func preservingLocalDateRange(from localParsed: ParsedCalendarCommand, in modelParsed: ParsedCalendarCommand) -> ParsedCalendarCommand {
+        guard !localParsed.missingFields.contains("time") else { return modelParsed }
+        switch (localParsed.intent, modelParsed.intent) {
+        case (.create(let localDraft), .create(var modelDraft)):
+            modelDraft.startDate = localDraft.startDate
+            modelDraft.endDate = localDraft.endDate
+            return ParsedCalendarCommand(originalText: modelParsed.originalText, localeIdentifier: modelParsed.localeIdentifier, intent: .create(modelDraft), confidence: modelParsed.confidence, missingFields: modelParsed.missingFields, warnings: modelParsed.warnings)
+        case (.modify(_, let localPatch), .modify(let query, var modelPatch)):
+            modelPatch.startDate = localPatch.startDate ?? modelPatch.startDate
+            modelPatch.endDate = localPatch.endDate ?? modelPatch.endDate
+            return ParsedCalendarCommand(originalText: modelParsed.originalText, localeIdentifier: modelParsed.localeIdentifier, intent: .modify(query: query, patch: modelPatch), confidence: modelParsed.confidence, missingFields: modelParsed.missingFields, warnings: modelParsed.warnings)
+        default:
+            return modelParsed
+        }
     }
 
     private func containsChinese(_ text: String) -> Bool {
@@ -135,15 +166,22 @@ final class FoundationModelsCalendarParser: CalendarCommandParsing {
 
     private static let instructions = """
     You extract calendar commands into strict fields for a privacy-first iOS calendar assistant.
-    Return create, modify, delete, or unknown only. Use ISO-8601 dates when the user gives a clear date/time.
+    Return create, modify, delete, or unknown only. Use ISO-8601 dates with the user's provided local wall-clock time and the explicit timezone offset supplied in the prompt.
     Mark missingFields when title, target event, or time is ambiguous. Do not invent far-future dates.
     Confidence must be 0...1 and lower than 0.7 when required information is missing.
     """
 
-    private static func prompt(for text: String) -> String {
-        """
+    private static func prompt(for text: String, timeZone: TimeZone) -> String {
+        let now = Date()
+        let seconds = timeZone.secondsFromGMT(for: now)
+        let sign = seconds >= 0 ? "+" : "-"
+        let absoluteSeconds = abs(seconds)
+        let offset = String(format: "%@%02d:%02d", sign, absoluteSeconds / 3600, (absoluteSeconds % 3600) / 60)
+        return """
         User calendar command:
         \(text)
+
+        User timezone: \(timeZone.identifier) (UTC\(offset)). Treat spoken times such as "3 PM" or "下午三点" as local wall-clock times in this timezone. Do not convert local times to UTC.
 
         Extract a calendar intent. For modify/delete, targetHint is the event to search for. For create, title/start/end are the new event.
         """

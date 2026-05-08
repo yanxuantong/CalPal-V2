@@ -3,14 +3,14 @@ import SwiftUI
 struct CommandOrb: View {
     let state: CommandInteractionState
     let reduceMotion: Bool
-    let onHoldStart: () -> Void
-    let onHoldEnd: () -> Void
+    let showsIdleHint: Bool
+    let onRecordingStart: () -> Void
+    let onRecordingFinish: () -> Void
     let onDoubleTap: () -> Void
     let onCancel: () -> Void
 
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
-    @State private var isPressing = false
-    @State private var pressStartedRecording = false
+    @State private var singleTapTask: Task<Void, Never>?
 
     var body: some View {
         VStack(spacing: CalPalTheme.Spacing.xs) {
@@ -24,29 +24,33 @@ struct CommandOrb: View {
             }
             .frame(width: Self.touchFieldSize, height: Self.touchFieldSize)
             .frame(maxWidth: .infinity)
-            Text(statusText)
+            Text(statusText ?? " ")
                 .font(.caption2)
                 .foregroundStyle(CalPalTheme.Colors.textSecondary)
+                .opacity(statusText == nil ? 0 : 1)
         }
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.28), value: statusText)
     }
 
     private var orb: some View {
-        ZStack {
-            if isRecording && !reduceMotion { RecordingRippleView() }
-            Circle()
-                .fill(orbFill)
-                .frame(width: Self.orbDiameter, height: Self.orbDiameter)
-                .shadow(color: shadowColor, radius: isRecording ? 24 : 20, x: 0, y: 10)
-                .overlay(label)
-                .overlay(Circle().stroke(Color.white.opacity(reduceTransparency ? 0 : 0.24), lineWidth: 1))
-                .scaleEffect(orbScale)
-                .animation(reduceMotion ? nil : .spring(response: 0.25, dampingFraction: 0.72), value: isRecording)
-                .animation(reduceMotion ? nil : .spring(response: 0.18, dampingFraction: 0.65), value: isPressing)
+        Button(action: handleSingleTap) {
+            ZStack {
+                if isRecording && !reduceMotion { RecordingRippleView() }
+                Circle()
+                    .fill(orbFill)
+                    .frame(width: Self.orbDiameter, height: Self.orbDiameter)
+                    .shadow(color: shadowColor, radius: isRecording ? 24 : 20, x: 0, y: 10)
+                    .overlay(label)
+                    .overlay(Circle().stroke(Color.white.opacity(reduceTransparency ? 0 : 0.24), lineWidth: 1))
+                    .scaleEffect(orbScale)
+                    .animation(reduceMotion ? nil : .spring(response: 0.25, dampingFraction: 0.72), value: isRecording)
+            }
+            .frame(width: Self.touchFieldSize, height: Self.touchFieldSize)
+            .contentShape(Circle())
         }
+        .buttonStyle(.plain)
         .frame(width: Self.touchFieldSize, height: Self.touchFieldSize)
-        .contentShape(Circle())
-        .onLongPressGesture(minimumDuration: 0.12, maximumDistance: Self.touchFieldSize, pressing: handlePressingChanged, perform: handleLongPressReady)
-        .simultaneousGesture(TapGesture(count: 2).onEnded(onDoubleTap))
+        .simultaneousGesture(TapGesture(count: 2).onEnded(handleDoubleTap))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityLabel)
         .accessibilityHint(accessibilityHint)
@@ -66,18 +70,27 @@ struct CommandOrb: View {
         .accessibilityLabel("Cancel recording")
     }
 
-    private func handlePressingChanged(_ pressing: Bool) {
-        isPressing = pressing
-        if !pressing, pressStartedRecording {
-            onHoldEnd()
-            pressStartedRecording = false
+    private func handleSingleTap() {
+        singleTapTask?.cancel()
+        singleTapTask = Task {
+            try? await Task.sleep(nanoseconds: 220_000_000)
+            guard !Task.isCancelled else { return }
+            await MainActor.run {
+                if isRecording {
+                    onRecordingFinish()
+                } else if !isProcessing {
+                    onRecordingStart()
+                }
+            }
         }
     }
 
-    private func handleLongPressReady() {
-        guard !pressStartedRecording else { return }
-        pressStartedRecording = true
-        onHoldStart()
+    private func handleDoubleTap() {
+        singleTapTask?.cancel()
+        if isRecording {
+            onCancel()
+        }
+        onDoubleTap()
     }
 
     static let touchFieldSize: CGFloat = 184
@@ -87,7 +100,6 @@ struct CommandOrb: View {
     private var isProcessing: Bool { state.isProcessing }
     private var orbScale: CGFloat {
         if reduceMotion { return 1 }
-        if isPressing { return 1.06 }
         return isRecording ? 1.04 : 1
     }
     private var shadowColor: Color { (isRecording ? CalPalTheme.Colors.recording : CalPalTheme.Colors.brandPrimary).opacity(reduceTransparency ? 0.18 : 0.36) }
@@ -112,10 +124,10 @@ struct CommandOrb: View {
         .foregroundStyle(Color.white)
     }
 
-    private var statusText: String {
-        if isRecording { return "Release to process · Cancel available" }
+    private var statusText: String? {
+        if isRecording { return "Tap again to finish · Cancel available" }
         if isProcessing { return "Processing calendar command" }
-        return "Hold to speak · double-tap to type"
+        return showsIdleHint ? "Tap to speak · double-tap to type" : nil
     }
 
     private var accessibilityLabel: String {
@@ -125,9 +137,9 @@ struct CommandOrb: View {
     }
 
     private var accessibilityHint: String {
-        if isRecording { return "Release to process. Use Cancel recording to stop." }
+        if isRecording { return "Tap again to process. Use Cancel recording to stop." }
         if isProcessing { return "Calendar command is being processed." }
-        return "Hold to speak. Double-tap to type."
+        return "Tap to start recording. Double-tap to type."
     }
 }
 
@@ -162,14 +174,14 @@ struct RecordingRippleView: View {
 }
 
 #Preview("Orb Recording Light") {
-    CommandOrb(state: .recording(startedAt: Date()), reduceMotion: false, onHoldStart: {}, onHoldEnd: {}, onDoubleTap: {}, onCancel: {})
+    CommandOrb(state: .recording(startedAt: Date()), reduceMotion: false, showsIdleHint: true, onRecordingStart: {}, onRecordingFinish: {}, onDoubleTap: {}, onCancel: {})
         .padding()
         .background(CalPalTheme.Colors.backgroundPrimary)
         .preferredColorScheme(.light)
 }
 
 #Preview("Orb Recording Dark") {
-    CommandOrb(state: .recording(startedAt: Date()), reduceMotion: false, onHoldStart: {}, onHoldEnd: {}, onDoubleTap: {}, onCancel: {})
+    CommandOrb(state: .recording(startedAt: Date()), reduceMotion: false, showsIdleHint: true, onRecordingStart: {}, onRecordingFinish: {}, onDoubleTap: {}, onCancel: {})
         .padding()
         .background(CalPalTheme.Colors.backgroundPrimary)
         .preferredColorScheme(.dark)

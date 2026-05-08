@@ -85,7 +85,9 @@ final class SystemSpeechService: NSObject, SpeechServiceProtocol {
 
         let inputNode = audioEngine.inputNode
         let format = inputNode.outputFormat(forBus: 0)
-        guard format.channelCount > 0 else { throw SpeechServiceError.microphoneUnavailable }
+        guard format.channelCount > 0, format.sampleRate > 0 else {
+            throw SpeechServiceError.microphoneUnavailable
+        }
         inputNode.removeTap(onBus: 0)
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { [weak request] buffer, _ in
             request?.append(buffer)

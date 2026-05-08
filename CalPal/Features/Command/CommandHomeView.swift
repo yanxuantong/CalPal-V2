@@ -22,11 +22,14 @@ struct CommandHomeView: View {
             VStack(spacing: CalPalTheme.Spacing.sm) {
                 if let result = model.latestResult {
                     ResultCard(result: result)
-                        .onTapGesture { model.dismissLatestResult() }
+                        .onTapGesture { model.focusLatestResultDate() }
                 }
                 if let error = model.latestError { FailureCard(error: error) }
                 if model.commandState.isProcessing { ProcessingCard(onCancel: model.cancelProcessing) }
-                CommandOrb(state: model.commandState, reduceMotion: reduceMotion, onHoldStart: model.beginRecording, onHoldEnd: model.finishRecording, onDoubleTap: appModel.openTextEntry, onCancel: model.cancelRecording)
+                CommandOrb(state: model.commandState, reduceMotion: reduceMotion, showsIdleHint: model.showsCommandHint, onRecordingStart: model.beginRecording, onRecordingFinish: model.finishRecording, onDoubleTap: {
+                    model.hideCommandHint()
+                    appModel.openTextEntry()
+                }, onCancel: model.cancelRecording)
                     .padding(.bottom, CalPalTheme.Spacing.lg)
             }
             .padding(.horizontal, CalPalTheme.Spacing.lg)

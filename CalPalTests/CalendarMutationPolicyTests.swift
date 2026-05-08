@@ -130,8 +130,8 @@ final class VisualSnapshotRenderingTests: XCTestCase {
     }
 
     func testCommandOrbSnapshotsCaptureIdleAndRecordingStates() throws {
-        let idle = render(CommandOrb(state: .idle, reduceMotion: true, onHoldStart: {}, onHoldEnd: {}, onDoubleTap: {}, onCancel: {}), colorScheme: .light, size: CGSize(width: 240, height: 180))
-        let recording = render(CommandOrb(state: .recording(startedAt: Date()), reduceMotion: true, onHoldStart: {}, onHoldEnd: {}, onDoubleTap: {}, onCancel: {}), colorScheme: .light, size: CGSize(width: 240, height: 180))
+        let idle = render(CommandOrb(state: .idle, reduceMotion: true, showsIdleHint: true, onRecordingStart: {}, onRecordingFinish: {}, onDoubleTap: {}, onCancel: {}), colorScheme: .light, size: CGSize(width: 240, height: 180))
+        let recording = render(CommandOrb(state: .recording(startedAt: Date()), reduceMotion: true, showsIdleHint: true, onRecordingStart: {}, onRecordingFinish: {}, onDoubleTap: {}, onCancel: {}), colorScheme: .light, size: CGSize(width: 240, height: 180))
 
         XCTAssertGreaterThan(try XCTUnwrap(idle.pngData()).count, 4_000)
         XCTAssertGreaterThan(try XCTUnwrap(recording.pngData()).count, 4_000)
@@ -276,9 +276,58 @@ final class MVPBugFixRegressionTests: XCTestCase {
         XCTAssertEqual(components.day, 2)
     }
 
+    func testChineseAfternoonTimeUsesLocalTimezoneWallClock() throws {
+        var losAngelesCalendar = Calendar(identifier: .gregorian)
+        let losAngeles = TimeZone(identifier: "America/Los_Angeles")!
+        losAngelesCalendar.timeZone = losAngeles
+        let now = losAngelesCalendar.date(from: DateComponents(year: 2026, month: 5, day: 1, hour: 12))!
+        let parser = NaturalLanguageCalendarParser(calendar: losAngelesCalendar, timeZone: losAngeles, now: { now })
+
+        let parsed = parser.parse("明天下午三点和 Alex 开会")
+        guard case .create(let draft) = parsed.intent else { return XCTFail("Expected create draft") }
+        let components = losAngelesCalendar.dateComponents(in: losAngeles, from: draft.startDate)
+        XCTAssertEqual(components.hour, 15)
+        XCTAssertEqual(components.minute, 0)
+        XCTAssertEqual(components.day, 2)
+    }
+
+    @MainActor
+    func testCommandHintHidesAfterFirstCommandUse() {
+        let model = CommandHomeModel(dependencies: .mock(), selectedDay: PreviewFixtures.now)
+        XCTAssertTrue(model.showsCommandHint)
+        model.hideCommandHint()
+        XCTAssertFalse(model.showsCommandHint)
+    }
+
+    @MainActor
+    func testResultTapFocusesAgendaOnResultEventDate() throws {
+        let model = CommandHomeModel(dependencies: .mock(), selectedDay: PreviewFixtures.now)
+        let targetDay = try XCTUnwrap(Calendar.current.date(byAdding: .day, value: 2, to: PreviewFixtures.now))
+        let event = CalendarEvent(
+            id: "created-future-event",
+            title: "Future review",
+            calendarID: "work",
+            calendarName: "Work Calendar",
+            accountName: "iCloud",
+            startDate: targetDay,
+            endDate: targetDay.addingTimeInterval(3600),
+            isAllDay: false,
+            location: nil,
+            notes: nil,
+            isRecurring: false,
+            calendarColorHex: "#0A84FF"
+        )
+        model.latestResult = CommandResultViewState(title: "Added to Calendar", message: "Future review", event: event, actionTitle: "Open in Calendar")
+
+        model.focusLatestResultDate()
+
+        XCTAssertNil(model.latestResult)
+        XCTAssertTrue(Calendar.current.isDate(model.selectedDay, inSameDayAs: targetDay))
+    }
+
     func testCommandOrbUsesStableSnapshotSizeAcrossIdleAndRecording() throws {
-        let idle = render(CommandOrb(state: .idle, reduceMotion: true, onHoldStart: {}, onHoldEnd: {}, onDoubleTap: {}, onCancel: {}), colorScheme: .light, size: CGSize(width: 240, height: 220))
-        let recording = render(CommandOrb(state: .recording(startedAt: Date()), reduceMotion: true, onHoldStart: {}, onHoldEnd: {}, onDoubleTap: {}, onCancel: {}), colorScheme: .light, size: CGSize(width: 240, height: 220))
+        let idle = render(CommandOrb(state: .idle, reduceMotion: true, showsIdleHint: true, onRecordingStart: {}, onRecordingFinish: {}, onDoubleTap: {}, onCancel: {}), colorScheme: .light, size: CGSize(width: 240, height: 220))
+        let recording = render(CommandOrb(state: .recording(startedAt: Date()), reduceMotion: true, showsIdleHint: true, onRecordingStart: {}, onRecordingFinish: {}, onDoubleTap: {}, onCancel: {}), colorScheme: .light, size: CGSize(width: 240, height: 220))
         XCTAssertEqual(idle.size, recording.size)
         XCTAssertGreaterThan(try XCTUnwrap(recording.pngData()).count, 4_000)
     }
