@@ -2,7 +2,7 @@ import SwiftUI
 
 @main
 struct CalPalApp: App {
-    @StateObject private var appModel = AppModel(dependencies: .live)
+    @StateObject private var appModel = AppModel(runtime: .current())
 
     var body: some Scene {
         WindowGroup {

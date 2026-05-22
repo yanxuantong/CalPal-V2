@@ -11,23 +11,35 @@ final class AppModel: ObservableObject {
     private let onboardingKey = "calpal.hasSeenOnboarding"
     private let initializationKey = "calpal.hasRequestedInitialPermissions"
     private let defaults: UserDefaults
+    private let runtime: AppRuntimeConfiguration
     private var isInitializingPermissions = false
 
-    init(dependencies: DependencyContainer, defaults: UserDefaults = .standard) {
-        self.dependencies = dependencies
+    convenience init(dependencies: DependencyContainer, defaults: UserDefaults = .standard) {
+        self.init(runtime: .test(dependencies: dependencies), defaults: defaults)
+    }
+
+    init(runtime: AppRuntimeConfiguration, defaults: UserDefaults = .standard) {
+        self.runtime = runtime
+        self.dependencies = runtime.dependencies
         self.defaults = defaults
-        self.capabilitySummary = dependencies.capabilityService.currentSummary()
-        self.commandHomeModel = CommandHomeModel(dependencies: dependencies)
+        self.capabilitySummary = runtime.dependencies.capabilityService.currentSummary()
+        self.commandHomeModel = CommandHomeModel(dependencies: runtime.dependencies)
         self.commandHomeModel.sheetPresenter = { [weak self] sheet in self?.activeSheet = sheet }
     }
 
     func presentOnboardingIfNeeded() {
+        guard !runtime.skipsOnboarding else { return }
         guard !defaults.bool(forKey: onboardingKey), activeSheet == nil else { return }
         activeSheet = .onboarding
     }
 
     func initializeRequiredPermissionsIfNeeded() async {
         guard !isInitializingPermissions else { return }
+        if runtime.skipsPermissionRequests {
+            refreshCapabilities()
+            if runtime.preloadsAgenda { await commandHomeModel.loadAgenda() }
+            return
+        }
         guard !defaults.bool(forKey: initializationKey) else {
             refreshCapabilities()
             if dependencies.calendarRepository.authorizationStatus() == .allowed { await commandHomeModel.loadAgenda() }
@@ -53,7 +65,10 @@ final class AppModel: ObservableObject {
         refreshCapabilities()
         activeSheet = .settings(section)
     }
-    func openTextEntry() { activeSheet = .textEntry(TextEntryContext()) }
+    func openTextEntry() {
+        commandHomeModel.hideCommandHint()
+        activeSheet = .textEntry(TextEntryContext())
+    }
     func dismissSheet() { activeSheet = nil }
     func refreshCapabilities() { capabilitySummary = dependencies.capabilityService.currentSummary() }
 }
@@ -65,6 +80,7 @@ enum AppSheet: Identifiable, Equatable {
     case confirmation(ConfirmationContext)
     case candidateSelection(CandidateSelectionContext)
     case calendarChooser(CalendarChooserContext)
+    case eventDetail(EventDetailContext)
     case settings(SettingsSection?)
     case modelUnavailable(UnavailableContext)
     case speechUnavailable(UnavailableContext)
@@ -78,6 +94,7 @@ enum AppSheet: Identifiable, Equatable {
         case .confirmation(let context): return "confirmation-\(context.id)"
         case .candidateSelection(let context): return "candidate-\(context.id)"
         case .calendarChooser(let context): return "calendar-\(context.id)"
+        case .eventDetail(let context): return "event-\(context.event.id)-\(context.id)"
         case .settings(let section): return "settings-\(section?.rawValue ?? "root")"
         case .modelUnavailable(let context): return "model-\(context.id)"
         case .speechUnavailable(let context): return "speech-\(context.id)"

@@ -33,7 +33,7 @@ struct AppSheetHost: View {
                 appModel.dismissSheet()
                 Task { await homeModel.submit(text: text) }
             }
-            .presentationDetents([.medium, .large])
+            .presentationDetents([.large])
         case .correction(let context):
             CorrectionView(context: context) { draft in
                 appModel.dismissSheet()
@@ -58,6 +58,12 @@ struct AppSheetHost: View {
                 homeModel.selectCalendar(calendar)
             }
             .presentationDetents([.large])
+        case .eventDetail(let context):
+            EventDetailView(context: context) { patch in
+                appModel.dismissSheet()
+                homeModel.confirmUpdate(for: context.event, patch: patch)
+            }
+            .presentationDetents([.medium, .large])
         case .settings(let startSection):
             SettingsView(startSection: startSection)
                 .presentationDetents([.large])

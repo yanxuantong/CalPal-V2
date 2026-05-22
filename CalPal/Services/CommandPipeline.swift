@@ -51,7 +51,7 @@ final class CalendarCommandPipeline: CalendarCommandPipelineProtocol {
             let status = await repository.requestFullAccessIfNeeded()
             guard status == .allowed else { throw CalendarRepositoryError.accessDenied }
             let event = try await repository.createEvent(draft)
-            return .result(CommandResultViewState(title: "Added to Calendar", message: "\(event.title) · \(event.formattedRange)", event: event, actionTitle: "Open in Calendar"))
+            return .result(CommandResultViewState(title: "Added to Calendar", message: "\(event.title) · \(event.formattedRange)", event: event, actionTitle: "Open in Calendar", actionURL: CalendarDeepLink.appleCalendarURL(for: event.startDate)))
         } catch CalendarRepositoryError.accessDenied {
             return .unavailable(UnavailableContext(title: "Calendar Access Needed", message: "Allow full calendar access to read and update existing events. You can still create manually after access is restored.", primaryAction: .openSettings, secondaryAction: .openManualCreate))
         } catch {
@@ -71,7 +71,7 @@ final class CalendarCommandPipeline: CalendarCommandPipelineProtocol {
             case .modify:
                 guard let id = context.targetEventID, let patch = context.patch else { throw CalendarRepositoryError.eventNotFound }
                 let event = try await repository.updateEvent(id: id, patch: patch, recurrenceScope: recurrenceScope ?? context.recurrenceScope)
-                return .result(CommandResultViewState(title: "Updated Calendar", message: "\(event.title) · \(event.formattedRange)", event: event, actionTitle: "Open in Calendar"))
+                return .result(CommandResultViewState(title: "Updated Calendar", message: "\(event.title) · \(event.formattedRange)", event: event, actionTitle: "Open in Calendar", actionURL: CalendarDeepLink.appleCalendarURL(for: event.startDate)))
             case .delete:
                 guard let id = context.targetEventID else { throw CalendarRepositoryError.eventNotFound }
                 try await repository.deleteEvent(id: id, recurrenceScope: recurrenceScope ?? context.recurrenceScope)

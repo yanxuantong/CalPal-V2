@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		611FC5012FA46C7F00C267C2 /* EventDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 611FC5002FA46C7F00C267C2 /* EventDetailView.swift */; };
+		611FC5022FA46C7F00C267C2 /* EventDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 611FC5002FA46C7F00C267C2 /* EventDetailView.swift */; };
+		611FC5042FA46C7F00C267C2 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 611FC5052FA46C7F00C267C2 /* PrivacyInfo.xcprivacy */; };
+		611FC5062FA46C7F00C267C2 /* AppRuntimeConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 611FC5082FA46C7F00C267C2 /* AppRuntimeConfiguration.swift */; };
+		611FC5072FA46C7F00C267C2 /* AppRuntimeConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 611FC5082FA46C7F00C267C2 /* AppRuntimeConfiguration.swift */; };
 		611FC4B42FA46C7F00C267C2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 611FC4B12FA46C7F00C267C2 /* Assets.xcassets */; };
 		611FC4B52FA46C7F00C267C2 /* PreferenceSummaryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 611FC4AC2FA46C7F00C267C2 /* PreferenceSummaryStore.swift */; };
 		611FC4B62FA46C7F00C267C2 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 611FC4802FA46C7F00C267C2 /* AppModel.swift */; };
@@ -90,6 +95,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		611FC5002FA46C7F00C267C2 /* EventDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventDetailView.swift; sourceTree = "<group>"; };
+		611FC5052FA46C7F00C267C2 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		611FC5082FA46C7F00C267C2 /* AppRuntimeConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRuntimeConfiguration.swift; sourceTree = "<group>"; };
 		611FC4802FA46C7F00C267C2 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
 		611FC4812FA46C7F00C267C2 /* AppRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRootView.swift; sourceTree = "<group>"; };
 		611FC4822FA46C7F00C267C2 /* DependencyContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DependencyContainer.swift; sourceTree = "<group>"; };
@@ -153,6 +161,7 @@
 				611FC4802FA46C7F00C267C2 /* AppModel.swift */,
 				611FC4812FA46C7F00C267C2 /* AppRootView.swift */,
 				611FC4822FA46C7F00C267C2 /* DependencyContainer.swift */,
+				611FC5082FA46C7F00C267C2 /* AppRuntimeConfiguration.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -260,6 +269,14 @@
 			path = Unavailable;
 			sourceTree = "<group>";
 		};
+		611FC5032FA46C7F00C267C2 /* EventDetail */ = {
+			isa = PBXGroup;
+			children = (
+				611FC5002FA46C7F00C267C2 /* EventDetailView.swift */,
+			);
+			path = EventDetail;
+			sourceTree = "<group>";
+		};
 		611FC4A32FA46C7F00C267C2 /* Features */ = {
 			isa = PBXGroup;
 			children = (
@@ -268,6 +285,7 @@
 				611FC4942FA46C7F00C267C2 /* Command */,
 				611FC4962FA46C7F00C267C2 /* Confirmation */,
 				611FC4982FA46C7F00C267C2 /* Correction */,
+				611FC5032FA46C7F00C267C2 /* EventDetail */,
 				611FC49A2FA46C7F00C267C2 /* ManualEvent */,
 				611FC49C2FA46C7F00C267C2 /* Onboarding */,
 				611FC49E2FA46C7F00C267C2 /* Settings */,
@@ -313,6 +331,7 @@
 				611FC4B02FA46C7F00C267C2 /* Support */,
 				611FC4B12FA46C7F00C267C2 /* Assets.xcassets */,
 				611FC4B22FA46C7F00C267C2 /* CalPalApp.swift */,
+				611FC5052FA46C7F00C267C2 /* PrivacyInfo.xcprivacy */,
 			);
 			path = CalPal;
 			sourceTree = "<group>";
@@ -407,6 +426,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				611FC4D72FA46C7F00C267C2 /* Assets.xcassets in Resources */,
+				611FC5042FA46C7F00C267C2 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -434,9 +454,11 @@
 				611FC4BB2FA46C7F00C267C2 /* MockCalendarRepository.swift in Sources */,
 				611FC4BC2FA46C7F00C267C2 /* ModelProvider.swift in Sources */,
 				611FC4BD2FA46C7F00C267C2 /* SpeechService.swift in Sources */,
-				611FC4BE2FA46C7F00C267C2 /* CalPalApp.swift in Sources */,
-				611FC4BF2FA46C7F00C267C2 /* OnboardingView.swift in Sources */,
+					611FC4BE2FA46C7F00C267C2 /* CalPalApp.swift in Sources */,
+					611FC5062FA46C7F00C267C2 /* AppRuntimeConfiguration.swift in Sources */,
+					611FC4BF2FA46C7F00C267C2 /* OnboardingView.swift in Sources */,
 				611FC4C02FA46C7F00C267C2 /* CalPalTheme.swift in Sources */,
+				611FC5012FA46C7F00C267C2 /* EventDetailView.swift in Sources */,
 				611FC4C12FA46C7F00C267C2 /* UnavailableView.swift in Sources */,
 				611FC4C22FA46C7F00C267C2 /* StatusCards.swift in Sources */,
 				611FC4C32FA46C7F00C267C2 /* NaturalLanguageCalendarParser.swift in Sources */,
@@ -475,9 +497,11 @@
 				611FC4DE2FA46C7F00C267C2 /* MockCalendarRepository.swift in Sources */,
 				611FC4DF2FA46C7F00C267C2 /* ModelProvider.swift in Sources */,
 				611FC4E02FA46C7F00C267C2 /* SpeechService.swift in Sources */,
-				611FC4E12FA46C7F00C267C2 /* CalPalApp.swift in Sources */,
-				611FC4E22FA46C7F00C267C2 /* OnboardingView.swift in Sources */,
+					611FC4E12FA46C7F00C267C2 /* CalPalApp.swift in Sources */,
+					611FC5072FA46C7F00C267C2 /* AppRuntimeConfiguration.swift in Sources */,
+					611FC4E22FA46C7F00C267C2 /* OnboardingView.swift in Sources */,
 				611FC4E32FA46C7F00C267C2 /* CalPalTheme.swift in Sources */,
+				611FC5022FA46C7F00C267C2 /* EventDetailView.swift in Sources */,
 				611FC4E42FA46C7F00C267C2 /* UnavailableView.swift in Sources */,
 				611FC4E52FA46C7F00C267C2 /* StatusCards.swift in Sources */,
 				611FC4E62FA46C7F00C267C2 /* NaturalLanguageCalendarParser.swift in Sources */,
@@ -519,7 +543,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = CNRD7Y3CBQ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "CalPal needs full calendar access to show, create, modify, and delete events only when you ask.";
@@ -532,7 +556,7 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
-				MARKETING_VERSION = 0.2;
+				MARKETING_VERSION = 0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.calpal.mvp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -674,7 +698,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = CNRD7Y3CBQ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "CalPal needs full calendar access to show, create, modify, and delete events only when you ask.";
@@ -687,7 +711,7 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
-				MARKETING_VERSION = 0.2;
+				MARKETING_VERSION = 0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.calpal.mvp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -705,11 +729,11 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
-				MARKETING_VERSION = 0.2;
+				MARKETING_VERSION = 0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.calpal.mvp.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -727,11 +751,11 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
-				MARKETING_VERSION = 0.2;
+				MARKETING_VERSION = 0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.calpal.mvp.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;

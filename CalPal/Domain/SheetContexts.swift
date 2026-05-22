@@ -38,6 +38,11 @@ struct CalendarChooserContext: Identifiable, Equatable {
     var selectedID: String?
 }
 
+struct EventDetailContext: Identifiable, Equatable {
+    var id = UUID()
+    var event: CalendarEvent
+}
+
 struct ManualEventContext: Identifiable, Equatable {
     var id = UUID()
     var reason: String

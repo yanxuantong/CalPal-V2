@@ -21,6 +21,14 @@ struct TextEntryView: View {
                         .lineLimit(4...8)
                         .focused($inputFocused)
                         .accessibilityLabel("Calendar command text")
+                    Button(action: submit) {
+                        Label("Send Command", systemImage: "paperplane.fill")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .disabled(trimmedText.isEmpty)
+                    .accessibilityIdentifier("textCommandSend")
                     exampleChips
                 }
                 .padding()
@@ -29,7 +37,11 @@ struct TextEntryView: View {
             .navigationTitle("Text Command")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) { Button("Send") { submit() }.disabled(trimmedText.isEmpty) }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Send") { submit() }
+                        .disabled(trimmedText.isEmpty)
+                        .accessibilityIdentifier("textCommandToolbarSend")
+                }
             }
             .onAppear { inputFocused = true }
         }

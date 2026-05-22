@@ -54,6 +54,8 @@ struct ProcessingCard: View {
 
 struct ResultCard: View {
     let result: CommandResultViewState
+    var onAction: ((URL) -> Void)?
+
     var body: some View {
         VStack(alignment: .leading, spacing: CalPalTheme.Spacing.sm) {
             Label(result.title, systemImage: "checkmark.circle.fill")
@@ -62,15 +64,26 @@ struct ResultCard: View {
                 .font(.subheadline)
                 .foregroundStyle(CalPalTheme.Colors.textPrimary)
             if let actionTitle = result.actionTitle {
-                Label(actionTitle, systemImage: "calendar")
+                if let actionURL = result.actionURL, let onAction {
+                    Button {
+                        onAction(actionURL)
+                    } label: {
+                        Label(actionTitle, systemImage: "calendar")
+                    }
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(CalPalTheme.Colors.textSecondary)
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .accessibilityIdentifier("resultOpenInCalendar")
+                } else {
+                    Label(actionTitle, systemImage: "calendar")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(CalPalTheme.Colors.textSecondary)
+                }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
         .glassCard()
-        .accessibilityElement(children: .combine)
     }
 }
 

@@ -60,16 +60,20 @@ final class NaturalLanguageCalendarParser {
         let hour = extractHour(from: text) ?? 9
         let minute = (text.contains("半") || text.contains(":30")) ? 30 : 0
         guard let start = calendar.date(bySettingHour: hour, minute: minute, second: 0, of: day) else { return nil }
-        let duration: TimeInterval = text.lowercased().contains("30 min") || text.contains("半小时") ? 1800 : 3600
+        let duration = extractDuration(from: text) ?? 3600
         return (start, start.addingTimeInterval(duration))
     }
 
     private func extractDay(from text: String) -> Date? {
         let lower = text.lowercased()
         let today = calendar.startOfDay(for: now())
+        if lower.contains("day after tomorrow") || text.contains("后天") { return calendar.date(byAdding: .day, value: 2, to: today) }
         if lower.contains("tomorrow") || text.contains("明天") { return calendar.date(byAdding: .day, value: 1, to: today) }
         if lower.contains("today") || text.contains("今天") { return today }
         if lower.contains("yesterday") || text.contains("昨天") { return calendar.date(byAdding: .day, value: -1, to: today) }
+        if let weekday = extractWeekday(from: text) {
+            return nextDate(matchingWeekday: weekday, from: today, forceFollowingWeek: lower.contains("next ") || text.contains("下周"))
+        }
         if lower.contains("next week") || text.contains("下周") { return calendar.date(byAdding: .day, value: 7, to: today) }
         if lower.contains("100 years") || text.contains("100年") { return calendar.date(byAdding: .year, value: 100, to: today) }
         return nil
@@ -77,6 +81,8 @@ final class NaturalLanguageCalendarParser {
 
     private func extractHour(from text: String) -> Int? {
         let lower = text.lowercased()
+        if lower.contains("noon") || text.contains("中午") { return 12 }
+        if lower.contains("midnight") || text.contains("午夜") { return 0 }
         let patterns = ["(\\d{1,2})\\s*(am|pm)", "(\\d{1,2}):(\\d{2})", "(\\d{1,2})\\s*点"]
         for pattern in patterns {
             if let match = lower.firstMatch(pattern: pattern), let hour = Int(match[1]) {
@@ -84,7 +90,7 @@ final class NaturalLanguageCalendarParser {
                 return normalizeHour(hour, source: lower)
             }
         }
-        let chineseHours: [(String, Int)] = [("一点",1),("两点",2),("二点",2),("三点",3),("四点",4),("五点",5),("六点",6),("七点",7),("八点",8),("九点",9),("十点",10)]
+        let chineseHours: [(String, Int)] = [("一点",1),("两点",2),("二点",2),("三点",3),("四点",4),("五点",5),("六点",6),("七点",7),("八点",8),("九点",9),("十点",10),("十一点",11),("十二点",12)]
         for (token, value) in chineseHours where text.contains(token) { return normalizeHour(value, source: lower + text) }
         return nil
     }
@@ -92,6 +98,42 @@ final class NaturalLanguageCalendarParser {
     private func normalizeHour(_ hour: Int, source: String) -> Int {
         if (source.contains("afternoon") || source.contains("evening") || source.contains("下午") || source.contains("晚上")), hour < 12 { return hour + 12 }
         return hour
+    }
+
+    private func extractDuration(from text: String) -> TimeInterval? {
+        let lower = text.lowercased()
+        if lower.contains("30 min") || lower.contains("half hour") || text.contains("半小时") { return 1800 }
+        if lower.contains("90 min") || text.contains("一个半小时") { return 5400 }
+        if let match = lower.firstMatch(pattern: "(?:for\\s*)?(\\d{1,2})\\s*(?:hour|hours|hr|hrs)"), let hours = Double(match[1]) {
+            return hours * 3600
+        }
+        let chineseHours: [(String, Double)] = [("两小时", 2), ("两个小时", 2), ("二小时", 2), ("三小时", 3), ("三个小时", 3), ("一小时", 1), ("一个小时", 1)]
+        for (token, hours) in chineseHours where text.contains(token) { return hours * 3600 }
+        return nil
+    }
+
+    private func extractWeekday(from text: String) -> Int? {
+        let lower = text.lowercased()
+        let english: [(String, Int)] = [
+            ("sunday", 1), ("monday", 2), ("tuesday", 3), ("wednesday", 4),
+            ("thursday", 5), ("friday", 6), ("saturday", 7)
+        ]
+        for (token, weekday) in english where lower.contains(token) { return weekday }
+        let chinese: [(String, Int)] = [
+            ("周日", 1), ("星期日", 1), ("周天", 1), ("星期天", 1),
+            ("周一", 2), ("星期一", 2), ("周二", 3), ("星期二", 3),
+            ("周三", 4), ("星期三", 4), ("周四", 5), ("星期四", 5),
+            ("周五", 6), ("星期五", 6), ("周六", 7), ("星期六", 7)
+        ]
+        for (token, weekday) in chinese where text.contains(token) { return weekday }
+        return nil
+    }
+
+    private func nextDate(matchingWeekday weekday: Int, from today: Date, forceFollowingWeek: Bool) -> Date? {
+        let currentWeekday = calendar.component(.weekday, from: today)
+        var delta = (weekday - currentWeekday + 7) % 7
+        if delta == 0 || forceFollowingWeek { delta += 7 }
+        return calendar.date(byAdding: .day, value: delta, to: today)
     }
 
     private func extractTitle(from text: String) -> String {

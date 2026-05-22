@@ -10,18 +10,21 @@ final class CommandHomeModel: ObservableObject {
     @Published var latestError: ErrorPresentation?
     @Published var calendars: [CalendarInfo] = []
     @Published var selectedCalendar: CalendarInfo?
+    @Published var calendarSelectionNotice: CalendarSelectionNotice?
     @Published var showsCommandHint = true
 
     let dependencies: DependencyContainer
     var sheetPresenter: ((AppSheet) -> Void)?
     private let calendar = Calendar.autoupdatingCurrent
+    private let now: () -> Date
     private var resultDismissTask: Task<Void, Never>?
     private var recordingFinishTask: Task<Void, Never>?
     private var activeRecordingID: UUID?
 
-    init(dependencies: DependencyContainer, selectedDay: Date = Date()) {
+    init(dependencies: DependencyContainer, selectedDay: Date = Date(), now: @escaping () -> Date = Date.init) {
         self.dependencies = dependencies
         self.selectedDay = selectedDay
+        self.now = now
     }
 
     func loadAgenda() async {
@@ -33,8 +36,9 @@ final class CommandHomeModel: ObservableObject {
         do {
             async let calendarsTask = dependencies.calendarRepository.fetchCalendars()
             async let eventsTask = dependencies.calendarRepository.fetchEvents(for: selectedDay)
-            calendars = try await calendarsTask
-            selectedCalendar = preferredCalendar(from: calendars)
+            let fetchedCalendars = try await calendarsTask
+            calendars = fetchedCalendars
+            selectedCalendar = reconcileSelectedCalendar(from: fetchedCalendars)
             events = try await eventsTask
             agendaState = .loaded
         } catch CalendarRepositoryError.accessDenied {
@@ -47,6 +51,16 @@ final class CommandHomeModel: ObservableObject {
     func selectDay(_ day: Date) {
         selectedDay = day
         Task { await loadAgenda() }
+    }
+
+    func selectToday() {
+        let today = now()
+        guard !calendar.isDate(selectedDay, inSameDayAs: today) else { return }
+        selectDay(today)
+    }
+
+    var isSelectedDayToday: Bool {
+        calendar.isDate(selectedDay, inSameDayAs: now())
     }
 
     func hideCommandHint() {
@@ -130,17 +144,40 @@ final class CommandHomeModel: ObservableObject {
         guard calendar.allowsContentModifications else { return }
         selectedCalendar = calendar
         dependencies.preferenceSummaryStore.saveDefaultCalendarID(calendar.id)
+        calendarSelectionNotice = CalendarSelectionNotice(
+            title: "Default calendar saved",
+            message: "New events will be written to \(calendar.title) · \(calendar.accountName)."
+        )
     }
 
     func clearDefaultCalendar() {
         dependencies.preferenceSummaryStore.saveDefaultCalendarID(nil)
         selectedCalendar = calendars.first(where: { $0.allowsContentModifications })
+        calendarSelectionNotice = nil
     }
 
     func openCalendarChooser() { sheetPresenter?(.calendarChooser(CalendarChooserContext(calendars: calendars, selectedID: selectedCalendar?.id))) }
 
+    func openEventDetail(_ event: CalendarEvent) {
+        sheetPresenter?(.eventDetail(EventDetailContext(event: event)))
+    }
+
+    func confirmUpdate(for event: CalendarEvent, patch: EventPatch) {
+        guard patch.hasChanges else { return }
+        sheetPresenter?(.confirmation(ConfirmationContext(
+            operation: .modify,
+            title: "Update Event?",
+            message: "Review before changing this existing calendar event.",
+            before: event,
+            afterDraft: nil,
+            patch: patch,
+            targetEventID: event.id,
+            recurrenceScope: event.isRecurring ? .thisEvent : nil
+        )))
+    }
+
     func openManualCreate(reason: String = "Create the event manually.") {
-        let start = calendar.date(byAdding: .hour, value: 1, to: Date()) ?? Date().addingTimeInterval(3600)
+        let start = calendar.date(byAdding: .hour, value: 1, to: now()) ?? now().addingTimeInterval(3600)
         sheetPresenter?(.manualEventForm(ManualEventContext(reason: reason, draft: EventDraft(title: "", startDate: start, endDate: start.addingTimeInterval(3600), calendarID: selectedCalendar?.id, calendarName: selectedCalendar?.title, location: nil, notes: nil))))
     }
 
@@ -211,10 +248,34 @@ final class CommandHomeModel: ObservableObject {
         }
     }
 
-    private func preferredCalendar(from calendars: [CalendarInfo]) -> CalendarInfo? {
+    private func reconcileSelectedCalendar(from calendars: [CalendarInfo]) -> CalendarInfo? {
         let preferredID = dependencies.preferenceSummaryStore.loadDefaultCalendarID()
-        return calendars.first { $0.id == preferredID && $0.allowsContentModifications }
-            ?? calendars.first(where: { $0.allowsContentModifications })
+        let writableCalendars = calendars.filter(\.allowsContentModifications)
+
+        if let preferredID, let preferred = writableCalendars.first(where: { $0.id == preferredID }) {
+            if calendarSelectionNotice?.title == "Default calendar needs attention" {
+                calendarSelectionNotice = nil
+            }
+            return preferred
+        }
+
+        guard let fallback = writableCalendars.first else {
+            selectedCalendar = nil
+            calendarSelectionNotice = CalendarSelectionNotice(
+                title: "No writable calendar",
+                message: "CalPal can read your calendars, but none can accept new or updated events."
+            )
+            return nil
+        }
+
+        if preferredID != nil {
+            dependencies.preferenceSummaryStore.saveDefaultCalendarID(fallback.id)
+            calendarSelectionNotice = CalendarSelectionNotice(
+                title: "Default calendar needs attention",
+                message: "The saved calendar is unavailable or read-only. CalPal is using \(fallback.title) · \(fallback.accountName)."
+            )
+        }
+        return fallback
     }
 
     private func confirmationContext(for event: CalendarEvent, selection: CandidateSelectionContext) -> ConfirmationContext {
@@ -228,6 +289,17 @@ final class CommandHomeModel: ObservableObject {
             targetEventID: event.id,
             recurrenceScope: event.isRecurring ? .thisEvent : nil
         )
+    }
+}
+
+struct CalendarSelectionNotice: Equatable {
+    var title: String
+    var message: String
+}
+
+extension EventPatch {
+    var hasChanges: Bool {
+        title != nil || startDate != nil || endDate != nil || location != nil || notes != nil
     }
 }
 

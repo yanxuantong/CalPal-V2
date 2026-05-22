@@ -4,11 +4,12 @@ struct DailyAgendaPager: View {
     let selectedDay: Date
     let events: [CalendarEvent]
     let state: AgendaLoadingState
+    var onSelectEvent: (CalendarEvent) -> Void = { _ in }
     let onSelectDay: (Date) -> Void
     private let calendar = Calendar.current
 
     var body: some View {
-        VStack(spacing: CalPalTheme.Spacing.md) {
+        VStack(spacing: CalPalTheme.Spacing.sm) {
             WeekStripView(selectedDay: selectedDay, onSelectDay: onSelectDay)
             content
         }
@@ -29,7 +30,7 @@ struct DailyAgendaPager: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         case .loaded:
-            if events.isEmpty { EmptyAgendaView(onManualCreate: {}) } else { DayAgendaTimeline(day: selectedDay, events: events) }
+            if events.isEmpty { EmptyAgendaView(onManualCreate: {}) } else { DayAgendaTimeline(day: selectedDay, events: events, onSelectEvent: onSelectEvent) }
         case .denied(let error), .failed(let error):
             FailureCard(error: error).frame(maxWidth: .infinity, alignment: .top)
         }
@@ -58,7 +59,7 @@ struct WeekStripView: View {
                         }
                         .frame(minWidth: dynamicTypeSize.isAccessibilitySize ? 58 : 42)
                         .padding(.horizontal, CalPalTheme.Spacing.sm)
-                        .padding(.vertical, 10)
+                        .padding(.vertical, dynamicTypeSize.isAccessibilitySize ? 10 : 7)
                         .background(isSelected ? CalPalTheme.Colors.selectedDateBackground : Color.clear, in: Capsule())
                         .foregroundStyle(isSelected ? CalPalTheme.Colors.selectedDateForeground : CalPalTheme.Colors.textPrimary)
                     }
@@ -78,6 +79,7 @@ struct WeekStripView: View {
 struct DayAgendaTimeline: View {
     let day: Date
     let events: [CalendarEvent]
+    var onSelectEvent: (CalendarEvent) -> Void = { _ in }
     var now: Date = Date()
     var calendar: Calendar = .current
 
@@ -85,9 +87,9 @@ struct DayAgendaTimeline: View {
         let sections = AgendaNowPlacement.sections(events: events, selectedDay: day, now: now, calendar: calendar)
         ScrollView {
             VStack(alignment: .leading, spacing: CalPalTheme.Spacing.md) {
-                ForEach(sections.earlier) { event in AgendaEventRow(event: event) }
+                ForEach(sections.earlier) { event in AgendaEventRow(event: event, onSelect: onSelectEvent) }
                 if sections.showsNow { NowIndicator() }
-                ForEach(sections.upcoming) { event in AgendaEventRow(event: event) }
+                ForEach(sections.upcoming) { event in AgendaEventRow(event: event, onSelect: onSelectEvent) }
             }
             .padding(.vertical, CalPalTheme.Spacing.sm)
             .padding(.bottom, CalPalTheme.Spacing.orb + CalPalTheme.Spacing.xl)
@@ -116,37 +118,42 @@ enum AgendaNowPlacement {
 
 struct AgendaEventRow: View {
     let event: CalendarEvent
+    var onSelect: (CalendarEvent) -> Void = { _ in }
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
-        HStack(alignment: .top, spacing: CalPalTheme.Spacing.md) {
-            if !dynamicTypeSize.isAccessibilitySize { timeView.frame(width: 58, alignment: .leading) }
-            HStack(spacing: CalPalTheme.Spacing.md) {
-                RoundedRectangle(cornerRadius: 2, style: .continuous)
-                    .fill(CalPalTheme.Colors.eventAccent(hex: event.calendarColorHex, fallbackID: event.calendarID))
-                    .frame(width: 4)
-                VStack(alignment: .leading, spacing: 5) {
-                    if dynamicTypeSize.isAccessibilitySize { timeView }
-                    Text(event.title)
-                        .font(.headline)
-                        .foregroundStyle(CalPalTheme.Colors.textPrimary)
-                    Text("\(event.calendarName) · \(event.formattedRange)")
-                        .font(.caption)
-                        .foregroundStyle(CalPalTheme.Colors.textSecondary)
-                    if let location = event.location, !location.isEmpty {
-                        Label(location, systemImage: "location")
+        Button { onSelect(event) } label: {
+            HStack(alignment: .top, spacing: CalPalTheme.Spacing.md) {
+                if !dynamicTypeSize.isAccessibilitySize { timeView.frame(width: 58, alignment: .leading) }
+                HStack(spacing: CalPalTheme.Spacing.md) {
+                    RoundedRectangle(cornerRadius: 2, style: .continuous)
+                        .fill(CalPalTheme.Colors.eventAccent(hex: event.calendarColorHex, fallbackID: event.calendarID))
+                        .frame(width: 4)
+                    VStack(alignment: .leading, spacing: 5) {
+                        if dynamicTypeSize.isAccessibilitySize { timeView }
+                        Text(event.title)
+                            .font(.headline)
+                            .foregroundStyle(CalPalTheme.Colors.textPrimary)
+                        Text("\(event.calendarName) · \(event.formattedRange)")
                             .font(.caption)
                             .foregroundStyle(CalPalTheme.Colors.textSecondary)
+                        if let location = event.location, !location.isEmpty {
+                            Label(location, systemImage: "location")
+                                .font(.caption)
+                                .foregroundStyle(CalPalTheme.Colors.textSecondary)
+                        }
                     }
+                    .padding(.vertical, CalPalTheme.Spacing.md)
+                    .padding(.trailing, CalPalTheme.Spacing.md)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .padding(.vertical, CalPalTheme.Spacing.md)
-                .padding(.trailing, CalPalTheme.Spacing.md)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .elevatedCard()
             }
-            .elevatedCard()
         }
+        .buttonStyle(.plain)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilitySummary)
+        .accessibilityHint("Opens event details and update options")
     }
 
     private var timeView: some View {

@@ -62,3 +62,9 @@ struct EventQuery: Equatable, Codable, Hashable {
     var titleHint: String?
     var boundedDays: Int = 14
 }
+
+enum CalendarDeepLink {
+    static func appleCalendarURL(for date: Date) -> URL? {
+        URL(string: "calshow:\(date.timeIntervalSinceReferenceDate)")
+    }
+}

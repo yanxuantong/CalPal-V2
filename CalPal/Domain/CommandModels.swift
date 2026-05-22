@@ -35,6 +35,7 @@ struct CommandResultViewState: Identifiable, Equatable {
     var message: String
     var event: CalendarEvent?
     var actionTitle: String?
+    var actionURL: URL? = nil
 }
 
 struct ErrorPresentation: Identifiable, Equatable {

@@ -18,10 +18,10 @@ xcodebuild -project CalPal.xcodeproj -scheme CalPal -configuration Debug -sdk ip
 - Debug simulator build passed on Xcode 26.4.1.
 - Unit tests passed for parser intent extraction, bilingual corpus coverage, mutation policy gating, recurrence-scope confirmation, and local preference storage.
 - Runtime smoke installed and launched the app on an iPhone 17 iOS 26.4.1 simulator; onboarding appears without an early EventKit permission prompt.
-- v0.2 adds tap-to-record voice entry, first-use command hint fade-out, created-result agenda focusing, verified EventKit create persistence, and local timezone preservation for wall-clock phrases.
+- v0.3 adds tap-to-record voice entry, first-use command hint fade-out, created-result agenda focusing, verified EventKit create persistence, Apple Calendar result deep links, event detail update staging, an in-app readiness checklist, expanded parser readiness samples, and local timezone preservation for wall-clock phrases.
 
 ## MVP limitations / follow-ups
 - Foundation Models runtime behavior depends on Apple Intelligence availability on the device; when unavailable, the deterministic local parser is used as the privacy-preserving fallback.
 - Real microphone transcription still needs device/manual QA with actual calendars and permissions.
-- The app icon is a placeholder asset catalog.
-- “Open in Calendar” result action is present visually but not yet wired to deep-link into Apple Calendar.
+- Apple Calendar opening uses the public `calshow:` date URL and opens the relevant date rather than a guaranteed exact-event detail page.
+- Public App Store release still needs a signed archive upload, TestFlight device sweep, final screenshot review, public privacy-policy URL, and App Store Connect submission. Record those external gates in `AppStore/APP_STORE_PUBLIC_RELEASE_EVIDENCE.md`; `Scripts/verify_public_release_readiness.sh` is expected to fail until the evidence is complete.

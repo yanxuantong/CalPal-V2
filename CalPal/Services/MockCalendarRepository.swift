@@ -2,7 +2,7 @@ import Foundation
 
 final class MockCalendarRepository: CalendarRepositoryProtocol {
     private var events: [CalendarEvent]
-    private var calendars: [CalendarInfo]
+    var calendars: [CalendarInfo]
     private let calendar = Calendar.current
     var authorization: PermissionStatus = .allowed
     private(set) var requestFullAccessCount = 0

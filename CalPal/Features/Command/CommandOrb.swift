@@ -18,12 +18,11 @@ struct CommandOrb: View {
                 orb
                 if isRecording {
                     cancelButton
-                        .offset(x: 84)
+                        .offset(x: 46)
                         .transition(.opacity)
                 }
             }
             .frame(width: Self.touchFieldSize, height: Self.touchFieldSize)
-            .frame(maxWidth: .infinity)
             Text(statusText ?? " ")
                 .font(.caption2)
                 .foregroundStyle(CalPalTheme.Colors.textSecondary)
@@ -93,8 +92,8 @@ struct CommandOrb: View {
         onDoubleTap()
     }
 
-    static let touchFieldSize: CGFloat = 184
-    static let orbDiameter: CGFloat = CalPalTheme.Spacing.orb
+    static let touchFieldSize: CGFloat = 96
+    static let orbDiameter: CGFloat = 60
 
     private var isRecording: Bool { if case .recording = state { return true }; return false }
     private var isProcessing: Bool { state.isProcessing }

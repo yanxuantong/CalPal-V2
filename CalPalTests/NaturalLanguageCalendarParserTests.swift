@@ -65,6 +65,32 @@ final class NaturalLanguageCalendarParserTests: XCTestCase {
             }
         }
     }
+
+    func testV3ReadinessNaturalLanguageSampleSet() throws {
+        let cases: [(text: String, dayOffset: Int, hour: Int, minute: Int, duration: TimeInterval)] = [
+            ("Schedule design review day after tomorrow at 10am for 2 hours", 2, 10, 0, 7200),
+            ("Coffee next Monday at noon", 4, 12, 0, 3600),
+            ("Plan focus block Friday at 2 pm for 90 min", 1, 14, 0, 5400),
+            ("Review launch checklist tomorrow at 11:30", 1, 11, 30, 3600),
+            ("Schedule standup today at 9am for 30 min", 0, 9, 0, 1800),
+            ("后天上午十点复盘", 2, 10, 0, 3600),
+            ("下周一下午三点团队同步", 11, 15, 0, 3600),
+            ("明天中午和 Alex 吃饭", 1, 12, 0, 3600),
+            ("今天晚上八点健身两个小时", 0, 20, 0, 7200),
+            ("周五下午四点半产品评审", 1, 16, 30, 3600)
+        ]
+
+        for item in cases {
+            let parsed = parser.parse(item.text)
+            guard case .create(let draft) = parsed.intent else { return XCTFail("Expected create for \(item.text)") }
+            let expectedDay = try XCTUnwrap(Calendar.current.date(byAdding: .day, value: item.dayOffset, to: Calendar.current.startOfDay(for: now)))
+            XCTAssertTrue(Calendar.current.isDate(draft.startDate, inSameDayAs: expectedDay), item.text)
+            XCTAssertEqual(Calendar.current.component(.hour, from: draft.startDate), item.hour, item.text)
+            XCTAssertEqual(Calendar.current.component(.minute, from: draft.startDate), item.minute, item.text)
+            XCTAssertEqual(draft.endDate.timeIntervalSince(draft.startDate), item.duration, item.text)
+            XCTAssertTrue(parsed.missingFields.isEmpty, item.text)
+        }
+    }
 }
 
 private enum CalendarCommandIntentMatcher {

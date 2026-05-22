@@ -4,6 +4,52 @@ import UIKit
 @testable import CalPal
 
 final class CalendarMutationPolicyTests: XCTestCase {
+    func testDemoRuntimeUsesMockDataAndSkipsBlockingLaunchPrompts() {
+        let runtime = AppRuntimeConfiguration.current(arguments: ["CalPal", AppRuntimeConfiguration.demoLaunchArgument])
+
+        XCTAssertTrue(runtime.skipsOnboarding)
+        XCTAssertTrue(runtime.skipsPermissionRequests)
+        XCTAssertTrue(runtime.preloadsAgenda)
+        XCTAssertEqual(runtime.dependencies.calendarRepository.authorizationStatus(), .allowed)
+        XCTAssertEqual(runtime.dependencies.speechService.authorizationStatus(), .allowed)
+    }
+
+    func testDemoRuntimeSeedsAgendaForLaunchDay() async throws {
+        let runtime = AppRuntimeConfiguration.current(arguments: ["CalPal", AppRuntimeConfiguration.demoLaunchArgument])
+
+        let events = try await runtime.dependencies.calendarRepository.fetchEvents(for: Date())
+
+        XCTAssertFalse(events.isEmpty)
+    }
+
+    func testLiveRuntimeKeepsNormalPermissionFlow() {
+        let runtime = AppRuntimeConfiguration.current(arguments: ["CalPal"])
+
+        XCTAssertFalse(runtime.skipsOnboarding)
+        XCTAssertFalse(runtime.skipsPermissionRequests)
+        XCTAssertFalse(runtime.preloadsAgenda)
+    }
+
+    @MainActor
+    func testDemoAppModelPreloadsAgendaWithoutShowingOnboarding() async {
+        let app = AppModel(
+            runtime: .test(
+                dependencies: .mock(),
+                skipsOnboarding: true,
+                skipsPermissionRequests: true,
+                preloadsAgenda: true
+            ),
+            defaults: UserDefaults(suiteName: UUID().uuidString)!
+        )
+
+        app.presentOnboardingIfNeeded()
+        await app.initializeRequiredPermissionsIfNeeded()
+
+        XCTAssertNil(app.activeSheet)
+        XCTAssertEqual(app.commandHomeModel.agendaState, .loaded)
+        XCTAssertFalse(app.commandHomeModel.events.isEmpty)
+    }
+
     func testHighConfidenceCreateAutoApplies() async {
         let repo = MockCalendarRepository()
         let calendars: [CalendarInfo]
@@ -358,5 +404,149 @@ final class MVPBugFixRegressionTests: XCTestCase {
         return UIGraphicsImageRenderer(size: size).image { _ in
             controller.view.drawHierarchy(in: controller.view.bounds, afterScreenUpdates: true)
         }
+    }
+}
+
+@MainActor
+final class V2UsabilityRegressionTests: XCTestCase {
+    func testTodayActionUsesInjectedClockAndReloadsAgenda() async throws {
+        let today = PreviewFixtures.now
+        let repo = MockCalendarRepository(now: today)
+        let deps = DependencyContainer(
+            calendarRepository: repo,
+            commandPipeline: CalendarCommandPipeline(parser: NaturalLanguageCalendarParser(now: { today }), policy: CalendarMutationPolicy(now: { today }), repository: repo),
+            speechService: MockSpeechService(),
+            modelProvider: MockModelProvider(),
+            preferenceSummaryStore: InMemoryPreferenceSummaryStore(),
+            capabilityService: DefaultCapabilityService(calendarRepository: repo, speechService: MockSpeechService(), modelProvider: MockModelProvider())
+        )
+        let tomorrow = try XCTUnwrap(Calendar.current.date(byAdding: .day, value: 1, to: today))
+        let model = CommandHomeModel(dependencies: deps, selectedDay: tomorrow, now: { today })
+
+        model.selectToday()
+        try await Task.sleep(nanoseconds: 120_000_000)
+
+        XCTAssertTrue(Calendar.current.isDate(model.selectedDay, inSameDayAs: today))
+        XCTAssertEqual(model.agendaState, .loaded)
+        XCTAssertFalse(model.events.isEmpty)
+    }
+
+    func testDefaultCalendarSelectionPersistsAndReloadKeepsCheckmark() async throws {
+        let repo = MockCalendarRepository()
+        let prefs = InMemoryPreferenceSummaryStore()
+        let deps = DependencyContainer(
+            calendarRepository: repo,
+            commandPipeline: CalendarCommandPipeline(parser: NaturalLanguageCalendarParser(now: { PreviewFixtures.now }), policy: CalendarMutationPolicy(now: { PreviewFixtures.now }, preferredCalendarID: { prefs.loadDefaultCalendarID() }), repository: repo),
+            speechService: MockSpeechService(),
+            modelProvider: MockModelProvider(),
+            preferenceSummaryStore: prefs,
+            capabilityService: DefaultCapabilityService(calendarRepository: repo, speechService: MockSpeechService(), modelProvider: MockModelProvider())
+        )
+        let model = CommandHomeModel(dependencies: deps, selectedDay: PreviewFixtures.now)
+        await model.loadAgenda()
+        let personal = try XCTUnwrap(model.calendars.first { $0.id == "personal" })
+
+        model.selectCalendar(personal)
+        XCTAssertEqual(model.selectedCalendar?.id, "personal")
+        XCTAssertEqual(prefs.loadDefaultCalendarID(), "personal")
+
+        await model.loadAgenda()
+        XCTAssertEqual(model.selectedCalendar?.id, "personal")
+    }
+
+    func testInvalidSavedDefaultFallsBackAndCommunicatesRecovery() async throws {
+        let repo = MockCalendarRepository()
+        repo.calendars = [
+            CalendarInfo(id: "old", title: "Old", accountName: "iCloud", allowsContentModifications: false, colorHex: nil),
+            CalendarInfo(id: "work", title: "Work Calendar", accountName: "iCloud", allowsContentModifications: true, colorHex: "#0A84FF")
+        ]
+        let prefs = InMemoryPreferenceSummaryStore()
+        prefs.saveDefaultCalendarID("old")
+        let deps = DependencyContainer(
+            calendarRepository: repo,
+            commandPipeline: CalendarCommandPipeline(parser: NaturalLanguageCalendarParser(now: { PreviewFixtures.now }), policy: CalendarMutationPolicy(now: { PreviewFixtures.now }, preferredCalendarID: { prefs.loadDefaultCalendarID() }), repository: repo),
+            speechService: MockSpeechService(),
+            modelProvider: MockModelProvider(),
+            preferenceSummaryStore: prefs,
+            capabilityService: DefaultCapabilityService(calendarRepository: repo, speechService: MockSpeechService(), modelProvider: MockModelProvider())
+        )
+        let model = CommandHomeModel(dependencies: deps, selectedDay: PreviewFixtures.now)
+
+        await model.loadAgenda()
+
+        XCTAssertEqual(model.selectedCalendar?.id, "work")
+        XCTAssertEqual(prefs.loadDefaultCalendarID(), "work")
+        XCTAssertEqual(model.calendarSelectionNotice?.title, "Default calendar needs attention")
+    }
+
+    func testEventTapPresentsDetailAndUpdateUsesModifyConfirmation() throws {
+        let model = CommandHomeModel(dependencies: .mock(), selectedDay: PreviewFixtures.now)
+        let event = PreviewFixtures.workEvent
+        var presented: AppSheet?
+        model.sheetPresenter = { presented = $0 }
+
+        model.openEventDetail(event)
+        guard case .eventDetail(let detail)? = presented else { return XCTFail("Expected event detail sheet") }
+        XCTAssertEqual(detail.event.id, event.id)
+
+        let patch = EventPatch(title: "Updated Alex 1:1", startDate: nil, endDate: nil, location: nil, notes: nil)
+        model.confirmUpdate(for: event, patch: patch)
+        guard case .confirmation(let confirmation)? = presented else { return XCTFail("Expected modify confirmation") }
+        XCTAssertEqual(confirmation.operation, .modify)
+        XCTAssertEqual(confirmation.targetEventID, event.id)
+        XCTAssertEqual(confirmation.patch, patch)
+        XCTAssertNil(confirmation.afterDraft)
+    }
+
+    func testCalendarResultsCarryAppleCalendarDeepLink() async throws {
+        let repo = MockCalendarRepository()
+        let pipeline = CalendarCommandPipeline(
+            parser: NaturalLanguageCalendarParser(now: { PreviewFixtures.now }),
+            policy: CalendarMutationPolicy(now: { PreviewFixtures.now }),
+            repository: repo
+        )
+
+        let output = await pipeline.process(text: "Standup tomorrow at 9am")
+
+        guard case .result(let result) = output else { return XCTFail("Expected successful create result") }
+        let url = try XCTUnwrap(result.actionURL)
+        XCTAssertEqual(result.actionTitle, "Open in Calendar")
+        XCTAssertEqual(url.scheme, "calshow")
+        XCTAssertTrue(url.absoluteString.contains(String(result.event!.startDate.timeIntervalSinceReferenceDate)))
+    }
+
+    func testReadinessChecklistSeparatesAutomatedAndManualReleaseGates() {
+        let calendar = CalendarInfo(id: "work", title: "Work Calendar", accountName: "iCloud", allowsContentModifications: true, colorHex: "#0A84FF")
+        let readyItems = AppStoreReadinessChecklist.items(
+            summary: CapabilitySummary(calendar: .allowed, speech: .allowed, model: .allowed, preferredLocales: ["en-US"], runsOnDevice: true),
+            writableCalendarCount: 1,
+            selectedCalendar: calendar
+        )
+
+        XCTAssertEqual(readyItems.first { $0.id == "calendar-access" }?.state, .ready)
+        XCTAssertEqual(readyItems.first { $0.id == "writable-calendar" }?.state, .ready)
+        XCTAssertEqual(readyItems.first { $0.id == "speech" }?.state, .ready)
+        XCTAssertEqual(readyItems.first { $0.id == "privacy-manifest" }?.state, .ready)
+        XCTAssertEqual(readyItems.first { $0.id == "calendar-open" }?.state, .manualGate)
+        XCTAssertEqual(readyItems.first { $0.id == "store-assets" }?.state, .manualGate)
+
+        let blockedItems = AppStoreReadinessChecklist.items(
+            summary: CapabilitySummary(calendar: .denied, speech: .notDetermined, model: .unavailable, preferredLocales: ["en-US"], runsOnDevice: false),
+            writableCalendarCount: 0,
+            selectedCalendar: nil
+        )
+
+        XCTAssertEqual(blockedItems.first { $0.id == "calendar-access" }?.state, .needsAttention)
+        XCTAssertEqual(blockedItems.first { $0.id == "writable-calendar" }?.state, .needsAttention)
+        XCTAssertEqual(blockedItems.first { $0.id == "speech" }?.state, .manualGate)
+        XCTAssertEqual(blockedItems.first { $0.id == "local-ai" }?.state, .ready)
+        XCTAssertEqual(blockedItems.first { $0.id == "privacy-manifest" }?.state, .ready)
+    }
+
+    func testOpeningTextEntryHidesPersistentHint() {
+        let app = AppModel(dependencies: .mock())
+        XCTAssertTrue(app.commandHomeModel.showsCommandHint)
+        app.openTextEntry()
+        XCTAssertFalse(app.commandHomeModel.showsCommandHint)
     }
 }
