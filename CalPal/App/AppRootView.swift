@@ -45,7 +45,7 @@ struct AppSheetHost: View {
                 appModel.dismissSheet()
                 Task { await homeModel.resolveConfirmation(context, decision: decision) }
             }
-            .presentationDetents([.medium, .large])
+            .presentationDetents([.large])
         case .candidateSelection(let context):
             CandidateSelectionView(context: context) { event in
                 appModel.dismissSheet()
