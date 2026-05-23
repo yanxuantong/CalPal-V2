@@ -104,7 +104,13 @@ final class NaturalLanguageCalendarParser {
         let lower = text.lowercased()
         if lower.contains("30 min") || lower.contains("half hour") || text.contains("半小时") { return 1800 }
         if lower.contains("90 min") || text.contains("一个半小时") { return 5400 }
+        if lower.contains("one hour") || lower.contains("an hour") { return 3600 }
+        if lower.contains("two hours") { return 7200 }
+        if lower.contains("three hours") { return 10800 }
         if let match = lower.firstMatch(pattern: "(?:for\\s*)?(\\d{1,2})\\s*(?:hour|hours|hr|hrs)"), let hours = Double(match[1]) {
+            return hours * 3600
+        }
+        if let match = text.firstMatch(pattern: "(\\d{1,2})\\s*个?\\s*小时"), let hours = Double(match[1]) {
             return hours * 3600
         }
         let chineseHours: [(String, Double)] = [("两小时", 2), ("两个小时", 2), ("二小时", 2), ("三小时", 3), ("三个小时", 3), ("一小时", 1), ("一个小时", 1)]
@@ -140,8 +146,38 @@ final class NaturalLanguageCalendarParser {
         let lower = text.lowercased()
         if lower.contains("alex") || text.contains("Alex") { return lower.contains("meeting") || text.contains("会") ? "Meeting with Alex" : "Alex 1:1" }
         if lower.contains("standup") { return "Standup" }
-        let cleaned = text.replacingOccurrences(of: "我要", with: "").replacingOccurrences(of: "安排", with: "").replacingOccurrences(of: "schedule", with: "", options: .caseInsensitive).trimmingCharacters(in: .whitespacesAndNewlines)
+        let cleaned = sanitizedTitleCandidate(from: text)
         return cleaned.isEmpty ? "New Event" : String(cleaned.prefix(48))
+    }
+
+    private func sanitizedTitleCandidate(from text: String) -> String {
+        var cleaned = text
+        let patterns = [
+            "(?i)\\b(i\\s+want\\s+to|i'd\\s+like\\s+to|would\\s+like\\s+to|please|schedule|create|add|plan|book)\\b",
+            "(?i)\\b(day\\s+after\\s+tomorrow|tomorrow|today|yesterday|tonight|this\\s+evening|this\\s+afternoon|this\\s+morning|next\\s+week)\\b",
+            "(?i)\\b(next\\s+)?(sunday|monday|tuesday|wednesday|thursday|friday|saturday)\\b",
+            "(?i)\\b(at|from|for)\\b",
+            "(?i)\\b\\d{1,2}\\s*(:\\s*\\d{2})?\\s*(am|pm)\\b",
+            "(?i)\\b\\d{1,2}\\s*(:\\s*\\d{2})\\b",
+            "(?i)\\b(one|an|two|three|\\d{1,2})\\s*(hours?|hrs?|minutes?|mins?)\\b",
+            "(我想要在|我想要|我想|我要|请帮我|帮我|创建|新增|安排|预约)",
+            "(今天|明天|后天|昨天|今晚|晚上|下午|上午|早上|中午|午夜|下周[一二三四五六日天]?|周[一二三四五六日天]|星期[一二三四五六日天])",
+            "\\d{1,2}\\s*[:：]\\s*\\d{2}",
+            "\\d{1,2}\\s*点\\s*(钟|半)?",
+            "(一|一个|两|两个|二|三|三个|\\d{1,2})\\s*个?\\s*小时",
+            "做\\s*$"
+        ]
+        for pattern in patterns {
+            cleaned = cleaned.replacingRegex(pattern, with: " ")
+        }
+        cleaned = cleaned
+            .replacingOccurrences(of: "，", with: " ")
+            .replacingOccurrences(of: ",", with: " ")
+            .replacingOccurrences(of: "。", with: " ")
+            .replacingOccurrences(of: "：", with: " ")
+            .replacingOccurrences(of: ":", with: " ")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return cleaned.replacingRegex("\\s+", with: " ")
     }
 
     private func extractTitleHint(from text: String) -> String? {
@@ -164,5 +200,11 @@ private extension String {
             let range = match.range(at: i)
             return range.location == NSNotFound ? "" : ns.substring(with: range)
         }
+    }
+
+    func replacingRegex(_ pattern: String, with replacement: String) -> String {
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else { return self }
+        let range = NSRange(location: 0, length: (self as NSString).length)
+        return regex.stringByReplacingMatches(in: self, range: range, withTemplate: replacement)
     }
 }

@@ -25,6 +25,52 @@ final class NaturalLanguageCalendarParserTests: XCTestCase {
         XCTAssertEqual(Calendar.current.component(.hour, from: draft.startDate), 15)
     }
 
+    func testChineseWorkoutTonightAtTenForOneHour() {
+        let parsed = parser.parse("我想要在今天晚上 10 点钟 workout 做一个小时")
+        guard case .create(let draft) = parsed.intent else { return XCTFail("Expected create") }
+        XCTAssertEqual(draft.title, "workout")
+        XCTAssertTrue(Calendar.current.isDate(draft.startDate, inSameDayAs: now))
+        XCTAssertEqual(Calendar.current.component(.hour, from: draft.startDate), 22)
+        XCTAssertEqual(Calendar.current.component(.minute, from: draft.startDate), 0)
+        XCTAssertEqual(draft.endDate.timeIntervalSince(draft.startDate), 3600)
+        XCTAssertTrue(parsed.missingFields.isEmpty)
+    }
+
+    func testEnglishWorkoutTonightAtTenForOneHour() {
+        let parsed = parser.parse("I want to schedule workout today at 10 pm for one hour")
+        guard case .create(let draft) = parsed.intent else { return XCTFail("Expected create") }
+        XCTAssertEqual(draft.title, "workout")
+        XCTAssertTrue(Calendar.current.isDate(draft.startDate, inSameDayAs: now))
+        XCTAssertEqual(Calendar.current.component(.hour, from: draft.startDate), 22)
+        XCTAssertEqual(Calendar.current.component(.minute, from: draft.startDate), 0)
+        XCTAssertEqual(draft.endDate.timeIntervalSince(draft.startDate), 3600)
+        XCTAssertTrue(parsed.missingFields.isEmpty)
+    }
+
+    func testFoundationModelsParserPrefersModelResultOverFallbackDate() async throws {
+        let modelStart = try XCTUnwrap(Calendar.current.date(from: DateComponents(year: 2026, month: 4, day: 30, hour: 21)))
+        let modelEnd = modelStart.addingTimeInterval(3600)
+        let fallback = NaturalLanguageCalendarParser(now: { self.now })
+        let parser = FoundationModelsCalendarParser(
+            fallback: fallback,
+            modelProvider: MockModelProvider(),
+            now: { self.now },
+            commandGenerator: { text, _, _, includesChinese in
+                XCTAssertEqual(text, "I want to schedule workout today at 10 pm for one hour")
+                XCTAssertFalse(includesChinese)
+                let draft = EventDraft(title: "AI workout", startDate: modelStart, endDate: modelEnd, calendarID: nil, calendarName: nil, location: nil, notes: nil)
+                return ParsedCalendarCommand(originalText: text, localeIdentifier: "en-US", intent: .create(draft), confidence: 0.93, missingFields: [], warnings: [])
+            }
+        )
+
+        let parsed = await parser.parseCommand("I want to schedule workout today at 10 pm for one hour")
+        guard case .create(let draft) = parsed.intent else { return XCTFail("Expected create") }
+        XCTAssertEqual(draft.title, "AI workout")
+        XCTAssertEqual(Calendar.current.component(.hour, from: draft.startDate), 21)
+        XCTAssertEqual(parsed.confidence, 0.93)
+        XCTAssertTrue(parsed.missingFields.isEmpty)
+    }
+
     func testCreateWithoutDateNeedsCorrection() {
         let parsed = parser.parse("Schedule a meeting")
         guard case .create = parsed.intent else { return XCTFail("Expected create") }

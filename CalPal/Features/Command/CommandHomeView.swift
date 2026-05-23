@@ -57,16 +57,17 @@ struct CommandHomeView: View {
 
             Spacer(minLength: CalPalTheme.Spacing.sm)
 
-            Button { model.selectToday() } label: {
-                Label("Today", systemImage: model.isSelectedDayToday ? "checkmark.circle.fill" : "calendar")
-                    .labelStyle(.titleAndIcon)
-                    .font(.subheadline.weight(.semibold))
+            if !model.isSelectedDayToday {
+                Button { model.selectToday() } label: {
+                    Label(todayButtonTitle, systemImage: "calendar")
+                        .labelStyle(.titleAndIcon)
+                        .font(.subheadline.weight(.semibold))
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .tint(CalPalTheme.Colors.brandPrimary)
+                .accessibilityLabel(todayButtonAccessibilityLabel)
             }
-            .buttonStyle(.bordered)
-            .controlSize(.small)
-            .tint(model.isSelectedDayToday ? CalPalTheme.Colors.textSecondary : CalPalTheme.Colors.brandPrimary)
-            .disabled(model.isSelectedDayToday)
-            .accessibilityLabel(model.isSelectedDayToday ? "Today, currently selected" : "Return to today")
 
             Button { appModel.openSettings() } label: {
                 Image(systemName: "gearshape")
@@ -78,6 +79,14 @@ struct CommandHomeView: View {
             .accessibilityLabel("Settings")
         }
         .padding(.vertical, CalPalTheme.Spacing.xs)
+    }
+
+    private var todayButtonTitle: String {
+        Locale.current.language.languageCode?.identifier == "zh" ? "回到今天" : "Back to Today"
+    }
+
+    private var todayButtonAccessibilityLabel: String {
+        Locale.current.language.languageCode?.identifier == "zh" ? "回到今天" : "Return to today"
     }
 }
 

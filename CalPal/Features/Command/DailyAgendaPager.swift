@@ -57,12 +57,12 @@ struct WeekStripView: View {
                             Text(day.formatted(.dateTime.weekday(.abbreviated))).font(.caption2)
                             Text(day.formatted(.dateTime.day())).font(.callout.bold())
                         }
-                        .frame(minWidth: dynamicTypeSize.isAccessibilitySize ? 58 : 42)
-                        .padding(.horizontal, CalPalTheme.Spacing.sm)
-                        .padding(.vertical, dynamicTypeSize.isAccessibilitySize ? 10 : 7)
+                        .frame(width: dynamicTypeSize.isAccessibilitySize ? 72 : 54, height: dynamicTypeSize.isAccessibilitySize ? 62 : 48)
                         .background(isSelected ? CalPalTheme.Colors.selectedDateBackground : Color.clear, in: Capsule())
                         .foregroundStyle(isSelected ? CalPalTheme.Colors.selectedDateForeground : CalPalTheme.Colors.textPrimary)
+                        .contentShape(Capsule())
                     }
+                    .buttonStyle(.plain)
                     .accessibilityLabel("\(day.formatted(date: .complete, time: .omitted))\(isSelected ? ", selected" : "")")
                 }
             }
