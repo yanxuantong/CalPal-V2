@@ -7,7 +7,7 @@ OUTPUT_DIR="${OUTPUT_DIR:-$ROOT_DIR/Artifacts/AppStoreScreenshots}"
 SIMULATOR_NAME="${SIMULATOR_NAME:-iPhone 17}"
 DESTINATION="platform=iOS Simulator,name=$SIMULATOR_NAME"
 APP_PATH="$DERIVED_DATA_PATH/Build/Products/Debug-iphonesimulator/CalPal.app"
-BUNDLE_ID="com.calpal.mvp"
+INFO_PLIST="$APP_PATH/Info.plist"
 
 mkdir -p "$OUTPUT_DIR"
 
@@ -42,6 +42,17 @@ fi
 if [[ -z "$UDID" ]]; then
   echo "Could not find an available simulator named '$SIMULATOR_NAME'." >&2
   echo "Set SIMULATOR_NAME or SIMULATOR_UDID to one listed by: xcrun simctl list devices available" >&2
+  exit 1
+fi
+
+if [[ ! -f "$INFO_PLIST" ]]; then
+  echo "Missing built Info.plist at $INFO_PLIST" >&2
+  exit 1
+fi
+
+BUNDLE_ID="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$INFO_PLIST")"
+if [[ -z "$BUNDLE_ID" ]]; then
+  echo "Built app Info.plist did not contain CFBundleIdentifier." >&2
   exit 1
 fi
 

@@ -50,7 +50,7 @@ Only App Store-listed products were used as references:
 
 ## Remaining Production Gaps
 
-- Simulator confirms routing and local flows, but Foundation Models generation still needs a real-device smoke pass before App Store submission because Simulator can lack required system ML resources.
+- Simulator confirms routing and local flows, but Foundation Models generation still needs an owner-run real-device smoke pass before App Store submission because Simulator can lack required system ML resources. Codex verification for this checkpoint remains Simulator-only.
 - App Store Connect metadata, screenshots, privacy URL, signed archive upload, and TestFlight distribution remain manual release gates.
 - The current MVP does not yet compete on task management, widgets, calendar-set filtering, availability links, travel/weather context, or automatic replanning. These are roadmap items, not blockers for a narrow MVP.
 - Localization is only partial. The parser handles English and Chinese examples, but the visible UI is mostly English.
@@ -76,6 +76,8 @@ Only App Store-listed products were used as references:
 - Targeted agenda-failure action suite: 2 passed, 0 failed.
 - Full Simulator XCTest: 60 passed, 0 failed.
 - Simulator build: passed with `CODE_SIGNING_ALLOWED=NO`.
+- Release script syntax checks: passed for screenshot capture and local release gate scripts.
+- Demo screenshot capture: passed on iPhone 17 Simulator using the built app's `CFBundleIdentifier`; generated light and dark screenshots at 1206x2622.
 
 ## Follow-Up Pass - Safety Settings
 
@@ -153,3 +155,8 @@ Only App Store-listed products were used as references:
 - Agenda permission-denied states now route their primary action to iOS Settings, where the user can grant Calendar access.
 - Generic agenda load failures now route secondary recovery to CalPal diagnostics instead of the system Settings app.
 - Regression coverage locks the denied-versus-failed action split so future UI copy cannot silently point to the wrong recovery surface.
+
+## Follow-Up Pass - Release Script Robustness
+
+- Demo screenshot capture now reads the built app's `CFBundleIdentifier` from `Info.plist` instead of relying on a hard-coded bundle id.
+- The local release gate now rejects screenshot artifacts that are readable but too small to be credible App Store review evidence.

@@ -68,6 +68,12 @@ for screenshot in calpal-demo-home.png calpal-demo-home-dark.png; do
     echo "Could not read screenshot dimensions for $path" >&2
     exit 1
   fi
+  width="$(awk '/pixelWidth:/ { print $2 }' <<<"$dimensions")"
+  height="$(awk '/pixelHeight:/ { print $2 }' <<<"$dimensions")"
+  if (( width < 390 || height < 800 )); then
+    echo "Screenshot artifact is too small for App Store review evidence: $path is ${width}x${height}." >&2
+    exit 1
+  fi
 done
 
 echo "CalPal v0.3 local release gate passed."
