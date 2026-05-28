@@ -55,4 +55,5 @@ xcodebuild -project CalPal.xcodeproj -scheme CalPal -configuration Debug -sdk ip
 - Mock calendar writes now enforce writable-calendar selection like EventKit, and no-writable-calendar saves route to diagnostics instead of manual retry.
 - Manual and correction forms now show the target calendar before save, with fallback copy for EventKit's default writable calendar behavior.
 - Draft saves now normalize title, location, and notes in the command pipeline before EventKit writes, and whitespace-only titles are rejected before repository mutation.
+- Modify patches now normalize title, location, and notes before EventKit writes; patches that become empty after normalization fail as `No Changes`.
 - Competitive reference notes and release gaps live in `AppStore/ProductionPolish/2026-05-28/README.md`.

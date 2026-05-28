@@ -59,6 +59,20 @@ struct EventPatch: Equatable, Codable, Hashable {
     var endDate: Date?
     var location: String?
     var notes: String?
+
+    var hasChanges: Bool {
+        title != nil || startDate != nil || endDate != nil || location != nil || notes != nil
+    }
+
+    var normalizedForSave: EventPatch {
+        EventPatch(
+            title: title?.nilIfBlank,
+            startDate: startDate,
+            endDate: endDate,
+            location: location?.nilIfBlank,
+            notes: notes?.nilIfBlank
+        )
+    }
 }
 
 enum RecurrenceChangeScope: String, CaseIterable, Identifiable, Codable, Hashable {

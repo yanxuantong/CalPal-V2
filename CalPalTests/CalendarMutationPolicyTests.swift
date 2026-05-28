@@ -745,6 +745,56 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertEqual(unavailable.secondaryAction, .openSettings)
     }
 
+    func testConfirmationNormalizesPatchBeforeUpdating() async throws {
+        let repo = MockCalendarRepository()
+        let pipeline = CalendarCommandPipeline(
+            parser: NaturalLanguageCalendarParser(now: { PreviewFixtures.now }),
+            policy: CalendarMutationPolicy(now: { PreviewFixtures.now }),
+            repository: repo
+        )
+        let context = ConfirmationContext(
+            operation: .modify,
+            title: "Update Event?",
+            message: "Review before changing this existing calendar event.",
+            before: PreviewFixtures.workEvent,
+            afterDraft: nil,
+            patch: EventPatch(title: "  Updated Alex 1:1  ", startDate: nil, endDate: nil, location: "   ", notes: "  Bring notes  "),
+            targetEventID: "alex",
+            recurrenceScope: nil
+        )
+
+        let output = await pipeline.confirm(context, decision: .confirm(recurrenceScope: nil))
+
+        guard case .result(let result) = output else { return XCTFail("Expected updated result") }
+        XCTAssertEqual(result.event?.title, "Updated Alex 1:1")
+        XCTAssertNil(result.event?.location)
+        XCTAssertEqual(result.event?.notes, "Bring notes")
+    }
+
+    func testConfirmationRejectsPatchWithNoChangesAfterNormalization() async throws {
+        let repo = MockCalendarRepository()
+        let pipeline = CalendarCommandPipeline(
+            parser: NaturalLanguageCalendarParser(now: { PreviewFixtures.now }),
+            policy: CalendarMutationPolicy(now: { PreviewFixtures.now }),
+            repository: repo
+        )
+        let context = ConfirmationContext(
+            operation: .modify,
+            title: "Update Event?",
+            message: "Review before changing this existing calendar event.",
+            before: PreviewFixtures.workEvent,
+            afterDraft: nil,
+            patch: EventPatch(title: "   ", startDate: nil, endDate: nil, location: nil, notes: nil),
+            targetEventID: "alex",
+            recurrenceScope: nil
+        )
+
+        let output = await pipeline.confirm(context, decision: .confirm(recurrenceScope: nil))
+
+        guard case .failure(let error) = output else { return XCTFail("Expected no-changes failure") }
+        XCTAssertEqual(error.title, "No Changes")
+    }
+
     func testSystemSettingsActionUsesIOSSettingsURL() {
         XCTAssertEqual(UnavailableAction.openSystemSettings.title, "Open iOS Settings")
         XCTAssertEqual(UnavailableAction.openSystemSettings.systemImage, "gearshape")

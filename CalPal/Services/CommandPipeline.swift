@@ -78,7 +78,11 @@ final class CalendarCommandPipeline: CalendarCommandPipelineProtocol {
                 return .failure(ErrorPresentation(title: "Missing Draft", message: "The event details were unavailable.", recovery: "Try again."))
             case .modify:
                 guard let id = context.targetEventID, let patch = context.patch else { throw CalendarRepositoryError.eventNotFound }
-                let event = try await repository.updateEvent(id: id, patch: patch, recurrenceScope: recurrenceScope ?? context.recurrenceScope)
+                let normalizedPatch = patch.normalizedForSave
+                guard normalizedPatch.hasChanges else {
+                    return .failure(ErrorPresentation(title: "No Changes", message: "Review the update and change at least one field before saving.", recovery: "Edit the event and try again."))
+                }
+                let event = try await repository.updateEvent(id: id, patch: normalizedPatch, recurrenceScope: recurrenceScope ?? context.recurrenceScope)
                 return .result(CommandResultViewState(title: "Updated Calendar", message: "\(event.title) · \(event.formattedRange)", event: event, actionTitle: "Open in Calendar", actionURL: CalendarDeepLink.appleCalendarURL(for: event.startDate), parseRoute: context.parseRoute))
             case .delete:
                 guard let id = context.targetEventID else { throw CalendarRepositoryError.eventNotFound }

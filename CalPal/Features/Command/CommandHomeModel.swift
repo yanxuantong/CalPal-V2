@@ -363,12 +363,6 @@ struct CalendarSelectionNotice: Equatable {
     var message: String
 }
 
-extension EventPatch {
-    var hasChanges: Bool {
-        title != nil || startDate != nil || endDate != nil || location != nil || notes != nil
-    }
-}
-
 enum AgendaLoadingState: Equatable {
     case idle
     case loading
