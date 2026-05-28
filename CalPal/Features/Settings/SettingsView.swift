@@ -110,6 +110,7 @@ struct SettingsView: View {
 
     private var readinessSection: some View {
         Section(SettingsSection.diagnostics.title) {
+            ReadinessSummaryCard(summary: readinessSummary)
             ForEach(readinessItems) { item in
                 ReadinessChecklistRow(item: item)
             }
@@ -144,6 +145,10 @@ struct SettingsView: View {
         )
     }
 
+    private var readinessSummary: ReadinessChecklistSummary {
+        ReadinessChecklistSummary(items: readinessItems)
+    }
+
     private func scrollToStartSection(with proxy: ScrollViewProxy) {
         guard let startSection, !didScrollToStartSection else { return }
         didScrollToStartSection = true
@@ -152,6 +157,46 @@ struct SettingsView: View {
                 proxy.scrollTo(startSection, anchor: .top)
             }
         }
+    }
+}
+
+struct ReadinessChecklistSummary: Equatable {
+    let readyCount: Int
+    let manualGateCount: Int
+    let needsAttentionCount: Int
+
+    init(items: [ReadinessChecklistItem]) {
+        readyCount = items.filter { $0.state == .ready }.count
+        manualGateCount = items.filter { $0.state == .manualGate }.count
+        needsAttentionCount = items.filter { $0.state == .needsAttention }.count
+    }
+
+    var statusTitle: String {
+        if needsAttentionCount > 0 { return "Readiness needs attention" }
+        if manualGateCount > 0 { return "Manual release gates remain" }
+        return "Automated readiness complete"
+    }
+
+    var detail: String {
+        if needsAttentionCount > 0 {
+            return "Resolve \(needsAttentionCount) item(s) and complete \(manualGateCount) manual gate(s) before App Store submission."
+        }
+        if manualGateCount > 0 {
+            return "\(readyCount) automated item(s) are ready. Complete \(manualGateCount) manual gate(s) during TestFlight or real-device owner review before submission."
+        }
+        return "All listed readiness items are ready for this environment."
+    }
+
+    var iconName: String {
+        if needsAttentionCount > 0 { return "exclamationmark.triangle.fill" }
+        if manualGateCount > 0 { return "iphone.gen3" }
+        return "checkmark.circle.fill"
+    }
+
+    var palette: CalPalTheme.ChipPalette {
+        if needsAttentionCount > 0 { return CalPalTheme.Colors.warningChip }
+        if manualGateCount > 0 { return CalPalTheme.Colors.aiChip }
+        return CalPalTheme.Colors.successChip
     }
 }
 
@@ -262,6 +307,40 @@ enum AppStoreReadinessChecklist {
         case .denied, .restricted:
             return "Foundation Models are restricted in this environment."
         }
+    }
+}
+
+private struct ReadinessSummaryCard: View {
+    let summary: ReadinessChecklistSummary
+
+    var body: some View {
+        HStack(alignment: .top, spacing: CalPalTheme.Spacing.md) {
+            Image(systemName: summary.iconName)
+                .foregroundStyle(summary.palette.foreground)
+                .frame(width: 22)
+            VStack(alignment: .leading, spacing: 6) {
+                Text(summary.statusTitle)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(CalPalTheme.Colors.textPrimary)
+                Text(summary.detail)
+                    .font(.caption)
+                    .foregroundStyle(CalPalTheme.Colors.textSecondary)
+                HStack(spacing: CalPalTheme.Spacing.sm) {
+                    Text("\(summary.readyCount) ready")
+                        .quietChip(CalPalTheme.Colors.successChip)
+                    Text("\(summary.manualGateCount) manual")
+                        .quietChip(CalPalTheme.Colors.aiChip)
+                    if summary.needsAttentionCount > 0 {
+                        Text("\(summary.needsAttentionCount) attention")
+                            .quietChip(CalPalTheme.Colors.warningChip)
+                    }
+                }
+            }
+        }
+        .padding(.vertical, 4)
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("readinessSummary")
+        .accessibilityLabel("\(summary.statusTitle). \(summary.detail)")
     }
 }
 

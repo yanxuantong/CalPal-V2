@@ -70,4 +70,5 @@ xcodebuild -project CalPal.xcodeproj -scheme CalPal -configuration Debug -sdk ip
 - Ambiguous candidate-selection rows now include calendar account/source in visible and accessibility summaries.
 - Agenda event rows now include calendar account/source in visible and accessibility summaries.
 - Event detail quick-update readiness copy now calls out clear intents before confirmation.
+- Settings readiness now includes an aggregate summary that separates automated-ready checks from remaining manual release gates.
 - Competitive reference notes and release gaps live in `AppStore/ProductionPolish/2026-05-28/README.md`.

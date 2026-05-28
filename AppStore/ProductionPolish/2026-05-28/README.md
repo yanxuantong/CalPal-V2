@@ -36,6 +36,7 @@ Only App Store-listed products were used as references:
 - Fixed English weekday semantics so "next Monday" resolves to the next upcoming Monday while Chinese "下周一" continues to mean the following week.
 - Relaxed an over-specific visual luminance assertion so the snapshot test guards against blank/identical light and dark renders without encoding a brittle page-level contrast target.
 - Split Settings readiness into `Foundation Models route` and `Deterministic parser fallback` so real AI availability and fallback safety are visible as separate release signals.
+- Added an aggregate Settings readiness summary so automated-ready items cannot be confused with remaining manual App Store/TestFlight gates.
 - Updated the processing card copy for transcription, model parsing, and EventKit saving states.
 - Replaced the non-functional `Automation Mode` picker with a read-only `Safety Mode` row. CalPal currently has one real safety behavior: Auto Review before modify/delete/recurring/ambiguous mutations.
 - Added a final empty-command guard before the AI/parser pipeline so blank text or empty transcripts cannot trigger accidental calendar work.
@@ -59,13 +60,13 @@ Only App Store-listed products were used as references:
 ## Verification Plan
 
 - Run targeted unit tests for `V2UsabilityRegressionTests` on iOS Simulator.
-- Run each XCTest suite on iOS Simulator. The full suite currently covers 80 tests.
+- Run each XCTest suite on iOS Simulator. The full suite currently covers 81 tests.
 - Build the app for an iOS Simulator destination with code signing disabled.
 - Do not run any real-device install, launch, or debug command in this checkpoint.
 
 ## Verification Results
 
-- `V2UsabilityRegressionTests`: 30 passed, 0 failed.
+- `V2UsabilityRegressionTests`: 31 passed, 0 failed.
 - `PreferenceSummaryStoreTests`: 1 passed, 0 failed.
 - `NaturalLanguageCalendarParserTests`: 13 passed, 0 failed.
 - `CalendarMutationPolicyTests` + `LightDarkUIPresentationTests`: 9 passed, 0 failed.
@@ -80,7 +81,7 @@ Only App Store-listed products were used as references:
 - Targeted manual-form calendar target tests: passed for selected-calendar display state and default-writable fallback copy.
 - Targeted draft normalization tests: passed for trimming title/location/notes before save and rejecting whitespace-only titles before repository writes.
 - Targeted patch normalization tests: passed for trimming update patches before EventKit mutation, preserving clear-field intent, and rejecting no-op patches after normalization.
-- Full Simulator XCTest: 80 passed, 0 failed.
+- Full Simulator XCTest: 81 passed, 0 failed.
 - Simulator build: passed with `CODE_SIGNING_ALLOWED=NO`.
 - Release script syntax checks: passed for screenshot capture and local release gate scripts.
 - Demo screenshot capture: passed on iPhone 17 Simulator using the built app's `CFBundleIdentifier`; generated light and dark screenshots at 1206x2622.
@@ -281,3 +282,9 @@ Only App Store-listed products were used as references:
 - Event detail quick updates now surface clear intents in the inline readiness hint before opening the confirmation sheet.
 - Clearing optional fields such as location or notes is described as part of the review state instead of only appearing later in the confirmation card.
 - Regression coverage locks the clear-count copy for quick-update readiness feedback.
+
+## Follow-Up Pass - Readiness Summary Clarity
+
+- Settings now shows an aggregate readiness summary before the itemized checklist.
+- The summary distinguishes ready automated checks from remaining manual release gates, including TestFlight and owner-run real-device review items.
+- Regression coverage locks the summary counts and copy so green automated checks do not imply App Store submission readiness.

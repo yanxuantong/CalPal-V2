@@ -1073,6 +1073,24 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertEqual(blockedItems.first { $0.id == "privacy-manifest" }?.state, .ready)
     }
 
+    func testReadinessSummarySeparatesManualGatesFromReadyItems() {
+        let calendar = CalendarInfo(id: "work", title: "Work Calendar", accountName: "iCloud", allowsContentModifications: true, colorHex: "#0A84FF")
+        let items = AppStoreReadinessChecklist.items(
+            summary: CapabilitySummary(calendar: .allowed, speech: .allowed, model: .allowed, preferredLocales: ["en-US"], runsOnDevice: true),
+            writableCalendarCount: 1,
+            selectedCalendar: calendar
+        )
+
+        let summary = ReadinessChecklistSummary(items: items)
+
+        XCTAssertEqual(summary.readyCount, 6)
+        XCTAssertEqual(summary.manualGateCount, 2)
+        XCTAssertEqual(summary.needsAttentionCount, 0)
+        XCTAssertEqual(summary.statusTitle, "Manual release gates remain")
+        XCTAssertTrue(summary.detail.contains("6 automated item(s) are ready"))
+        XCTAssertTrue(summary.detail.contains("2 manual gate(s)"))
+    }
+
     func testFoundationModelsNotReadyIsManualGateWhileFallbackStaysReady() {
         let items = AppStoreReadinessChecklist.items(
             summary: CapabilitySummary(calendar: .allowed, speech: .allowed, model: .notDetermined, preferredLocales: ["en-US"], runsOnDevice: false),
