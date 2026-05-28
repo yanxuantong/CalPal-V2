@@ -24,6 +24,10 @@ struct CalendarEvent: Identifiable, Equatable, Codable, Hashable {
     var notes: String?
     var isRecurring: Bool
     var calendarColorHex: String? = nil
+
+    var calendarAccountSummary: String {
+        "\(calendarName) · \(accountName)"
+    }
 }
 
 struct EventDraft: Identifiable, Equatable, Codable, Hashable {

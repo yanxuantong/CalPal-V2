@@ -110,12 +110,6 @@ private struct CandidateEventRow: View {
     }
 }
 
-extension CalendarEvent {
-    var calendarAccountSummary: String {
-        "\(calendarName) · \(accountName)"
-    }
-}
-
 #Preview("Candidate Selection") {
     CandidateSelectionView(
         context: CandidateSelectionContext(

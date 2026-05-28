@@ -192,7 +192,7 @@ struct AgendaEventRow: View {
                         Text(event.title)
                             .font(.headline)
                             .foregroundStyle(CalPalTheme.Colors.textPrimary)
-                        Text("\(event.calendarName) · \(event.formattedRange)")
+                        Text(event.agendaRowSubtitle)
                             .font(.caption)
                             .foregroundStyle(CalPalTheme.Colors.textSecondary)
                         if let location = event.location, !location.isEmpty {
@@ -222,10 +222,16 @@ struct AgendaEventRow: View {
     }
 
     private var accessibilitySummary: String {
-        var parts = [event.title, event.formattedRange, event.calendarName]
+        var parts = [event.title, event.formattedRange, event.calendarAccountSummary]
         if event.isRecurring { parts.append("Repeating") }
         if let location = event.location, !location.isEmpty { parts.append(location) }
         return parts.joined(separator: ", ")
+    }
+}
+
+extension CalendarEvent {
+    var agendaRowSubtitle: String {
+        "\(calendarAccountSummary) · \(formattedRange)"
     }
 }
 

@@ -1035,6 +1035,13 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertEqual(event.calendarAccountSummary, "Work Calendar · iCloud")
     }
 
+    func testAgendaEventRowSubtitleIncludesCalendarAccount() {
+        let event = PreviewFixtures.workEvent
+
+        XCTAssertTrue(event.agendaRowSubtitle.contains("Work Calendar · iCloud"))
+        XCTAssertTrue(event.agendaRowSubtitle.contains(event.formattedRange))
+    }
+
     func testReadinessChecklistSeparatesAutomatedAndManualReleaseGates() {
         let calendar = CalendarInfo(id: "work", title: "Work Calendar", accountName: "iCloud", allowsContentModifications: true, colorHex: "#0A84FF")
         let readyItems = AppStoreReadinessChecklist.items(
