@@ -58,20 +58,20 @@ Only App Store-listed products were used as references:
 ## Verification Plan
 
 - Run targeted unit tests for `V2UsabilityRegressionTests` on iOS Simulator.
-- Run each XCTest suite on iOS Simulator. The full suite currently covers 49 tests.
+- Run each XCTest suite on iOS Simulator. The full suite currently covers 51 tests.
 - Build the app for an iOS Simulator destination with code signing disabled.
 - Do not run any real-device install, launch, or debug command in this checkpoint.
 
 ## Verification Results
 
-- `V2UsabilityRegressionTests`: 13 passed, 0 failed.
+- `V2UsabilityRegressionTests`: 15 passed, 0 failed.
 - `PreferenceSummaryStoreTests`: 1 passed, 0 failed.
 - `NaturalLanguageCalendarParserTests`: 13 passed, 0 failed.
 - `CalendarMutationPolicyTests` + `LightDarkUIPresentationTests`: 9 passed, 0 failed.
 - `MVPBugFixRegressionTests`: 9 passed, 0 failed.
 - `VisualSnapshotRenderingTests`: 4 passed, 0 failed.
-- Targeted AI route/usability/snapshot suites: 30 passed, 0 failed.
-- Full Simulator XCTest: 49 passed, 0 failed.
+- Targeted review-route/usability/snapshot suites: 19 passed, 0 failed.
+- Full Simulator XCTest: 51 passed, 0 failed.
 - Simulator build: passed with `CODE_SIGNING_ALLOWED=NO`.
 
 ## Follow-Up Pass - Safety Settings
@@ -91,3 +91,9 @@ Only App Store-listed products were used as references:
 - Parsed commands now carry a structured route: `foundationModelsGenerated`, `foundationModelsUnavailable`, `foundationModelsFailedOver`, `foundationModelsLocaleUnsupported`, or `deterministicFallback`.
 - Auto-applied command results annotate the success card with the route used, so a fallback result is no longer visually indistinguishable from a successful Apple Intelligence generation.
 - Regression tests now prove the injected Foundation Models path is preferred over fallback output, unavailable models are labeled as unavailable fallback, failed model generations are labeled as failed-over fallback, and successful pipeline results retain their parser route.
+
+## Follow-Up Pass - Route Preservation Through Review
+
+- Correction, confirmation, and candidate-selection contexts now retain the parser route from the original command.
+- Confirmation sheets can show the same route badge before destructive or modifying changes are applied, which keeps the user-facing review surface aligned with the final result card.
+- Confirmed modify/delete results preserve the original route instead of losing that evidence after the user approves the change.

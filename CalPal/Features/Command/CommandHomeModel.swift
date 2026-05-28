@@ -201,7 +201,8 @@ final class CommandHomeModel: ObservableObject {
             afterDraft: nil,
             patch: patch,
             targetEventID: event.id,
-            recurrenceScope: event.isRecurring ? .thisEvent : nil
+            recurrenceScope: event.isRecurring ? .thisEvent : nil,
+            parseRoute: nil
         )))
     }
 
@@ -337,7 +338,8 @@ final class CommandHomeModel: ObservableObject {
             afterDraft: nil,
             patch: selection.patch,
             targetEventID: event.id,
-            recurrenceScope: event.isRecurring ? .thisEvent : nil
+            recurrenceScope: event.isRecurring ? .thisEvent : nil,
+            parseRoute: selection.parseRoute
         )
     }
 }

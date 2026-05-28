@@ -9,6 +9,7 @@ struct CorrectionContext: Identifiable, Equatable {
     var draft: EventDraft
     var missingFields: [String]
     var sourceText: String
+    var parseRoute: CalendarParseRoute? = nil
 }
 
 struct ConfirmationContext: Identifiable, Equatable {
@@ -21,6 +22,7 @@ struct ConfirmationContext: Identifiable, Equatable {
     var patch: EventPatch?
     var targetEventID: String?
     var recurrenceScope: RecurrenceChangeScope?
+    var parseRoute: CalendarParseRoute? = nil
     var isDestructive: Bool { operation == .delete }
 }
 
@@ -30,6 +32,7 @@ struct CandidateSelectionContext: Identifiable, Equatable {
     var candidates: [CalendarEvent]
     var patch: EventPatch?
     var sourceText: String
+    var parseRoute: CalendarParseRoute? = nil
 }
 
 struct CalendarChooserContext: Identifiable, Equatable {

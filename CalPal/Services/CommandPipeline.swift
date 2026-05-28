@@ -66,16 +66,18 @@ final class CalendarCommandPipeline: CalendarCommandPipelineProtocol {
         do {
             switch context.operation {
             case .create:
-                if let draft = context.afterDraft { return await apply(draft: draft) }
+                if let draft = context.afterDraft {
+                    return await apply(draft: draft).annotatingResult(parseRoute: context.parseRoute)
+                }
                 return .failure(ErrorPresentation(title: "Missing Draft", message: "The event details were unavailable.", recovery: "Try again."))
             case .modify:
                 guard let id = context.targetEventID, let patch = context.patch else { throw CalendarRepositoryError.eventNotFound }
                 let event = try await repository.updateEvent(id: id, patch: patch, recurrenceScope: recurrenceScope ?? context.recurrenceScope)
-                return .result(CommandResultViewState(title: "Updated Calendar", message: "\(event.title) · \(event.formattedRange)", event: event, actionTitle: "Open in Calendar", actionURL: CalendarDeepLink.appleCalendarURL(for: event.startDate)))
+                return .result(CommandResultViewState(title: "Updated Calendar", message: "\(event.title) · \(event.formattedRange)", event: event, actionTitle: "Open in Calendar", actionURL: CalendarDeepLink.appleCalendarURL(for: event.startDate), parseRoute: context.parseRoute))
             case .delete:
                 guard let id = context.targetEventID else { throw CalendarRepositoryError.eventNotFound }
                 try await repository.deleteEvent(id: id, recurrenceScope: recurrenceScope ?? context.recurrenceScope)
-                return .result(CommandResultViewState(title: "Deleted Event", message: context.before?.title ?? "Calendar event removed", event: nil, actionTitle: nil))
+                return .result(CommandResultViewState(title: "Deleted Event", message: context.before?.title ?? "Calendar event removed", event: nil, actionTitle: nil, parseRoute: context.parseRoute))
             }
         } catch {
             return .failure(ErrorPresentation(title: "Calendar Change Failed", message: error.localizedDescription, recovery: "Re-fetch the agenda and try again."))
@@ -85,6 +87,10 @@ final class CalendarCommandPipeline: CalendarCommandPipelineProtocol {
 
 private extension CalendarCommandPipelineOutput {
     func annotatingResult(parseRoute: CalendarParseRoute) -> CalendarCommandPipelineOutput {
+        annotatingResult(parseRoute: Optional(parseRoute))
+    }
+
+    func annotatingResult(parseRoute: CalendarParseRoute?) -> CalendarCommandPipelineOutput {
         guard case .result(var result) = self else { return self }
         result.parseRoute = parseRoute
         return .result(result)

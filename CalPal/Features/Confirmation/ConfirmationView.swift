@@ -34,6 +34,13 @@ struct ConfirmationView: View {
         VStack(alignment: .leading, spacing: CalPalTheme.Spacing.sm) {
             Label(context.isDestructive ? "Destructive change" : "Review change", systemImage: context.isDestructive ? "exclamationmark.triangle.fill" : "checkmark.seal")
                 .quietChip(context.isDestructive ? CalPalTheme.Colors.destructiveChip : CalPalTheme.Colors.aiChip)
+            if let route = context.parseRoute {
+                Label(route.resultLabel, systemImage: route == .foundationModelsGenerated ? "sparkles" : "cpu")
+                    .font(.caption.weight(.semibold))
+                    .quietChip(route == .foundationModelsGenerated ? CalPalTheme.Colors.aiChip : CalPalTheme.Colors.warningChip)
+                    .accessibilityLabel(route.accessibilityLabel)
+                    .accessibilityIdentifier("confirmationParseRoute")
+            }
             Text(context.message)
                 .font(.callout)
                 .foregroundStyle(CalPalTheme.Colors.textSecondary)

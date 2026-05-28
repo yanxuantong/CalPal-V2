@@ -160,6 +160,9 @@ final class VisualSnapshotRenderingTests: XCTestCase {
         )
         let textEntryDark = render(TextEntryView { _ in }, colorScheme: .dark, size: CGSize(width: 390, height: 520))
         let confirmationLight = render(ConfirmationView(context: PreviewFixtures.deleteConfirmationContext) { _ in }, colorScheme: .light, size: CGSize(width: 390, height: 620))
+        var routedConfirmation = PreviewFixtures.deleteConfirmationContext
+        routedConfirmation.parseRoute = .foundationModelsFailedOver
+        let routedConfirmationLight = render(ConfirmationView(context: routedConfirmation) { _ in }, colorScheme: .light, size: CGSize(width: 390, height: 660))
         let settingsDark = render(SettingsView(startSection: nil).environmentObject(app), colorScheme: .dark, size: CGSize(width: 390, height: 720))
         let unavailableLight = render(
             UnavailableView(context: UnavailableContext(title: "Speech Unavailable", message: "Text entry and manual create remain available.", primaryAction: .openTextEntry, secondaryAction: .openManualCreate)) { _ in },
@@ -171,6 +174,7 @@ final class VisualSnapshotRenderingTests: XCTestCase {
         assertSnapshot(homeDark, size: CGSize(width: 390, height: 844))
         assertSnapshot(textEntryDark, size: CGSize(width: 390, height: 520))
         assertSnapshot(confirmationLight, size: CGSize(width: 390, height: 620))
+        assertSnapshot(routedConfirmationLight, size: CGSize(width: 390, height: 660))
         assertSnapshot(settingsDark, size: CGSize(width: 390, height: 720))
         assertSnapshot(unavailableLight, size: CGSize(width: 390, height: 520))
         XCTAssertGreaterThan(abs(averageLuminance(homeLight) - averageLuminance(homeDark)), 0.02)
@@ -523,6 +527,41 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertEqual(url.scheme, "calshow")
         XCTAssertTrue(url.absoluteString.contains(String(result.event!.startDate.timeIntervalSinceReferenceDate)))
         XCTAssertEqual(result.parseRoute, .deterministicFallback)
+    }
+
+    func testConfirmationResultPreservesParserRoute() async throws {
+        let repo = MockCalendarRepository()
+        let pipeline = CalendarCommandPipeline(
+            parser: NaturalLanguageCalendarParser(now: { PreviewFixtures.now }),
+            policy: CalendarMutationPolicy(now: { PreviewFixtures.now }),
+            repository: repo
+        )
+
+        let output = await pipeline.process(text: "delete Alex today")
+        guard case .confirmation(let context) = output else { return XCTFail("Expected confirmation") }
+        XCTAssertEqual(context.parseRoute, .deterministicFallback)
+
+        let result = await pipeline.confirm(context, decision: .confirm(recurrenceScope: .thisEvent))
+        guard case .result(let state) = result else { return XCTFail("Expected delete result") }
+        XCTAssertEqual(state.parseRoute, .deterministicFallback)
+    }
+
+    func testCandidateSelectionPreservesParserRouteIntoConfirmation() {
+        let model = CommandHomeModel(dependencies: .mock(), selectedDay: PreviewFixtures.now)
+        let context = CandidateSelectionContext(
+            operation: .modify,
+            candidates: [PreviewFixtures.workEvent],
+            patch: EventPatch(title: "Updated Review", startDate: nil, endDate: nil, location: nil, notes: nil),
+            sourceText: "Move review",
+            parseRoute: .foundationModelsGenerated
+        )
+        var presented: AppSheet?
+        model.sheetPresenter = { presented = $0 }
+
+        model.selectCandidate(PreviewFixtures.workEvent, for: context)
+
+        guard case .confirmation(let confirmation)? = presented else { return XCTFail("Expected confirmation") }
+        XCTAssertEqual(confirmation.parseRoute, .foundationModelsGenerated)
     }
 
     func testReadinessChecklistSeparatesAutomatedAndManualReleaseGates() {
