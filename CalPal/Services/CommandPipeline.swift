@@ -86,8 +86,9 @@ final class CalendarCommandPipeline: CalendarCommandPipelineProtocol {
                 return .result(CommandResultViewState(title: "Updated Calendar", message: event.resultSummary, event: event, actionTitle: "Open in Calendar", actionURL: CalendarDeepLink.appleCalendarURL(for: event.startDate), parseRoute: context.parseRoute))
             case .delete:
                 guard let id = context.targetEventID else { throw CalendarRepositoryError.eventNotFound }
-                try await repository.deleteEvent(id: id, recurrenceScope: recurrenceScope ?? context.recurrenceScope)
-                return .result(CommandResultViewState(title: "Deleted Event", message: context.before?.title ?? "Calendar event removed", event: nil, actionTitle: nil, parseRoute: context.parseRoute))
+                let effectiveScope = recurrenceScope ?? context.recurrenceScope
+                try await repository.deleteEvent(id: id, recurrenceScope: effectiveScope)
+                return .result(CommandResultViewState(title: "Deleted Event", message: context.before?.deletionResultSummary(recurrenceScope: effectiveScope) ?? "Calendar event removed", event: nil, actionTitle: nil, parseRoute: context.parseRoute))
             }
         } catch CalendarRepositoryError.accessDenied {
             return .unavailable(UnavailableContext(title: "Calendar Access Needed", message: "Allow full calendar access before changing existing Apple Calendar events.", primaryAction: .openSystemSettings, secondaryAction: .openSettings))
@@ -119,6 +120,11 @@ extension CalendarEvent {
 
     var resultSummary: String {
         "\(title) · \(formattedRange) · \(calendarName) · \(accountName)"
+    }
+
+    func deletionResultSummary(recurrenceScope: RecurrenceChangeScope?) -> String {
+        guard isRecurring, let recurrenceScope else { return resultSummary }
+        return "\(resultSummary) · \(recurrenceScope.rawValue)"
     }
 }
 

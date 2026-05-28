@@ -66,4 +66,5 @@ xcodebuild -project CalPal.xcodeproj -scheme CalPal -configuration Debug -sdk ip
 - Draft target-calendar summaries now include the calendar account/source when known, so pre-save review can distinguish duplicate calendar names.
 - No-match modify/delete correction fallbacks now apply the same preferred writable calendar target as create commands.
 - Create/update success result cards now include the saved event calendar and account/source.
+- Delete success result cards now include deleted-event time, calendar/account, and recurring scope when available.
 - Competitive reference notes and release gaps live in `AppStore/ProductionPolish/2026-05-28/README.md`.

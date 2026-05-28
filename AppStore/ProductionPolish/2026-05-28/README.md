@@ -257,3 +257,9 @@ Only App Store-listed products were used as references:
 - Create and update success cards now include the saved event's `Calendar · Account` target in the result summary.
 - The post-save confirmation now closes the loop with the same target clarity shown before saving.
 - Regression assertions cover both auto-created events and confirmed updates so result cards cannot silently drop the write target.
+
+## Follow-Up Pass - Destructive Result Context
+
+- Delete success cards now include the deleted event's time, calendar, and account when the pre-delete event context is available.
+- Recurring delete results include the selected recurrence scope, so the final destructive feedback matches the confirmation choice.
+- Regression assertions lock deleted-event result copy for parser-route preservation, calendar/account context, and recurrence-scope context.

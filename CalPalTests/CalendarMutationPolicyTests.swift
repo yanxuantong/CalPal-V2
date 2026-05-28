@@ -938,6 +938,9 @@ final class V2UsabilityRegressionTests: XCTestCase {
         let result = await pipeline.confirm(context, decision: .confirm(recurrenceScope: .thisEvent))
         guard case .result(let state) = result else { return XCTFail("Expected delete result") }
         XCTAssertEqual(state.parseRoute, .deterministicFallback)
+        XCTAssertTrue(state.message.contains("Alex 1:1"))
+        XCTAssertTrue(state.message.contains("Work Calendar · iCloud"))
+        XCTAssertTrue(state.message.contains("This event only"))
     }
 
     func testCorrectedDraftResultPreservesParserRoute() async throws {
