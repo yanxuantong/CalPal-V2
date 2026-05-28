@@ -368,6 +368,7 @@ final class MVPBugFixRegressionTests: XCTestCase {
         let output = await pipeline.process(text: "Standup tomorrow at 9 am")
         guard case .result(let result) = output else { return XCTFail("Expected successful auto-apply result") }
         XCTAssertEqual(result.event?.calendarID, "personal")
+        XCTAssertTrue(result.message.contains("Personal · Google"))
         XCTAssertEqual(repo.createdDrafts.first?.calendarID, "personal")
         XCTAssertEqual(repo.createdDrafts.first?.targetCalendarSummary, "Personal · Google")
     }
@@ -801,6 +802,7 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertEqual(result.event?.title, "Updated Alex 1:1")
         XCTAssertEqual(result.event?.location, "")
         XCTAssertEqual(result.event?.notes, "Bring notes")
+        XCTAssertTrue(result.message.contains("Work Calendar · iCloud"))
     }
 
     func testConfirmationPatchSummaryShowsClearIntentForOptionalFields() {

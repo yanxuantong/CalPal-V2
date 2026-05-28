@@ -251,3 +251,9 @@ Only App Store-listed products were used as references:
 - Modify/delete commands that find no matching event now build their correction fallback draft with the same preferred writable calendar logic as create commands.
 - The `No Matching Event` correction sheet can show the actual `Calendar · Account` target before the user saves a fallback event manually.
 - Regression coverage locks the no-match correction path against losing preferred-calendar and account/source context.
+
+## Follow-Up Pass - Saved Result Target Feedback
+
+- Create and update success cards now include the saved event's `Calendar · Account` target in the result summary.
+- The post-save confirmation now closes the loop with the same target clarity shown before saving.
+- Regression assertions cover both auto-created events and confirmed updates so result cards cannot silently drop the write target.

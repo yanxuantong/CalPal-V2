@@ -55,7 +55,7 @@ final class CalendarCommandPipeline: CalendarCommandPipelineProtocol {
                 throw CalendarRepositoryError.invalidDraft("Title and a valid time range are required.")
             }
             let event = try await repository.createEvent(normalizedDraft)
-            return .result(CommandResultViewState(title: "Added to Calendar", message: "\(event.title) · \(event.formattedRange)", event: event, actionTitle: "Open in Calendar", actionURL: CalendarDeepLink.appleCalendarURL(for: event.startDate)))
+            return .result(CommandResultViewState(title: "Added to Calendar", message: event.resultSummary, event: event, actionTitle: "Open in Calendar", actionURL: CalendarDeepLink.appleCalendarURL(for: event.startDate)))
         } catch CalendarRepositoryError.accessDenied {
             return .unavailable(UnavailableContext(title: "Calendar Access Needed", message: "Allow full calendar access before saving events to Apple Calendar.", primaryAction: .openSystemSettings, secondaryAction: .openSettings))
         } catch CalendarRepositoryError.noWritableCalendar {
@@ -83,7 +83,7 @@ final class CalendarCommandPipeline: CalendarCommandPipelineProtocol {
                     return .failure(ErrorPresentation(title: "No Changes", message: "Review the update and change at least one field before saving.", recovery: "Edit the event and try again."))
                 }
                 let event = try await repository.updateEvent(id: id, patch: normalizedPatch, recurrenceScope: recurrenceScope ?? context.recurrenceScope)
-                return .result(CommandResultViewState(title: "Updated Calendar", message: "\(event.title) · \(event.formattedRange)", event: event, actionTitle: "Open in Calendar", actionURL: CalendarDeepLink.appleCalendarURL(for: event.startDate), parseRoute: context.parseRoute))
+                return .result(CommandResultViewState(title: "Updated Calendar", message: event.resultSummary, event: event, actionTitle: "Open in Calendar", actionURL: CalendarDeepLink.appleCalendarURL(for: event.startDate), parseRoute: context.parseRoute))
             case .delete:
                 guard let id = context.targetEventID else { throw CalendarRepositoryError.eventNotFound }
                 try await repository.deleteEvent(id: id, recurrenceScope: recurrenceScope ?? context.recurrenceScope)
@@ -115,6 +115,10 @@ extension CalendarEvent {
         f.dateStyle = .none
         f.timeStyle = .short
         return "\(f.string(from: startDate))–\(f.string(from: endDate))"
+    }
+
+    var resultSummary: String {
+        "\(title) · \(formattedRange) · \(calendarName) · \(accountName)"
     }
 }
 
