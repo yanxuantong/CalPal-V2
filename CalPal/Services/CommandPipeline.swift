@@ -32,7 +32,7 @@ final class CalendarCommandPipeline: CalendarCommandPipelineProtocol {
         if parsed.requiresCalendarRead {
             let status = await repository.requestFullAccessIfNeeded()
             guard status == .allowed else {
-                return .unavailable(UnavailableContext(title: "Calendar Access Needed", message: "Full access is required to find, modify, or delete existing events.", primaryAction: .openSettings, secondaryAction: .openManualCreate))
+                return .unavailable(UnavailableContext(title: "Calendar Access Needed", message: "Full access is required to find, modify, or delete existing events.", primaryAction: .openSettings, secondaryAction: nil))
             }
         }
         let calendars = (try? await repository.fetchCalendars()) ?? []
@@ -53,7 +53,7 @@ final class CalendarCommandPipeline: CalendarCommandPipelineProtocol {
             let event = try await repository.createEvent(draft)
             return .result(CommandResultViewState(title: "Added to Calendar", message: "\(event.title) · \(event.formattedRange)", event: event, actionTitle: "Open in Calendar", actionURL: CalendarDeepLink.appleCalendarURL(for: event.startDate)))
         } catch CalendarRepositoryError.accessDenied {
-            return .unavailable(UnavailableContext(title: "Calendar Access Needed", message: "Allow full calendar access to read and update existing events. You can still create manually after access is restored.", primaryAction: .openSettings, secondaryAction: .openManualCreate))
+            return .unavailable(UnavailableContext(title: "Calendar Access Needed", message: "Allow full calendar access before saving events to Apple Calendar.", primaryAction: .openSettings, secondaryAction: nil))
         } catch {
             return .failure(ErrorPresentation(title: "Could Not Save Event", message: error.localizedDescription, recovery: "Review the details or create manually."))
         }

@@ -6,6 +6,8 @@ struct DailyAgendaPager: View {
     let state: AgendaLoadingState
     var onSelectEvent: (CalendarEvent) -> Void = { _ in }
     var onManualCreate: () -> Void = {}
+    var onRetryAgenda: () -> Void = {}
+    var onOpenSettings: () -> Void = {}
     let onSelectDay: (Date) -> Void
     private let calendar = Calendar.current
 
@@ -27,13 +29,48 @@ struct DailyAgendaPager: View {
             AgendaLoadingPlaceholderView()
         case .loaded:
             if events.isEmpty { EmptyAgendaView(onManualCreate: onManualCreate) } else { DayAgendaTimeline(day: selectedDay, events: events, onSelectEvent: onSelectEvent) }
-        case .denied(let error), .failed(let error):
-            FailureCard(error: error).frame(maxWidth: .infinity, alignment: .top)
+        case .denied(let error):
+            AgendaFailureCard(error: error, primaryTitle: "Open Settings", primarySystemImage: "gearshape", primaryAction: onOpenSettings, secondaryTitle: "Try Again", secondarySystemImage: "arrow.clockwise", secondaryAction: onRetryAgenda)
+                .frame(maxWidth: .infinity, alignment: .top)
+        case .failed(let error):
+            AgendaFailureCard(error: error, primaryTitle: "Try Again", primarySystemImage: "arrow.clockwise", primaryAction: onRetryAgenda, secondaryTitle: "Open Settings", secondarySystemImage: "gearshape", secondaryAction: onOpenSettings)
+                .frame(maxWidth: .infinity, alignment: .top)
         }
     }
 
     private func moveDay(_ offset: Int) {
         if let next = calendar.date(byAdding: .day, value: offset, to: selectedDay) { onSelectDay(next) }
+    }
+}
+
+struct AgendaFailureCard: View {
+    let error: ErrorPresentation
+    let primaryTitle: String
+    let primarySystemImage: String
+    let primaryAction: () -> Void
+    let secondaryTitle: String
+    let secondarySystemImage: String
+    let secondaryAction: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: CalPalTheme.Spacing.md) {
+            FailureCard(error: error)
+            HStack(spacing: CalPalTheme.Spacing.sm) {
+                Button(action: primaryAction) {
+                    Label(primaryTitle, systemImage: primarySystemImage)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(CalPalTheme.Colors.brandPrimary)
+                .accessibilityIdentifier("agendaFailurePrimaryAction")
+
+                Button(action: secondaryAction) {
+                    Label(secondaryTitle, systemImage: secondarySystemImage)
+                }
+                .buttonStyle(.bordered)
+                .accessibilityIdentifier("agendaFailureSecondaryAction")
+            }
+        }
+        .accessibilityElement(children: .contain)
     }
 }
 

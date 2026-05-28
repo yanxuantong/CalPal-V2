@@ -35,7 +35,7 @@ final class CommandHomeModel: ObservableObject {
         agendaState = .loading
         guard dependencies.calendarRepository.authorizationStatus() == .allowed else {
             guard isCurrentAgendaLoad(requestID) else { return }
-            agendaState = .denied(ErrorPresentation(title: "Connect Calendars", message: "Allow full calendar access when you are ready to show and update your agenda.", recovery: "Use a calendar command or manual create to trigger access."))
+            agendaState = .denied(ErrorPresentation(title: "Connect Calendars", message: "Allow full calendar access when you are ready to show and update your agenda.", recovery: "Open Settings to review Calendar access, then try again."))
             return
         }
         do {
@@ -50,7 +50,7 @@ final class CommandHomeModel: ObservableObject {
             agendaState = .loaded
         } catch CalendarRepositoryError.accessDenied {
             guard isCurrentAgendaLoad(requestID) else { return }
-            agendaState = .denied(ErrorPresentation(title: "Calendar Access Needed", message: "Allow full calendar access to show and update your agenda.", recovery: "You can still use manual fallback once access is available."))
+            agendaState = .denied(ErrorPresentation(title: "Calendar Access Needed", message: "Allow full calendar access to show and update your agenda.", recovery: "Open Settings to review Calendar access, then try again."))
         } catch {
             guard isCurrentAgendaLoad(requestID) else { return }
             agendaState = .failed(ErrorPresentation(title: "Could Not Load Agenda", message: error.localizedDescription, recovery: "Try again later."))

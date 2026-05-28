@@ -201,6 +201,11 @@ final class VisualSnapshotRenderingTests: XCTestCase {
             colorScheme: .light,
             size: CGSize(width: 390, height: 520)
         )
+        let agendaDeniedLight = render(
+            DailyAgendaPager(selectedDay: PreviewFixtures.now, events: [], state: .denied(ErrorPresentation(title: "Calendar Access Needed", message: "Allow full calendar access to show and update your agenda.", recovery: "Open Settings to review Calendar access, then try again.")), onSelectDay: { _ in }),
+            colorScheme: .light,
+            size: CGSize(width: 390, height: 520)
+        )
 
         assertSnapshot(homeLight, size: CGSize(width: 390, height: 844))
         assertSnapshot(homeDark, size: CGSize(width: 390, height: 844))
@@ -212,6 +217,7 @@ final class VisualSnapshotRenderingTests: XCTestCase {
         assertSnapshot(settingsDark, size: CGSize(width: 390, height: 720))
         assertSnapshot(settingsDiagnosticsLight, size: CGSize(width: 390, height: 720))
         assertSnapshot(unavailableLight, size: CGSize(width: 390, height: 520))
+        assertSnapshot(agendaDeniedLight, size: CGSize(width: 390, height: 520))
         XCTAssertGreaterThan(abs(averageLuminance(homeLight) - averageLuminance(homeDark)), 0.02)
     }
 
@@ -562,6 +568,27 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertEqual(url.scheme, "calshow")
         XCTAssertTrue(url.absoluteString.contains(String(result.event!.startDate.timeIntervalSinceReferenceDate)))
         XCTAssertEqual(result.parseRoute, .deterministicFallback)
+    }
+
+    func testCalendarAccessUnavailableDoesNotOfferManualCreateDeadEnd() async throws {
+        let repo = MockCalendarRepository()
+        repo.authorization = .denied
+        let pipeline = CalendarCommandPipeline(
+            parser: NaturalLanguageCalendarParser(now: { PreviewFixtures.now }),
+            policy: CalendarMutationPolicy(now: { PreviewFixtures.now }),
+            repository: repo
+        )
+
+        let modifyOutput = await pipeline.process(text: "delete Alex today")
+        guard case .unavailable(let modifyContext) = modifyOutput else { return XCTFail("Expected unavailable context") }
+        XCTAssertEqual(modifyContext.primaryAction, .openSettings)
+        XCTAssertNil(modifyContext.secondaryAction)
+
+        let draft = EventDraft(title: "Manual draft", startDate: PreviewFixtures.now, endDate: PreviewFixtures.now.addingTimeInterval(3600), calendarID: "work", calendarName: "Work Calendar", location: nil, notes: nil)
+        let createOutput = await pipeline.apply(draft: draft)
+        guard case .unavailable(let createContext) = createOutput else { return XCTFail("Expected create unavailable context") }
+        XCTAssertEqual(createContext.primaryAction, .openSettings)
+        XCTAssertNil(createContext.secondaryAction)
     }
 
     func testConfirmationResultPreservesParserRoute() async throws {

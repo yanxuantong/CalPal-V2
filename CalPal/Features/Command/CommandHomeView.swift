@@ -14,6 +14,10 @@ struct CommandHomeView: View {
                 header
                 DailyAgendaPager(selectedDay: model.selectedDay, events: model.events, state: model.agendaState, onSelectEvent: model.openEventDetail, onManualCreate: {
                     model.openManualCreate(reason: "Create an event from an empty agenda.")
+                }, onRetryAgenda: {
+                    Task { await model.loadAgenda() }
+                }, onOpenSettings: {
+                    appModel.openSettings(.diagnostics)
                 }) { day in
                     model.selectDay(day)
                 }

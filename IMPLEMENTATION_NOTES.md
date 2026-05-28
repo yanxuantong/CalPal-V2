@@ -46,4 +46,5 @@ xcodebuild -project CalPal.xcodeproj -scheme CalPal -configuration Debug -sdk ip
 - Candidate selection now shows source command context, parser route, cancel affordance, recurring signals, and stable row identifiers before a target event can be selected.
 - Confirmation cancellation is handled as a normal no-op in `CommandHomeModel`, so cancel does not call the command pipeline or show a failure card.
 - Manual-create and correction forms now guard against duplicate save taps and keep start/end edits in a valid time range.
+- Calendar-access failures now provide actionable Settings/Try Again recovery and avoid sending users into manual-create flows that cannot save without EventKit access.
 - Competitive reference notes and release gaps live in `AppStore/ProductionPolish/2026-05-28/README.md`.
