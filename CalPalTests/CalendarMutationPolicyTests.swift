@@ -172,6 +172,28 @@ final class VisualSnapshotRenderingTests: XCTestCase {
         var routedConfirmation = PreviewFixtures.deleteConfirmationContext
         routedConfirmation.parseRoute = .foundationModelsFailedOver
         let routedConfirmationLight = render(ConfirmationView(context: routedConfirmation) { _ in }, colorScheme: .light, size: CGSize(width: 390, height: 660))
+        let alternateCandidate = CalendarEvent(
+            id: "candidate-alt",
+            title: "Alex project sync",
+            calendarID: "personal",
+            calendarName: "Personal",
+            accountName: "Google",
+            startDate: PreviewFixtures.now.addingTimeInterval(7200),
+            endDate: PreviewFixtures.now.addingTimeInterval(9000),
+            isAllDay: false,
+            location: nil,
+            notes: nil,
+            isRecurring: false,
+            calendarColorHex: "#30D158"
+        )
+        let candidateContext = CandidateSelectionContext(
+            operation: .modify,
+            candidates: [PreviewFixtures.workEvent, alternateCandidate],
+            patch: EventPatch(title: "Updated Alex time", startDate: nil, endDate: nil, location: nil, notes: nil),
+            sourceText: "Move Alex meeting",
+            parseRoute: .foundationModelsFailedOver
+        )
+        let candidateSelectionLight = render(CandidateSelectionView(context: candidateContext) { _ in }, colorScheme: .light, size: CGSize(width: 390, height: 640))
         let settingsDark = render(SettingsView(startSection: nil).environmentObject(app), colorScheme: .dark, size: CGSize(width: 390, height: 720))
         let settingsDiagnosticsLight = render(SettingsView(startSection: .diagnostics).environmentObject(app), colorScheme: .light, size: CGSize(width: 390, height: 720))
         let unavailableLight = render(
@@ -186,6 +208,7 @@ final class VisualSnapshotRenderingTests: XCTestCase {
         assertSnapshot(correctionLight, size: CGSize(width: 390, height: 640))
         assertSnapshot(confirmationLight, size: CGSize(width: 390, height: 620))
         assertSnapshot(routedConfirmationLight, size: CGSize(width: 390, height: 660))
+        assertSnapshot(candidateSelectionLight, size: CGSize(width: 390, height: 640))
         assertSnapshot(settingsDark, size: CGSize(width: 390, height: 720))
         assertSnapshot(settingsDiagnosticsLight, size: CGSize(width: 390, height: 720))
         assertSnapshot(unavailableLight, size: CGSize(width: 390, height: 520))

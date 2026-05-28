@@ -110,3 +110,9 @@ Only App Store-listed products were used as references:
 - Correction sheets now show the same parser-route badge used by confirmation and result surfaces.
 - Saving a corrected draft preserves the original route on the final result card, so low-confidence or missing-field flows keep Apple Intelligence versus fallback evidence after user repair.
 - Manual event creation remains route-neutral because it starts from explicit user entry rather than a parser result.
+
+## Follow-Up Pass - Candidate Selection Review Context
+
+- Candidate-selection sheets now include the original source command, parser-route badge, and a short explanation that no calendar change has been applied yet.
+- Ambiguous modify/delete choices have operation-specific titles and an explicit Cancel toolbar action.
+- Candidate rows now include stable accessibility identifiers, calendar color accents, recurring-event signals, and combined accessibility labels.
