@@ -80,14 +80,48 @@ struct EventSummaryCard: View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title.uppercased()).font(.caption.bold()).foregroundStyle(CalPalTheme.Colors.textSecondary)
             Text(event.title).font(.headline).foregroundStyle(CalPalTheme.Colors.textPrimary)
-            Text(event.formattedRange).font(.callout).foregroundStyle(CalPalTheme.Colors.textSecondary)
-            Label(event.calendarName, systemImage: "calendar")
-                .font(.caption)
-                .foregroundStyle(CalPalTheme.Colors.textSecondary)
+            ForEach(event.confirmationSummaryDetails) { detail in
+                Label(detail.value, systemImage: detail.systemImage)
+                    .font(.caption)
+                    .foregroundStyle(detail.isWarning ? CalPalTheme.Colors.warning : CalPalTheme.Colors.textSecondary)
+            }
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
         .elevatedCard()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(event.confirmationAccessibilitySummary(prefix: title))
+    }
+}
+
+struct EventSummaryDetail: Identifiable, Equatable {
+    var id: String
+    var value: String
+    var systemImage: String
+    var isWarning: Bool = false
+}
+
+extension CalendarEvent {
+    var confirmationSummaryDetails: [EventSummaryDetail] {
+        var details = [
+            EventSummaryDetail(id: "time", value: formattedRange, systemImage: "clock"),
+            EventSummaryDetail(id: "calendar", value: calendarName, systemImage: "calendar")
+        ]
+        if let location = location?.trimmedConfirmationDetail, !location.isEmpty {
+            details.append(EventSummaryDetail(id: "location", value: location, systemImage: "location"))
+        }
+        if let notes = notes?.trimmedConfirmationDetail, !notes.isEmpty {
+            details.append(EventSummaryDetail(id: "notes", value: notes, systemImage: "note.text"))
+        }
+        if isRecurring {
+            details.append(EventSummaryDetail(id: "recurrence", value: "Repeating event", systemImage: "repeat", isWarning: true))
+        }
+        return details
+    }
+
+    func confirmationAccessibilitySummary(prefix: String) -> String {
+        let details = confirmationSummaryDetails.map(\.value).joined(separator: ", ")
+        return "\(prefix), \(title), \(details)"
     }
 }
 
@@ -172,6 +206,10 @@ extension EventPatch {
 
 private extension String {
     var trimmedConfirmationText: String {
+        trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    var trimmedConfirmationDetail: String {
         trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }

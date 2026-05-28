@@ -822,6 +822,21 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertEqual(patch.confirmationAccessibilitySummary, "After update, Title: Updated Alex 1:1, Location: Clear location, Notes: Bring notes")
     }
 
+    func testConfirmationEventSummaryIncludesLocationNotesAndRecurrence() {
+        var event = PreviewFixtures.workEvent
+        event.location = " Room 3 "
+        event.notes = " Bring agenda "
+        event.isRecurring = true
+
+        let details = event.confirmationSummaryDetails
+
+        XCTAssertEqual(details.map(\.id), ["time", "calendar", "location", "notes", "recurrence"])
+        XCTAssertEqual(details.first { $0.id == "location" }?.value, "Room 3")
+        XCTAssertEqual(details.first { $0.id == "notes" }?.value, "Bring agenda")
+        XCTAssertTrue(details.first { $0.id == "recurrence" }?.isWarning == true)
+        XCTAssertTrue(event.confirmationAccessibilitySummary(prefix: "Before").contains("Repeating event"))
+    }
+
     func testConfirmationRejectsPatchWithNoChangesAfterNormalization() async throws {
         let repo = MockCalendarRepository()
         let pipeline = CalendarCommandPipeline(
