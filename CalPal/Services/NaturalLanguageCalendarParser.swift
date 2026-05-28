@@ -72,7 +72,7 @@ final class NaturalLanguageCalendarParser {
         if lower.contains("today") || text.contains("今天") { return today }
         if lower.contains("yesterday") || text.contains("昨天") { return calendar.date(byAdding: .day, value: -1, to: today) }
         if let weekday = extractWeekday(from: text) {
-            return nextDate(matchingWeekday: weekday, from: today, forceFollowingWeek: lower.contains("next ") || text.contains("下周"))
+            return nextDate(matchingWeekday: weekday, from: today, forceFollowingWeek: lower.contains("next week") || text.contains("下周"))
         }
         if lower.contains("next week") || text.contains("下周") { return calendar.date(byAdding: .day, value: 7, to: today) }
         if lower.contains("100 years") || text.contains("100年") { return calendar.date(byAdding: .year, value: 100, to: today) }

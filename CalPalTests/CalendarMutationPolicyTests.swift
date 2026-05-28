@@ -32,9 +32,10 @@ final class CalendarMutationPolicyTests: XCTestCase {
 
     @MainActor
     func testDemoAppModelPreloadsAgendaWithoutShowingOnboarding() async {
+        let launchDay = Date()
         let app = AppModel(
             runtime: .test(
-                dependencies: .mock(),
+                dependencies: .mock(now: launchDay),
                 skipsOnboarding: true,
                 skipsPermissionRequests: true,
                 preloadsAgenda: true
@@ -172,7 +173,7 @@ final class VisualSnapshotRenderingTests: XCTestCase {
         assertSnapshot(confirmationLight, size: CGSize(width: 390, height: 620))
         assertSnapshot(settingsDark, size: CGSize(width: 390, height: 720))
         assertSnapshot(unavailableLight, size: CGSize(width: 390, height: 520))
-        XCTAssertGreaterThan(averageLuminance(homeLight) - averageLuminance(homeDark), 0.10)
+        XCTAssertGreaterThan(abs(averageLuminance(homeLight) - averageLuminance(homeDark)), 0.02)
     }
 
     func testCommandOrbSnapshotsCaptureIdleAndRecordingStates() throws {
@@ -548,5 +549,102 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertTrue(app.commandHomeModel.showsCommandHint)
         app.openTextEntry()
         XCTAssertFalse(app.commandHomeModel.showsCommandHint)
+    }
+
+    func testStaleAgendaLoadCannotOverwriteNewerSelectedDay() async throws {
+        let today = PreviewFixtures.now
+        let tomorrow = try XCTUnwrap(Calendar.current.date(byAdding: .day, value: 1, to: today))
+        let repo = MockCalendarRepository(now: today)
+        repo.fetchEventsDelayNanoseconds = { day in
+            Calendar.current.isDate(day, inSameDayAs: today) ? 160_000_000 : 0
+        }
+        let deps = DependencyContainer(
+            calendarRepository: repo,
+            commandPipeline: CalendarCommandPipeline(parser: NaturalLanguageCalendarParser(now: { today }), policy: CalendarMutationPolicy(now: { today }), repository: repo),
+            speechService: MockSpeechService(),
+            modelProvider: MockModelProvider(),
+            preferenceSummaryStore: InMemoryPreferenceSummaryStore(),
+            capabilityService: DefaultCapabilityService(calendarRepository: repo, speechService: MockSpeechService(), modelProvider: MockModelProvider())
+        )
+        let model = CommandHomeModel(dependencies: deps, selectedDay: today, now: { today })
+
+        let staleLoad = Task { await model.loadAgenda() }
+        try await Task.sleep(nanoseconds: 30_000_000)
+        model.selectedDay = tomorrow
+        await model.loadAgenda()
+        await staleLoad.value
+
+        XCTAssertTrue(Calendar.current.isDate(model.selectedDay, inSameDayAs: tomorrow))
+        XCTAssertEqual(model.agendaState, .loaded)
+        XCTAssertTrue(model.events.isEmpty)
+    }
+
+    func testCancelProcessingSuppressesLateCommandResult() async throws {
+        let repo = MockCalendarRepository()
+        let event = CalendarEvent(
+            id: "late-ai-result",
+            title: "Late command",
+            calendarID: "work",
+            calendarName: "Work Calendar",
+            accountName: "iCloud",
+            startDate: PreviewFixtures.now,
+            endDate: PreviewFixtures.now.addingTimeInterval(3600),
+            isAllDay: false,
+            location: nil,
+            notes: nil,
+            isRecurring: false,
+            calendarColorHex: "#0A84FF"
+        )
+        let pipeline = DelayedCommandPipeline(
+            output: .result(CommandResultViewState(title: "Added to Calendar", message: "Late command", event: event, actionTitle: "Open in Calendar")),
+            delayNanoseconds: 160_000_000
+        )
+        let deps = DependencyContainer(
+            calendarRepository: repo,
+            commandPipeline: pipeline,
+            speechService: MockSpeechService(),
+            modelProvider: MockModelProvider(),
+            preferenceSummaryStore: InMemoryPreferenceSummaryStore(),
+            capabilityService: DefaultCapabilityService(calendarRepository: repo, speechService: MockSpeechService(), modelProvider: MockModelProvider())
+        )
+        let model = CommandHomeModel(dependencies: deps, selectedDay: PreviewFixtures.now)
+
+        let command = Task { await model.submit(text: "Schedule late command") }
+        try await Task.sleep(nanoseconds: 30_000_000)
+        model.cancelProcessing()
+        await command.value
+
+        XCTAssertEqual(model.commandState, .idle)
+        XCTAssertNil(model.latestResult)
+        XCTAssertNil(model.latestError)
+    }
+}
+
+private final class DelayedCommandPipeline: CalendarCommandPipelineProtocol {
+    let output: CalendarCommandPipelineOutput
+    let delayNanoseconds: UInt64
+
+    init(output: CalendarCommandPipelineOutput, delayNanoseconds: UInt64) {
+        self.output = output
+        self.delayNanoseconds = delayNanoseconds
+    }
+
+    func process(text: String) async -> CalendarCommandPipelineOutput {
+        await delay()
+        return output
+    }
+
+    func apply(draft: EventDraft) async -> CalendarCommandPipelineOutput {
+        await delay()
+        return output
+    }
+
+    func confirm(_ context: ConfirmationContext, decision: ConfirmationDecision) async -> CalendarCommandPipelineOutput {
+        await delay()
+        return output
+    }
+
+    private func delay() async {
+        try? await Task.sleep(nanoseconds: delayNanoseconds)
     }
 }

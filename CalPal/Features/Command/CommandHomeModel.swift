@@ -20,6 +20,8 @@ final class CommandHomeModel: ObservableObject {
     private var resultDismissTask: Task<Void, Never>?
     private var recordingFinishTask: Task<Void, Never>?
     private var activeRecordingID: UUID?
+    private var agendaLoadGeneration = 0
+    private var commandGeneration = 0
 
     init(dependencies: DependencyContainer, selectedDay: Date = Date(), now: @escaping () -> Date = Date.init) {
         self.dependencies = dependencies
@@ -28,22 +30,29 @@ final class CommandHomeModel: ObservableObject {
     }
 
     func loadAgenda() async {
+        let requestID = nextAgendaLoadGeneration()
+        let requestedDay = selectedDay
         agendaState = .loading
         guard dependencies.calendarRepository.authorizationStatus() == .allowed else {
+            guard isCurrentAgendaLoad(requestID) else { return }
             agendaState = .denied(ErrorPresentation(title: "Connect Calendars", message: "Allow full calendar access when you are ready to show and update your agenda.", recovery: "Use a calendar command or manual create to trigger access."))
             return
         }
         do {
             async let calendarsTask = dependencies.calendarRepository.fetchCalendars()
-            async let eventsTask = dependencies.calendarRepository.fetchEvents(for: selectedDay)
+            async let eventsTask = dependencies.calendarRepository.fetchEvents(for: requestedDay)
             let fetchedCalendars = try await calendarsTask
+            let fetchedEvents = try await eventsTask
+            guard isCurrentAgendaLoad(requestID) else { return }
             calendars = fetchedCalendars
             selectedCalendar = reconcileSelectedCalendar(from: fetchedCalendars)
-            events = try await eventsTask
+            events = fetchedEvents
             agendaState = .loaded
         } catch CalendarRepositoryError.accessDenied {
+            guard isCurrentAgendaLoad(requestID) else { return }
             agendaState = .denied(ErrorPresentation(title: "Calendar Access Needed", message: "Allow full calendar access to show and update your agenda.", recovery: "You can still use manual fallback once access is available."))
         } catch {
+            guard isCurrentAgendaLoad(requestID) else { return }
             agendaState = .failed(ErrorPresentation(title: "Could Not Load Agenda", message: error.localizedDescription, recovery: "Try again later."))
         }
     }
@@ -121,19 +130,27 @@ final class CommandHomeModel: ObservableObject {
     }
 
     func submit(text: String) async {
+        let requestID = nextCommandGeneration()
         commandState = .parsing(text)
         let output = await dependencies.commandPipeline.process(text: text)
+        guard isCurrentCommand(requestID) else { return }
         await handle(output)
     }
 
     func applyCorrectedDraft(_ draft: EventDraft) async {
+        let requestID = nextCommandGeneration()
         commandState = .applying
-        await handle(dependencies.commandPipeline.apply(draft: draft))
+        let output = await dependencies.commandPipeline.apply(draft: draft)
+        guard isCurrentCommand(requestID) else { return }
+        await handle(output)
     }
 
     func resolveConfirmation(_ context: ConfirmationContext, decision: ConfirmationDecision) async {
+        let requestID = nextCommandGeneration()
         commandState = .applying
-        await handle(dependencies.commandPipeline.confirm(context, decision: decision))
+        let output = await dependencies.commandPipeline.confirm(context, decision: decision)
+        guard isCurrentCommand(requestID) else { return }
+        await handle(output)
     }
 
     func selectCandidate(_ event: CalendarEvent, for context: CandidateSelectionContext) {
@@ -190,7 +207,10 @@ final class CommandHomeModel: ObservableObject {
         }
     }
 
-    func cancelProcessing() { commandState = .idle }
+    func cancelProcessing() {
+        commandGeneration += 1
+        commandState = .idle
+    }
 
     private func handle(_ output: CalendarCommandPipelineOutput) async {
         switch output {
@@ -246,6 +266,24 @@ final class CommandHomeModel: ObservableObject {
             guard !Task.isCancelled else { return }
             await MainActor.run { self?.latestResult = nil }
         }
+    }
+
+    private func nextAgendaLoadGeneration() -> Int {
+        agendaLoadGeneration += 1
+        return agendaLoadGeneration
+    }
+
+    private func isCurrentAgendaLoad(_ generation: Int) -> Bool {
+        generation == agendaLoadGeneration
+    }
+
+    private func nextCommandGeneration() -> Int {
+        commandGeneration += 1
+        return commandGeneration
+    }
+
+    private func isCurrentCommand(_ generation: Int) -> Bool {
+        generation == commandGeneration
     }
 
     private func reconcileSelectedCalendar(from calendars: [CalendarInfo]) -> CalendarInfo? {

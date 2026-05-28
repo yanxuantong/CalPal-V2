@@ -5,6 +5,7 @@ final class MockCalendarRepository: CalendarRepositoryProtocol {
     var calendars: [CalendarInfo]
     private let calendar = Calendar.current
     var authorization: PermissionStatus = .allowed
+    var fetchEventsDelayNanoseconds: (Date) -> UInt64 = { _ in 0 }
     private(set) var requestFullAccessCount = 0
     private(set) var createdDrafts: [EventDraft] = []
 
@@ -30,6 +31,10 @@ final class MockCalendarRepository: CalendarRepositoryProtocol {
     func fetchCalendars() async throws -> [CalendarInfo] { calendars }
 
     func fetchEvents(for day: Date) async throws -> [CalendarEvent] {
+        let delay = fetchEventsDelayNanoseconds(day)
+        if delay > 0 {
+            try await Task.sleep(nanoseconds: delay)
+        }
         let interval = calendar.dateInterval(of: .day, for: day) ?? DateInterval(start: day, duration: 86400)
         return events.filter { $0.startDate < interval.end && $0.endDate > interval.start }.sorted { $0.startDate < $1.startDate }
     }

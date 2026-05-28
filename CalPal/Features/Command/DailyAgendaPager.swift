@@ -23,12 +23,7 @@ struct DailyAgendaPager: View {
     @ViewBuilder private var content: some View {
         switch state {
         case .idle, .loading:
-            VStack(spacing: 12) {
-                ProgressView()
-                Text("Loading agenda…")
-                    .foregroundStyle(CalPalTheme.Colors.textSecondary)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            AgendaLoadingPlaceholderView()
         case .loaded:
             if events.isEmpty { EmptyAgendaView(onManualCreate: {}) } else { DayAgendaTimeline(day: selectedDay, events: events, onSelectEvent: onSelectEvent) }
         case .denied(let error), .failed(let error):
@@ -64,6 +59,7 @@ struct WeekStripView: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("\(day.formatted(date: .complete, time: .omitted))\(isSelected ? ", selected" : "")")
+                    .accessibilityIdentifier("weekDay_\(day.calPalDateIdentifier)")
                 }
             }
             .padding(.vertical, 2)
@@ -95,6 +91,7 @@ struct DayAgendaTimeline: View {
             .padding(.bottom, CalPalTheme.Spacing.orb + CalPalTheme.Spacing.xl)
         }
         .accessibilityLabel("Agenda for \(day.formatted(date: .complete, time: .omitted))")
+        .accessibilityIdentifier("agendaTimeline")
     }
 }
 
@@ -154,6 +151,7 @@ struct AgendaEventRow: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilitySummary)
         .accessibilityHint("Opens event details and update options")
+        .accessibilityIdentifier("agendaEventRow_\(event.id)")
     }
 
     private var timeView: some View {
@@ -184,6 +182,44 @@ struct NowIndicator: View {
     }
 }
 
+struct AgendaLoadingPlaceholderView: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: CalPalTheme.Spacing.md) {
+            ForEach(0..<3, id: \.self) { index in
+                HStack(alignment: .top, spacing: CalPalTheme.Spacing.md) {
+                    RoundedRectangle(cornerRadius: 4, style: .continuous)
+                        .fill(CalPalTheme.Colors.textSecondary.opacity(0.20))
+                        .frame(width: 54, height: 14)
+                        .padding(.top, CalPalTheme.Spacing.md)
+                    HStack(spacing: CalPalTheme.Spacing.md) {
+                        RoundedRectangle(cornerRadius: 2, style: .continuous)
+                            .fill(CalPalTheme.Colors.textSecondary.opacity(0.18))
+                            .frame(width: 4)
+                        VStack(alignment: .leading, spacing: 8) {
+                            RoundedRectangle(cornerRadius: 4, style: .continuous)
+                                .fill(CalPalTheme.Colors.textSecondary.opacity(0.22))
+                                .frame(width: index == 1 ? 170 : 220, height: 16)
+                            RoundedRectangle(cornerRadius: 4, style: .continuous)
+                                .fill(CalPalTheme.Colors.textSecondary.opacity(0.16))
+                                .frame(width: 130, height: 12)
+                        }
+                        .padding(.vertical, CalPalTheme.Spacing.md)
+                        .padding(.trailing, CalPalTheme.Spacing.md)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .elevatedCard()
+                    .frame(minHeight: 70)
+                }
+            }
+        }
+        .redacted(reason: .placeholder)
+        .accessibilityLabel("Loading agenda")
+        .accessibilityIdentifier("agendaLoadingPlaceholder")
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .padding(.vertical, CalPalTheme.Spacing.sm)
+    }
+}
+
 struct EmptyAgendaView: View {
     let onManualCreate: () -> Void
     var body: some View {
@@ -191,6 +227,20 @@ struct EmptyAgendaView: View {
             .foregroundStyle(CalPalTheme.Colors.textSecondary)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
+}
+
+private extension Date {
+    var calPalDateIdentifier: String {
+        Self.identifierFormatter.string(from: self)
+    }
+
+    static let identifierFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.calendar = .current
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter
+    }()
 }
 
 #Preview("Empty Agenda Light") {

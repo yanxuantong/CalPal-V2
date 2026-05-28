@@ -25,3 +25,13 @@ xcodebuild -project CalPal.xcodeproj -scheme CalPal -configuration Debug -sdk ip
 - Real microphone transcription still needs device/manual QA with actual calendars and permissions.
 - Apple Calendar opening uses the public `calshow:` date URL and opens the relevant date rather than a guaranteed exact-event detail page.
 - Public App Store release still needs a signed archive upload, TestFlight device sweep, final screenshot review, public privacy-policy URL, and App Store Connect submission. Record those external gates in `AppStore/APP_STORE_PUBLIC_RELEASE_EVIDENCE.md`; `Scripts/verify_public_release_readiness.sh` is expected to fail until the evidence is complete.
+
+## Production polish checkpoint - 2026-05-28
+- Verification boundary: this checkpoint is Simulator-only. Do not install, launch, or debug on a physical iPhone while running automated checks for this pass.
+- Agenda loading now uses a generation guard. If a slower `fetchEvents` call returns after the user has selected another day or triggered a newer refresh, the stale response is ignored.
+- Command processing now uses a generation guard. If a parser/model/pipeline result arrives after `cancelProcessing()` or after a newer command starts, the late result is ignored.
+- The agenda loading surface uses a redacted skeleton timeline instead of a bare spinner, matching the final content shape and reducing visual jump.
+- UI automation anchors were added for week day chips, agenda loading, the agenda timeline, and event rows.
+- The Xcode project now includes a shared `CalPal` scheme and explicitly includes the XCTest source files in `CalPalTests`, preventing false-positive zero-test runs.
+- English "next Monday" now resolves to the next upcoming Monday; Chinese "下周一" keeps the following-week behavior covered by the readiness sample set.
+- Competitive reference notes and release gaps live in `AppStore/ProductionPolish/2026-05-28/README.md`.

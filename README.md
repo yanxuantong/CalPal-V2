@@ -15,6 +15,7 @@ This repository currently represents the `v0.3` TestFlight-readiness MVP. The ap
 - Tap-to-record speech entry with double-tap text and manual fallbacks.
 - Result cards can jump the agenda preview to the created event's date or open that date in Apple Calendar.
 - Event detail sheets let users review an existing event and stage a small update before CalPal asks for confirmation.
+- Agenda reloads and command processing ignore stale async results after a newer day selection, command, or cancellation.
 
 ## Project Structure
 
@@ -26,6 +27,7 @@ This repository currently represents the `v0.3` TestFlight-readiness MVP. The ap
 - `CalPalTests/` - Unit tests for parsing, mutation policy, and preference storage.
 - `IMPLEMENTATION_NOTES.md` - MVP assumptions, verification notes, and known follow-ups.
 - `AppStore/` - v0.3 App Store checkpoint materials, including readiness, submission, public-release evidence, and privacy policy drafts.
+- `AppStore/ProductionPolish/` - Competitive references, production-polish notes, and verification boundaries for post-MVP hardening passes.
 
 ## Requirements
 
@@ -102,3 +104,4 @@ bash Scripts/verify_public_release_readiness.sh
 - `--calpal-demo` provides a deterministic screenshot/demo launch path without changing the normal live-calendar launch path.
 - The deterministic parser has an expanded v0.3 sample set for realistic English and Chinese calendar commands.
 - Real microphone transcription still needs manual QA on a physical device with real calendars before public App Store release.
+- The 2026-05-28 production-polish checkpoint is documented in `AppStore/ProductionPolish/2026-05-28/README.md`; its automated verification boundary is iOS Simulator only.

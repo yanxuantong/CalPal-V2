@@ -82,6 +82,9 @@
 		611FC4F72FA46C7F00C267C2 /* PreviewFixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 611FC4AF2FA46C7F00C267C2 /* PreviewFixtures.swift */; };
 		611FC4F82FA46C7F00C267C2 /* CommandHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 611FC4902FA46C7F00C267C2 /* CommandHomeView.swift */; };
 		611FC4F92FA46C7F00C267C2 /* SheetContexts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 611FC4892FA46C7F00C267C2 /* SheetContexts.swift */; };
+		7A1000040000000000000004 /* CalendarMutationPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000001 /* CalendarMutationPolicyTests.swift */; };
+		7A1000050000000000000005 /* NaturalLanguageCalendarParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000020000000000000002 /* NaturalLanguageCalendarParserTests.swift */; };
+		7A1000060000000000000006 /* PreferenceSummaryStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000030000000000000003 /* PreferenceSummaryStoreTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -134,7 +137,10 @@
 		611FC4B12FA46C7F00C267C2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		611FC4B22FA46C7F00C267C2 /* CalPalApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalPalApp.swift; sourceTree = "<group>"; };
 		611FC4FA2FA4744E00C267C2 /* CalPal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CalPal.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		A49119CFD85DB7CA2AF98708 /* CalPalTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; name = CalPalTests.xctest; path = "/Users/xuantongyan/Documents/CalPal-V2/build/Debug-iphoneos/CalPal.app/PlugIns/CalPalTests.xctest"; sourceTree = "<absolute>"; };
+		7A1000010000000000000001 /* CalendarMutationPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarMutationPolicyTests.swift; sourceTree = "<group>"; };
+		7A1000020000000000000002 /* NaturalLanguageCalendarParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NaturalLanguageCalendarParserTests.swift; sourceTree = "<group>"; };
+		7A1000030000000000000003 /* PreferenceSummaryStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferenceSummaryStoreTests.swift; sourceTree = "<group>"; };
+		A49119CFD85DB7CA2AF98708 /* CalPalTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CalPalTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -336,10 +342,21 @@
 			path = CalPal;
 			sourceTree = "<group>";
 		};
+		7A1000070000000000000007 /* CalPalTests */ = {
+			isa = PBXGroup;
+			children = (
+				7A1000010000000000000001 /* CalendarMutationPolicyTests.swift */,
+				7A1000020000000000000002 /* NaturalLanguageCalendarParserTests.swift */,
+				7A1000030000000000000003 /* PreferenceSummaryStoreTests.swift */,
+			);
+			path = CalPalTests;
+			sourceTree = "<group>";
+		};
 		8519E18173E369CD5260BDD1 = {
 			isa = PBXGroup;
 			children = (
 				611FC4B32FA46C7F00C267C2 /* CalPal */,
+				7A1000070000000000000007 /* CalPalTests */,
 				611FC4FA2FA4744E00C267C2 /* CalPal.app */,
 			);
 			sourceTree = "<group>";
@@ -481,6 +498,9 @@
 				611FC4D42FA46C7F00C267C2 /* PreviewFixtures.swift in Sources */,
 				611FC4D52FA46C7F00C267C2 /* CommandHomeView.swift in Sources */,
 				611FC4D62FA46C7F00C267C2 /* SheetContexts.swift in Sources */,
+				7A1000040000000000000004 /* CalendarMutationPolicyTests.swift in Sources */,
+				7A1000050000000000000005 /* NaturalLanguageCalendarParserTests.swift in Sources */,
+				7A1000060000000000000006 /* PreferenceSummaryStoreTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
