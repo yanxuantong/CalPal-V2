@@ -159,6 +159,15 @@ final class VisualSnapshotRenderingTests: XCTestCase {
             size: CGSize(width: 390, height: 844)
         )
         let textEntryDark = render(TextEntryView { _ in }, colorScheme: .dark, size: CGSize(width: 390, height: 520))
+        let correctionContext = CorrectionContext(
+            title: "Review Event Details",
+            message: "Some required details were missing or uncertain.",
+            draft: EventDraft(title: "Launch review", startDate: PreviewFixtures.now, endDate: PreviewFixtures.now.addingTimeInterval(3600), calendarID: "work", calendarName: "Work Calendar", location: nil, notes: nil),
+            missingFields: ["time"],
+            sourceText: "Schedule launch review",
+            parseRoute: .foundationModelsFailedOver
+        )
+        let correctionLight = render(CorrectionView(context: correctionContext) { _ in }, colorScheme: .light, size: CGSize(width: 390, height: 640))
         let confirmationLight = render(ConfirmationView(context: PreviewFixtures.deleteConfirmationContext) { _ in }, colorScheme: .light, size: CGSize(width: 390, height: 620))
         var routedConfirmation = PreviewFixtures.deleteConfirmationContext
         routedConfirmation.parseRoute = .foundationModelsFailedOver
@@ -174,6 +183,7 @@ final class VisualSnapshotRenderingTests: XCTestCase {
         assertSnapshot(homeLight, size: CGSize(width: 390, height: 844))
         assertSnapshot(homeDark, size: CGSize(width: 390, height: 844))
         assertSnapshot(textEntryDark, size: CGSize(width: 390, height: 520))
+        assertSnapshot(correctionLight, size: CGSize(width: 390, height: 640))
         assertSnapshot(confirmationLight, size: CGSize(width: 390, height: 620))
         assertSnapshot(routedConfirmationLight, size: CGSize(width: 390, height: 660))
         assertSnapshot(settingsDark, size: CGSize(width: 390, height: 720))
@@ -546,6 +556,39 @@ final class V2UsabilityRegressionTests: XCTestCase {
         let result = await pipeline.confirm(context, decision: .confirm(recurrenceScope: .thisEvent))
         guard case .result(let state) = result else { return XCTFail("Expected delete result") }
         XCTAssertEqual(state.parseRoute, .deterministicFallback)
+    }
+
+    func testCorrectedDraftResultPreservesParserRoute() async throws {
+        let repo = MockCalendarRepository()
+        let event = CalendarEvent(
+            id: "corrected-event",
+            title: "Corrected event",
+            calendarID: "work",
+            calendarName: "Work Calendar",
+            accountName: "iCloud",
+            startDate: PreviewFixtures.now,
+            endDate: PreviewFixtures.now.addingTimeInterval(3600),
+            isAllDay: false,
+            location: nil,
+            notes: nil,
+            isRecurring: false,
+            calendarColorHex: "#0A84FF"
+        )
+        let pipeline = CountingCommandPipeline(output: .result(CommandResultViewState(title: "Added to Calendar", message: "Corrected event", event: event, actionTitle: "Open in Calendar")))
+        let deps = DependencyContainer(
+            calendarRepository: repo,
+            commandPipeline: pipeline,
+            speechService: MockSpeechService(),
+            modelProvider: MockModelProvider(),
+            preferenceSummaryStore: InMemoryPreferenceSummaryStore(),
+            capabilityService: DefaultCapabilityService(calendarRepository: repo, speechService: MockSpeechService(), modelProvider: MockModelProvider())
+        )
+        let model = CommandHomeModel(dependencies: deps, selectedDay: PreviewFixtures.now)
+        let draft = EventDraft(title: "Corrected event", startDate: PreviewFixtures.now, endDate: PreviewFixtures.now.addingTimeInterval(3600), calendarID: "work", calendarName: "Work Calendar", location: nil, notes: nil)
+
+        await model.applyCorrectedDraft(draft, parseRoute: .foundationModelsFailedOver)
+
+        XCTAssertEqual(model.latestResult?.parseRoute, .foundationModelsFailedOver)
     }
 
     func testCandidateSelectionPreservesParserRouteIntoConfirmation() {

@@ -15,7 +15,7 @@ struct CorrectionView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section { CorrectionSummaryCard(title: context.title, message: context.message, sourceText: context.sourceText) }
+                Section { CorrectionSummaryCard(title: context.title, message: context.message, sourceText: context.sourceText, parseRoute: context.parseRoute) }
                 if !context.missingFields.isEmpty {
                     Section("Needs attention") {
                         MissingFieldChips(fields: context.missingFields)
@@ -43,12 +43,20 @@ struct CorrectionSummaryCard: View {
     let title: String
     let message: String
     let sourceText: String
+    var parseRoute: CalendarParseRoute?
 
     var body: some View {
         VStack(alignment: .leading, spacing: CalPalTheme.Spacing.sm) {
             Label(title, systemImage: "wand.and.stars")
                 .font(.headline)
                 .foregroundStyle(CalPalTheme.Colors.textPrimary)
+            if let parseRoute {
+                Label(parseRoute.resultLabel, systemImage: parseRoute == .foundationModelsGenerated ? "sparkles" : "cpu")
+                    .font(.caption.weight(.semibold))
+                    .quietChip(parseRoute == .foundationModelsGenerated ? CalPalTheme.Colors.aiChip : CalPalTheme.Colors.warningChip)
+                    .accessibilityLabel(parseRoute.accessibilityLabel)
+                    .accessibilityIdentifier("correctionParseRoute")
+            }
             Text(message)
                 .font(.callout)
                 .foregroundStyle(CalPalTheme.Colors.textSecondary)

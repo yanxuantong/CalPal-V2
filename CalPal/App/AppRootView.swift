@@ -37,7 +37,7 @@ struct AppSheetHost: View {
         case .correction(let context):
             CorrectionView(context: context) { draft in
                 appModel.dismissSheet()
-                Task { await homeModel.applyCorrectedDraft(draft) }
+                Task { await homeModel.applyCorrectedDraft(draft, parseRoute: context.parseRoute) }
             }
             .presentationDetents([.large])
         case .confirmation(let context):

@@ -149,10 +149,10 @@ final class CommandHomeModel: ObservableObject {
         await handle(output)
     }
 
-    func applyCorrectedDraft(_ draft: EventDraft) async {
+    func applyCorrectedDraft(_ draft: EventDraft, parseRoute: CalendarParseRoute? = nil) async {
         let requestID = nextCommandGeneration()
         commandState = .applying
-        let output = await dependencies.commandPipeline.apply(draft: draft)
+        let output = await dependencies.commandPipeline.apply(draft: draft).annotatingResult(parseRoute: parseRoute)
         guard isCurrentCommand(requestID) else { return }
         await handle(output)
     }
@@ -341,6 +341,14 @@ final class CommandHomeModel: ObservableObject {
             recurrenceScope: event.isRecurring ? .thisEvent : nil,
             parseRoute: selection.parseRoute
         )
+    }
+}
+
+private extension CalendarCommandPipelineOutput {
+    func annotatingResult(parseRoute: CalendarParseRoute?) -> CalendarCommandPipelineOutput {
+        guard let parseRoute, case .result(var result) = self else { return self }
+        result.parseRoute = parseRoute
+        return .result(result)
     }
 }
 

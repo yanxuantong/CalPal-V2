@@ -58,20 +58,20 @@ Only App Store-listed products were used as references:
 ## Verification Plan
 
 - Run targeted unit tests for `V2UsabilityRegressionTests` on iOS Simulator.
-- Run each XCTest suite on iOS Simulator. The full suite currently covers 52 tests.
+- Run each XCTest suite on iOS Simulator. The full suite currently covers 53 tests.
 - Build the app for an iOS Simulator destination with code signing disabled.
 - Do not run any real-device install, launch, or debug command in this checkpoint.
 
 ## Verification Results
 
-- `V2UsabilityRegressionTests`: 16 passed, 0 failed.
+- `V2UsabilityRegressionTests`: 17 passed, 0 failed.
 - `PreferenceSummaryStoreTests`: 1 passed, 0 failed.
 - `NaturalLanguageCalendarParserTests`: 13 passed, 0 failed.
 - `CalendarMutationPolicyTests` + `LightDarkUIPresentationTests`: 9 passed, 0 failed.
 - `MVPBugFixRegressionTests`: 9 passed, 0 failed.
 - `VisualSnapshotRenderingTests`: 4 passed, 0 failed.
-- Targeted settings-recovery/usability/snapshot suites: 20 passed, 0 failed.
-- Full Simulator XCTest: 52 passed, 0 failed.
+- Targeted correction-route/usability/snapshot suites: 21 passed, 0 failed.
+- Full Simulator XCTest: 53 passed, 0 failed.
 - Simulator build: passed with `CODE_SIGNING_ALLOWED=NO`.
 
 ## Follow-Up Pass - Safety Settings
@@ -104,3 +104,9 @@ Only App Store-listed products were used as references:
 - Error recovery actions that open diagnostics can land on the v0.3 readiness section instead of always starting at the top of Settings.
 - Settings now refreshes capability readiness on appear and exposes an explicit `Refresh Readiness` action for permission or environment changes.
 - Settings sections have stable accessibility identifiers so UI automation can target diagnostics, safety, calendar selection, and local preferences.
+
+## Follow-Up Pass - Correction Route Preservation
+
+- Correction sheets now show the same parser-route badge used by confirmation and result surfaces.
+- Saving a corrected draft preserves the original route on the final result card, so low-confidence or missing-field flows keep Apple Intelligence versus fallback evidence after user repair.
+- Manual event creation remains route-neutral because it starts from explicit user entry rather than a parser result.
