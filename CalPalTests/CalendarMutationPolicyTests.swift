@@ -164,6 +164,7 @@ final class VisualSnapshotRenderingTests: XCTestCase {
         routedConfirmation.parseRoute = .foundationModelsFailedOver
         let routedConfirmationLight = render(ConfirmationView(context: routedConfirmation) { _ in }, colorScheme: .light, size: CGSize(width: 390, height: 660))
         let settingsDark = render(SettingsView(startSection: nil).environmentObject(app), colorScheme: .dark, size: CGSize(width: 390, height: 720))
+        let settingsDiagnosticsLight = render(SettingsView(startSection: .diagnostics).environmentObject(app), colorScheme: .light, size: CGSize(width: 390, height: 720))
         let unavailableLight = render(
             UnavailableView(context: UnavailableContext(title: "Speech Unavailable", message: "Text entry and manual create remain available.", primaryAction: .openTextEntry, secondaryAction: .openManualCreate)) { _ in },
             colorScheme: .light,
@@ -176,6 +177,7 @@ final class VisualSnapshotRenderingTests: XCTestCase {
         assertSnapshot(confirmationLight, size: CGSize(width: 390, height: 620))
         assertSnapshot(routedConfirmationLight, size: CGSize(width: 390, height: 660))
         assertSnapshot(settingsDark, size: CGSize(width: 390, height: 720))
+        assertSnapshot(settingsDiagnosticsLight, size: CGSize(width: 390, height: 720))
         assertSnapshot(unavailableLight, size: CGSize(width: 390, height: 520))
         XCTAssertGreaterThan(abs(averageLuminance(homeLight) - averageLuminance(homeDark)), 0.02)
     }
@@ -604,6 +606,14 @@ final class V2UsabilityRegressionTests: XCTestCase {
 
         XCTAssertEqual(items.first { $0.id == "foundation-models" }?.state, .manualGate)
         XCTAssertEqual(items.first { $0.id == "deterministic-parser" }?.state, .ready)
+    }
+
+    func testSettingsSectionDeepLinksMatchRecoveryTargets() {
+        XCTAssertEqual(SettingsSection.diagnostics.title, "v0.3 Readiness")
+        XCTAssertEqual(SettingsSection.diagnostics.accessibilityIdentifier, "settingsSection-diagnostics")
+        XCTAssertEqual(SettingsSection.automation.title, "Safety Mode")
+        XCTAssertEqual(SettingsSection.language.title, "Default Calendar")
+        XCTAssertEqual(SettingsSection.privacy.title, "Local Preferences")
     }
 
     func testOpeningTextEntryHidesPersistentHint() {

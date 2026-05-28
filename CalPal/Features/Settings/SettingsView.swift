@@ -3,96 +3,132 @@ import SwiftUI
 struct SettingsView: View {
     @EnvironmentObject private var appModel: AppModel
     @State private var confirmReset = false
+    @State private var didScrollToStartSection = false
     let startSection: SettingsSection?
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section("Default Calendar") {
-                    if writableCalendars.isEmpty {
-                        Label("No writable calendar available", systemImage: "exclamationmark.triangle")
-                            .foregroundStyle(CalPalTheme.Colors.warning)
-                        Text("Grant Calendar Full Access or enable a writable account to choose a default calendar.")
-                            .font(.caption)
-                            .foregroundStyle(CalPalTheme.Colors.textSecondary)
-                    } else {
-                        ForEach(writableCalendars) { calendar in
-                            Button { appModel.commandHomeModel.selectCalendar(calendar) } label: {
-                                HStack(spacing: CalPalTheme.Spacing.md) {
-                                    Circle()
-                                        .fill(CalPalTheme.Colors.eventAccent(hex: calendar.colorHex, fallbackID: calendar.id))
-                                        .frame(width: 10, height: 10)
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text(calendar.title)
-                                            .foregroundStyle(CalPalTheme.Colors.textPrimary)
-                                        Text(calendar.accountName)
-                                            .font(.caption)
-                                            .foregroundStyle(CalPalTheme.Colors.textSecondary)
-                                    }
-                                    Spacer()
-                                    if appModel.commandHomeModel.selectedCalendar?.id == calendar.id {
-                                        Image(systemName: "checkmark.circle.fill")
-                                            .foregroundStyle(CalPalTheme.Colors.brandPrimary)
-                                            .accessibilityLabel("Selected")
-                                    }
-                                }
+            ScrollViewReader { proxy in
+                Form {
+                    defaultCalendarSection
+                        .id(SettingsSection.language)
+                        .accessibilityIdentifier(SettingsSection.language.accessibilityIdentifier)
+                    safetySection
+                        .id(SettingsSection.automation)
+                        .accessibilityIdentifier(SettingsSection.automation.accessibilityIdentifier)
+                    readinessSection
+                        .id(SettingsSection.diagnostics)
+                        .accessibilityIdentifier(SettingsSection.diagnostics.accessibilityIdentifier)
+                    localPreferencesSection
+                        .id(SettingsSection.privacy)
+                        .accessibilityIdentifier(SettingsSection.privacy.accessibilityIdentifier)
+                }
+                .task {
+                    appModel.refreshCapabilities()
+                    await appModel.commandHomeModel.loadAgenda()
+                    scrollToStartSection(with: proxy)
+                }
+                .onAppear { scrollToStartSection(with: proxy) }
+                .scrollContentBackground(.hidden)
+                .background(CalPalTheme.Colors.backgroundPrimary)
+                .navigationTitle("Settings")
+                .confirmationDialog("Reset local preferences?", isPresented: $confirmReset, titleVisibility: .visible) {
+                    Button("Reset Preferences", role: .destructive) {
+                        appModel.dependencies.preferenceSummaryStore.reset(accountID: nil)
+                        appModel.commandHomeModel.clearDefaultCalendar()
+                    }
+                    Button("Cancel", role: .cancel) {}
+                } message: {
+                    Text("This clears local preferences. Calendar events are not deleted.")
+                }
+            }
+        }
+    }
+
+    private var defaultCalendarSection: some View {
+        Section(SettingsSection.language.title) {
+            if writableCalendars.isEmpty {
+                Label("No writable calendar available", systemImage: "exclamationmark.triangle")
+                    .foregroundStyle(CalPalTheme.Colors.warning)
+                Text("Grant Calendar Full Access or enable a writable account to choose a default calendar.")
+                    .font(.caption)
+                    .foregroundStyle(CalPalTheme.Colors.textSecondary)
+            } else {
+                ForEach(writableCalendars) { calendar in
+                    Button { appModel.commandHomeModel.selectCalendar(calendar) } label: {
+                        HStack(spacing: CalPalTheme.Spacing.md) {
+                            Circle()
+                                .fill(CalPalTheme.Colors.eventAccent(hex: calendar.colorHex, fallbackID: calendar.id))
+                                .frame(width: 10, height: 10)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(calendar.title)
+                                    .foregroundStyle(CalPalTheme.Colors.textPrimary)
+                                Text(calendar.accountName)
+                                    .font(.caption)
+                                    .foregroundStyle(CalPalTheme.Colors.textSecondary)
                             }
-                            .buttonStyle(.plain)
-                            .accessibilityIdentifier("defaultCalendar-\(calendar.id)")
+                            Spacer()
+                            if appModel.commandHomeModel.selectedCalendar?.id == calendar.id {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundStyle(CalPalTheme.Colors.brandPrimary)
+                                    .accessibilityLabel("Selected")
+                            }
                         }
                     }
-
-                    if let notice = appModel.commandHomeModel.calendarSelectionNotice {
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text(notice.title).font(.caption.bold())
-                            Text(notice.message).font(.caption)
-                        }
-                        .foregroundStyle(CalPalTheme.Colors.textSecondary)
-                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("defaultCalendar-\(calendar.id)")
                 }
+            }
 
-                Section("Safety Mode") {
-                    Label {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Auto Review")
-                                .foregroundStyle(CalPalTheme.Colors.textPrimary)
-                            Text("Modify, delete, recurring, and ambiguous changes require confirmation before EventKit is mutated.")
-                                .font(.caption)
-                                .foregroundStyle(CalPalTheme.Colors.textSecondary)
-                        }
-                    } icon: {
-                        Image(systemName: "checkmark.shield.fill")
-                            .foregroundStyle(CalPalTheme.Colors.brandPrimary)
-                    }
-                    .accessibilityIdentifier("safetyModeAutoReview")
+            if let notice = appModel.commandHomeModel.calendarSelectionNotice {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(notice.title).font(.caption.bold())
+                    Text(notice.message).font(.caption)
                 }
+                .foregroundStyle(CalPalTheme.Colors.textSecondary)
+            }
+        }
+    }
 
-                Section("v0.3 Readiness") {
-                    ForEach(readinessItems) { item in
-                        ReadinessChecklistRow(item: item)
-                    }
-                    Text("Manual checks are completed during TestFlight or real-device review. CalPal stays in TestFlight-readiness until those are verified.")
+    private var safetySection: some View {
+        Section(SettingsSection.automation.title) {
+            Label {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Auto Review")
+                        .foregroundStyle(CalPalTheme.Colors.textPrimary)
+                    Text("Modify, delete, recurring, and ambiguous changes require confirmation before EventKit is mutated.")
                         .font(.caption)
                         .foregroundStyle(CalPalTheme.Colors.textSecondary)
                 }
+            } icon: {
+                Image(systemName: "checkmark.shield.fill")
+                    .foregroundStyle(CalPalTheme.Colors.brandPrimary)
+            }
+            .accessibilityIdentifier("safetyModeAutoReview")
+        }
+    }
 
-                Section("Local Preferences") {
-                    Button("Reset Local Preferences", role: .destructive) { confirmReset = true }
-                }
+    private var readinessSection: some View {
+        Section(SettingsSection.diagnostics.title) {
+            ForEach(readinessItems) { item in
+                ReadinessChecklistRow(item: item)
             }
-            .task { await appModel.commandHomeModel.loadAgenda() }
-            .scrollContentBackground(.hidden)
-            .background(CalPalTheme.Colors.backgroundPrimary)
-            .navigationTitle("Settings")
-            .confirmationDialog("Reset local preferences?", isPresented: $confirmReset, titleVisibility: .visible) {
-                Button("Reset Preferences", role: .destructive) {
-                    appModel.dependencies.preferenceSummaryStore.reset(accountID: nil)
-                    appModel.commandHomeModel.clearDefaultCalendar()
-                }
-                Button("Cancel", role: .cancel) {}
-            } message: {
-                Text("This clears local preferences. Calendar events are not deleted.")
+            Button {
+                appModel.refreshCapabilities()
+                Task { await appModel.commandHomeModel.loadAgenda() }
+            } label: {
+                Label("Refresh Readiness", systemImage: "arrow.clockwise")
             }
+            .accessibilityIdentifier("refreshReadiness")
+            Text("Manual checks are completed during TestFlight or real-device review. CalPal stays in TestFlight-readiness until those are verified.")
+                .font(.caption)
+                .foregroundStyle(CalPalTheme.Colors.textSecondary)
+        }
+    }
+
+    private var localPreferencesSection: some View {
+        Section(SettingsSection.privacy.title) {
+            Button("Reset Local Preferences", role: .destructive) { confirmReset = true }
         }
     }
 
@@ -106,6 +142,16 @@ struct SettingsView: View {
             writableCalendarCount: writableCalendars.count,
             selectedCalendar: appModel.commandHomeModel.selectedCalendar
         )
+    }
+
+    private func scrollToStartSection(with proxy: ScrollViewProxy) {
+        guard let startSection, !didScrollToStartSection else { return }
+        didScrollToStartSection = true
+        DispatchQueue.main.async {
+            withAnimation(.easeInOut(duration: 0.25)) {
+                proxy.scrollTo(startSection, anchor: .top)
+            }
+        }
     }
 }
 

@@ -41,4 +41,5 @@ xcodebuild -project CalPal.xcodeproj -scheme CalPal -configuration Debug -sdk ip
 - The empty-agenda surface now includes a real `Create Manually` action that presents the manual event form.
 - Calendar command parses now retain a route label. Auto-applied result cards can show whether Apple Intelligence generated the parse, the deterministic parser handled it directly, or Foundation Models failed/unavailable and CalPal fell back locally.
 - Parser-route labels are preserved through correction, confirmation, candidate selection, and confirmed modify/delete results, so sensitive review flows do not lose AI-vs-fallback evidence.
+- Settings section deep links now honor the requested section, diagnostics/readiness can be refreshed in place, and section identifiers are stable for UI automation.
 - Competitive reference notes and release gaps live in `AppStore/ProductionPolish/2026-05-28/README.md`.

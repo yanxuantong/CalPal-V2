@@ -26,4 +26,21 @@ enum SettingsSection: String, Identifiable, CaseIterable {
     case automation
 
     var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .language:
+            return "Default Calendar"
+        case .automation:
+            return "Safety Mode"
+        case .diagnostics:
+            return "v0.3 Readiness"
+        case .privacy:
+            return "Local Preferences"
+        }
+    }
+
+    var accessibilityIdentifier: String {
+        "settingsSection-\(rawValue)"
+    }
 }

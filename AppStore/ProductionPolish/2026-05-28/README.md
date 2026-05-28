@@ -58,20 +58,20 @@ Only App Store-listed products were used as references:
 ## Verification Plan
 
 - Run targeted unit tests for `V2UsabilityRegressionTests` on iOS Simulator.
-- Run each XCTest suite on iOS Simulator. The full suite currently covers 51 tests.
+- Run each XCTest suite on iOS Simulator. The full suite currently covers 52 tests.
 - Build the app for an iOS Simulator destination with code signing disabled.
 - Do not run any real-device install, launch, or debug command in this checkpoint.
 
 ## Verification Results
 
-- `V2UsabilityRegressionTests`: 15 passed, 0 failed.
+- `V2UsabilityRegressionTests`: 16 passed, 0 failed.
 - `PreferenceSummaryStoreTests`: 1 passed, 0 failed.
 - `NaturalLanguageCalendarParserTests`: 13 passed, 0 failed.
 - `CalendarMutationPolicyTests` + `LightDarkUIPresentationTests`: 9 passed, 0 failed.
 - `MVPBugFixRegressionTests`: 9 passed, 0 failed.
 - `VisualSnapshotRenderingTests`: 4 passed, 0 failed.
-- Targeted review-route/usability/snapshot suites: 19 passed, 0 failed.
-- Full Simulator XCTest: 51 passed, 0 failed.
+- Targeted settings-recovery/usability/snapshot suites: 20 passed, 0 failed.
+- Full Simulator XCTest: 52 passed, 0 failed.
 - Simulator build: passed with `CODE_SIGNING_ALLOWED=NO`.
 
 ## Follow-Up Pass - Safety Settings
@@ -97,3 +97,10 @@ Only App Store-listed products were used as references:
 - Correction, confirmation, and candidate-selection contexts now retain the parser route from the original command.
 - Confirmation sheets can show the same route badge before destructive or modifying changes are applied, which keeps the user-facing review surface aligned with the final result card.
 - Confirmed modify/delete results preserve the original route instead of losing that evidence after the user approves the change.
+
+## Follow-Up Pass - Settings Recovery Deep Links
+
+- `SettingsView(startSection:)` now honors the requested section and scrolls to the relevant Settings area after load.
+- Error recovery actions that open diagnostics can land on the v0.3 readiness section instead of always starting at the top of Settings.
+- Settings now refreshes capability readiness on appear and exposes an explicit `Refresh Readiness` action for permission or environment changes.
+- Settings sections have stable accessibility identifiers so UI automation can target diagnostics, safety, calendar selection, and local preferences.
