@@ -54,6 +54,8 @@ final class CalendarCommandPipeline: CalendarCommandPipelineProtocol {
             return .result(CommandResultViewState(title: "Added to Calendar", message: "\(event.title) · \(event.formattedRange)", event: event, actionTitle: "Open in Calendar", actionURL: CalendarDeepLink.appleCalendarURL(for: event.startDate)))
         } catch CalendarRepositoryError.accessDenied {
             return .unavailable(UnavailableContext(title: "Calendar Access Needed", message: "Allow full calendar access before saving events to Apple Calendar.", primaryAction: .openSystemSettings, secondaryAction: .openSettings))
+        } catch CalendarRepositoryError.noWritableCalendar {
+            return .unavailable(UnavailableContext(title: "Writable Calendar Needed", message: "CalPal could not find a calendar that allows new events.", primaryAction: .openSettings, secondaryAction: .dismiss))
         } catch {
             return .failure(ErrorPresentation(title: "Could Not Save Event", message: error.localizedDescription, recovery: "Review the details or create manually."))
         }

@@ -56,8 +56,8 @@ final class MockCalendarRepository: CalendarRepositoryProtocol {
 
     func createEvent(_ draft: EventDraft) async throws -> CalendarEvent {
         guard authorization == .allowed else { throw CalendarRepositoryError.accessDenied }
+        let calendarInfo = try writableCalendar(preferredID: draft.calendarID)
         createdDrafts.append(draft)
-        guard let calendarInfo = calendars.first(where: { $0.id == (draft.calendarID ?? "work") }) ?? calendars.first(where: { $0.allowsContentModifications }) else { throw CalendarRepositoryError.noWritableCalendar }
         let event = CalendarEvent(id: UUID().uuidString, title: draft.title, calendarID: calendarInfo.id, calendarName: calendarInfo.title, accountName: calendarInfo.accountName, startDate: draft.startDate, endDate: draft.endDate, isAllDay: draft.isAllDay, location: draft.location, notes: draft.notes, isRecurring: false, calendarColorHex: calendarInfo.colorHex)
         events.append(event)
         return event
@@ -77,5 +77,18 @@ final class MockCalendarRepository: CalendarRepositoryProtocol {
     func deleteEvent(id: String, recurrenceScope: RecurrenceChangeScope?) async throws {
         guard authorization == .allowed else { throw CalendarRepositoryError.accessDenied }
         events.removeAll { $0.id == id }
+    }
+
+    private func writableCalendar(preferredID: String?) throws -> CalendarInfo {
+        if let preferredID, let preferred = calendars.first(where: { $0.id == preferredID && $0.allowsContentModifications }) {
+            return preferred
+        }
+        if let work = calendars.first(where: { $0.id == "work" && $0.allowsContentModifications }) {
+            return work
+        }
+        guard let first = calendars.first(where: { $0.allowsContentModifications }) else {
+            throw CalendarRepositoryError.noWritableCalendar
+        }
+        return first
     }
 }

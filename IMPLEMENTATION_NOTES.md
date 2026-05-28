@@ -52,4 +52,5 @@ xcodebuild -project CalPal.xcodeproj -scheme CalPal -configuration Debug -sdk ip
 - Agenda failure actions now distinguish permission denial from generic load failure: denied opens iOS Settings, while non-permission failure opens in-app diagnostics.
 - Release scripts now derive the demo screenshot bundle id from the built app and validate minimum screenshot dimensions.
 - Calendar permission drift during existing-event search or confirmation-time mutation now routes to iOS Settings, with mock repositories enforcing denied access across read and write methods.
+- Mock calendar writes now enforce writable-calendar selection like EventKit, and no-writable-calendar saves route to diagnostics instead of manual retry.
 - Competitive reference notes and release gaps live in `AppStore/ProductionPolish/2026-05-28/README.md`.

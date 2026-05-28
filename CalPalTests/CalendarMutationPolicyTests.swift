@@ -371,6 +371,53 @@ final class MVPBugFixRegressionTests: XCTestCase {
         XCTAssertEqual(repo.createdDrafts.first?.calendarID, "personal")
     }
 
+    func testMockCreateFallsBackWhenPreferredCalendarIsReadOnly() async throws {
+        let repo = MockCalendarRepository()
+        let readOnlyDraft = EventDraft(
+            title: "Family read-only fallback",
+            startDate: PreviewFixtures.now,
+            endDate: PreviewFixtures.now.addingTimeInterval(3600),
+            calendarID: "family",
+            calendarName: "Family",
+            location: nil,
+            notes: nil
+        )
+
+        let event = try await repo.createEvent(readOnlyDraft)
+
+        XCTAssertEqual(event.calendarID, "work")
+        XCTAssertEqual(event.calendarName, "Work Calendar")
+    }
+
+    func testNoWritableCalendarRoutesToDiagnosticsInsteadOfManualRetry() async throws {
+        let repo = MockCalendarRepository()
+        repo.calendars = [
+            CalendarInfo(id: "family", title: "Family", accountName: "iCloud", allowsContentModifications: false, colorHex: "#FF9F0A")
+        ]
+        let pipeline = CalendarCommandPipeline(
+            parser: NaturalLanguageCalendarParser(now: { PreviewFixtures.now }),
+            policy: CalendarMutationPolicy(now: { PreviewFixtures.now }),
+            repository: repo
+        )
+        let draft = EventDraft(
+            title: "Read-only calendar attempt",
+            startDate: PreviewFixtures.now,
+            endDate: PreviewFixtures.now.addingTimeInterval(3600),
+            calendarID: "family",
+            calendarName: "Family",
+            location: nil,
+            notes: nil
+        )
+
+        let output = await pipeline.apply(draft: draft)
+
+        guard case .unavailable(let context) = output else { return XCTFail("Expected unavailable context") }
+        XCTAssertEqual(context.title, "Writable Calendar Needed")
+        XCTAssertEqual(context.primaryAction, .openSettings)
+        XCTAssertEqual(context.secondaryAction, .dismiss)
+        XCTAssertTrue(repo.createdDrafts.isEmpty)
+    }
+
     func testNaturalLanguageParserUsesInjectedCurrentTimezone() throws {
         var losAngelesCalendar = Calendar(identifier: .gregorian)
         let losAngeles = TimeZone(identifier: "America/Los_Angeles")!
