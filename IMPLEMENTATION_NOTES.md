@@ -58,4 +58,5 @@ xcodebuild -project CalPal.xcodeproj -scheme CalPal -configuration Debug -sdk ip
 - Modify patches now normalize title, location, and notes before EventKit writes; blank location/notes are preserved as explicit clear operations, while patches that become empty after normalization fail as `No Changes`.
 - Confirmation review now shows location and notes changes, including explicit clear intents, before update mutations are applied.
 - Event detail quick updates now show inline review readiness and disable review when the edited title is blank.
+- Manual-create and correction forms now show inline save readiness and use the same readiness model to gate their save actions.
 - Competitive reference notes and release gaps live in `AppStore/ProductionPolish/2026-05-28/README.md`.

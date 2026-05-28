@@ -23,6 +23,7 @@ struct ManualEventFormView: View {
                     TargetCalendarRow(summary: draft.targetCalendarSummary)
                     TextField("Location", text: Binding(optional: $draft.location, replacingNilWith: ""))
                     TextField("Notes", text: Binding(optional: $draft.notes, replacingNilWith: ""), axis: .vertical)
+                    DraftSaveReadinessHint(state: saveReadiness)
                 }
             }
             .scrollContentBackground(.hidden)
@@ -32,7 +33,7 @@ struct ManualEventFormView: View {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save Event", action: submit)
-                        .disabled(!draft.hasRequiredFields || isSaving)
+                        .disabled(!saveReadiness.canSave)
                         .accessibilityIdentifier("manualEventSave")
                 }
             }
@@ -40,9 +41,13 @@ struct ManualEventFormView: View {
     }
 
     private func submit() {
-        guard draft.hasRequiredFields, !isSaving else { return }
+        guard saveReadiness.canSave else { return }
         isSaving = true
         onSave(draft)
+    }
+
+    private var saveReadiness: DraftSaveReadiness {
+        DraftSaveReadiness(draft: draft, isSaving: isSaving)
     }
 }
 
@@ -80,5 +85,78 @@ struct ManualEventSummaryCard: View {
                 .foregroundStyle(CalPalTheme.Colors.textSecondary)
         }
         .padding(.vertical, CalPalTheme.Spacing.xs)
+    }
+}
+
+struct DraftSaveReadiness: Equatable {
+    enum Status: Equatable {
+        case missingTitle
+        case invalidTimeRange
+        case saving
+        case ready
+    }
+
+    var status: Status
+
+    init(draft: EventDraft, isSaving: Bool = false) {
+        if isSaving {
+            status = .saving
+        } else if draft.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            status = .missingTitle
+        } else if draft.endDate <= draft.startDate {
+            status = .invalidTimeRange
+        } else {
+            status = .ready
+        }
+    }
+
+    var canSave: Bool {
+        status == .ready
+    }
+
+    var message: String {
+        switch status {
+        case .missingTitle:
+            return "Title is required before saving."
+        case .invalidTimeRange:
+            return "End time must be after the start time."
+        case .saving:
+            return "Saving event..."
+        case .ready:
+            return "Ready to save."
+        }
+    }
+
+    var systemImage: String {
+        switch status {
+        case .missingTitle, .invalidTimeRange:
+            return "exclamationmark.circle.fill"
+        case .saving:
+            return "clock"
+        case .ready:
+            return "checkmark.circle.fill"
+        }
+    }
+
+    var palette: CalPalTheme.ChipPalette {
+        switch status {
+        case .missingTitle, .invalidTimeRange:
+            return CalPalTheme.Colors.warningChip
+        case .saving:
+            return CalPalTheme.Colors.aiChip
+        case .ready:
+            return CalPalTheme.Colors.successChip
+        }
+    }
+}
+
+struct DraftSaveReadinessHint: View {
+    let state: DraftSaveReadiness
+
+    var body: some View {
+        Label(state.message, systemImage: state.systemImage)
+            .font(.caption.weight(.semibold))
+            .quietChip(state.palette)
+            .accessibilityIdentifier("draftSaveReadinessHint")
     }
 }

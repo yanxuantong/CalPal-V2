@@ -1041,6 +1041,37 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertGreaterThan(adjustedEnd, start)
     }
 
+    func testDraftSaveReadinessExplainsBlockedSaveStates() {
+        let start = PreviewFixtures.now
+        let readyDraft = EventDraft(
+            title: "Planning",
+            startDate: start,
+            endDate: start.addingTimeInterval(3600),
+            calendarID: nil,
+            calendarName: nil,
+            location: nil,
+            notes: nil
+        )
+        var missingTitleDraft = readyDraft
+        missingTitleDraft.title = "   "
+        var invalidTimeDraft = readyDraft
+        invalidTimeDraft.endDate = start
+
+        let missingTitle = DraftSaveReadiness(draft: missingTitleDraft)
+        let invalidTime = DraftSaveReadiness(draft: invalidTimeDraft)
+        let saving = DraftSaveReadiness(draft: readyDraft, isSaving: true)
+        let ready = DraftSaveReadiness(draft: readyDraft)
+
+        XCTAssertFalse(missingTitle.canSave)
+        XCTAssertEqual(missingTitle.message, "Title is required before saving.")
+        XCTAssertFalse(invalidTime.canSave)
+        XCTAssertEqual(invalidTime.message, "End time must be after the start time.")
+        XCTAssertFalse(saving.canSave)
+        XCTAssertEqual(saving.message, "Saving event...")
+        XCTAssertTrue(ready.canSave)
+        XCTAssertEqual(ready.message, "Ready to save.")
+    }
+
     func testSettingsSectionDeepLinksMatchRecoveryTargets() {
         XCTAssertEqual(SettingsSection.diagnostics.title, "v0.3 Readiness")
         XCTAssertEqual(SettingsSection.diagnostics.accessibilityIdentifier, "settingsSection-diagnostics")

@@ -28,6 +28,7 @@ struct CorrectionView: View {
                     TargetCalendarRow(summary: draft.targetCalendarSummary)
                     TextField("Location", text: Binding(optional: $draft.location, replacingNilWith: ""))
                     TextField("Notes", text: Binding(optional: $draft.notes, replacingNilWith: ""), axis: .vertical)
+                    DraftSaveReadinessHint(state: saveReadiness)
                 }
             }
             .scrollContentBackground(.hidden)
@@ -37,7 +38,7 @@ struct CorrectionView: View {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save Event", action: submit)
-                        .disabled(!draft.hasRequiredFields || isSaving)
+                        .disabled(!saveReadiness.canSave)
                         .accessibilityIdentifier("correctionSaveEvent")
                 }
             }
@@ -45,9 +46,13 @@ struct CorrectionView: View {
     }
 
     private func submit() {
-        guard draft.hasRequiredFields, !isSaving else { return }
+        guard saveReadiness.canSave else { return }
         isSaving = true
         onSave(draft)
+    }
+
+    private var saveReadiness: DraftSaveReadiness {
+        DraftSaveReadiness(draft: draft, isSaving: isSaving)
     }
 }
 
