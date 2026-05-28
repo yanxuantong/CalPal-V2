@@ -21,6 +21,7 @@ struct AppRootView: View {
 struct AppSheetHost: View {
     @EnvironmentObject private var appModel: AppModel
     @EnvironmentObject private var homeModel: CommandHomeModel
+    @Environment(\.openURL) private var openURL
     let sheet: AppSheet
 
     var body: some View {
@@ -69,8 +70,7 @@ struct AppSheetHost: View {
                 .presentationDetents([.large])
         case .modelUnavailable(let context), .speechUnavailable(let context):
             UnavailableView(context: context) { action in
-                appModel.dismissSheet()
-                homeModel.handleUnavailableAction(action)
+                handleUnavailableAction(action)
             }
             .presentationDetents([.medium, .large])
         case .manualEventForm(let context):
@@ -79,6 +79,18 @@ struct AppSheetHost: View {
                 Task { await homeModel.applyCorrectedDraft(draft) }
             }
             .presentationDetents([.large])
+        }
+    }
+
+    private func handleUnavailableAction(_ action: UnavailableAction) {
+        appModel.dismissSheet()
+        switch action {
+        case .openSystemSettings:
+            openURL(AppSettingsLink.url)
+        case .openSettings:
+            appModel.openSettings(.diagnostics)
+        default:
+            homeModel.handleUnavailableAction(action)
         }
     }
 }

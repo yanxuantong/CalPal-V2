@@ -17,7 +17,7 @@ struct CommandHomeView: View {
                 }, onRetryAgenda: {
                     Task { await model.loadAgenda() }
                 }, onOpenSettings: {
-                    appModel.openSettings(.diagnostics)
+                    openURL(AppSettingsLink.url)
                 }) { day in
                     model.selectDay(day)
                 }

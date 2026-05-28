@@ -202,7 +202,7 @@ final class VisualSnapshotRenderingTests: XCTestCase {
             size: CGSize(width: 390, height: 520)
         )
         let agendaDeniedLight = render(
-            DailyAgendaPager(selectedDay: PreviewFixtures.now, events: [], state: .denied(ErrorPresentation(title: "Calendar Access Needed", message: "Allow full calendar access to show and update your agenda.", recovery: "Open Settings to review Calendar access, then try again.")), onSelectDay: { _ in }),
+            DailyAgendaPager(selectedDay: PreviewFixtures.now, events: [], state: .denied(ErrorPresentation(title: "Calendar Access Needed", message: "Allow full calendar access to show and update your agenda.", recovery: "Open iOS Settings to grant Calendar access, then try again.")), onSelectDay: { _ in }),
             colorScheme: .light,
             size: CGSize(width: 390, height: 520)
         )
@@ -570,7 +570,7 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertEqual(result.parseRoute, .deterministicFallback)
     }
 
-    func testCalendarAccessUnavailableDoesNotOfferManualCreateDeadEnd() async throws {
+    func testCalendarAccessUnavailableRoutesToSystemSettingsAndDiagnostics() async throws {
         let repo = MockCalendarRepository()
         repo.authorization = .denied
         let pipeline = CalendarCommandPipeline(
@@ -581,14 +581,42 @@ final class V2UsabilityRegressionTests: XCTestCase {
 
         let modifyOutput = await pipeline.process(text: "delete Alex today")
         guard case .unavailable(let modifyContext) = modifyOutput else { return XCTFail("Expected unavailable context") }
-        XCTAssertEqual(modifyContext.primaryAction, .openSettings)
-        XCTAssertNil(modifyContext.secondaryAction)
+        XCTAssertEqual(modifyContext.primaryAction, .openSystemSettings)
+        XCTAssertEqual(modifyContext.secondaryAction, .openSettings)
 
         let draft = EventDraft(title: "Manual draft", startDate: PreviewFixtures.now, endDate: PreviewFixtures.now.addingTimeInterval(3600), calendarID: "work", calendarName: "Work Calendar", location: nil, notes: nil)
         let createOutput = await pipeline.apply(draft: draft)
         guard case .unavailable(let createContext) = createOutput else { return XCTFail("Expected create unavailable context") }
-        XCTAssertEqual(createContext.primaryAction, .openSettings)
-        XCTAssertNil(createContext.secondaryAction)
+        XCTAssertEqual(createContext.primaryAction, .openSystemSettings)
+        XCTAssertEqual(createContext.secondaryAction, .openSettings)
+    }
+
+    func testSystemSettingsActionUsesIOSSettingsURL() {
+        XCTAssertEqual(UnavailableAction.openSystemSettings.title, "Open iOS Settings")
+        XCTAssertFalse(AppSettingsLink.url.absoluteString.isEmpty)
+    }
+
+    @MainActor
+    func testDeniedSpeechPermissionOffersTextEntryAndSystemSettings() async throws {
+        let speech = MockSpeechService(authorization: .denied)
+        let deps = DependencyContainer(
+            calendarRepository: MockCalendarRepository(),
+            commandPipeline: CountingCommandPipeline(output: .failure(ErrorPresentation(title: "Unexpected", message: "Should not parse", recovery: nil))),
+            speechService: speech,
+            modelProvider: MockModelProvider(),
+            preferenceSummaryStore: InMemoryPreferenceSummaryStore(),
+            capabilityService: DefaultCapabilityService(calendarRepository: MockCalendarRepository(), speechService: speech, modelProvider: MockModelProvider())
+        )
+        let model = CommandHomeModel(dependencies: deps, selectedDay: PreviewFixtures.now)
+        var presented: AppSheet?
+        model.sheetPresenter = { presented = $0 }
+
+        model.beginRecording()
+        try await Task.sleep(nanoseconds: 60_000_000)
+
+        guard case .speechUnavailable(let context)? = presented else { return XCTFail("Expected speech unavailable sheet") }
+        XCTAssertEqual(context.primaryAction, .openTextEntry)
+        XCTAssertEqual(context.secondaryAction, .openSystemSettings)
     }
 
     func testConfirmationResultPreservesParserRoute() async throws {

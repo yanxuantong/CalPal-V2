@@ -35,7 +35,7 @@ final class CommandHomeModel: ObservableObject {
         agendaState = .loading
         guard dependencies.calendarRepository.authorizationStatus() == .allowed else {
             guard isCurrentAgendaLoad(requestID) else { return }
-            agendaState = .denied(ErrorPresentation(title: "Connect Calendars", message: "Allow full calendar access when you are ready to show and update your agenda.", recovery: "Open Settings to review Calendar access, then try again."))
+            agendaState = .denied(ErrorPresentation(title: "Connect Calendars", message: "Allow full calendar access when you are ready to show and update your agenda.", recovery: "Open iOS Settings to grant Calendar access, then try again."))
             return
         }
         do {
@@ -50,7 +50,7 @@ final class CommandHomeModel: ObservableObject {
             agendaState = .loaded
         } catch CalendarRepositoryError.accessDenied {
             guard isCurrentAgendaLoad(requestID) else { return }
-            agendaState = .denied(ErrorPresentation(title: "Calendar Access Needed", message: "Allow full calendar access to show and update your agenda.", recovery: "Open Settings to review Calendar access, then try again."))
+            agendaState = .denied(ErrorPresentation(title: "Calendar Access Needed", message: "Allow full calendar access to show and update your agenda.", recovery: "Open iOS Settings to grant Calendar access, then try again."))
         } catch {
             guard isCurrentAgendaLoad(requestID) else { return }
             agendaState = .failed(ErrorPresentation(title: "Could Not Load Agenda", message: error.localizedDescription, recovery: "Try again later."))
@@ -89,7 +89,7 @@ final class CommandHomeModel: ObservableObject {
             let status = await dependencies.speechService.requestAuthorization()
             guard status == .allowed else {
                 commandState = .failed(ErrorPresentation(title: "Speech Permission Needed", message: "Allow speech recognition to use voice commands.", recovery: "Double-tap the orb to type instead."))
-                sheetPresenter?(.speechUnavailable(UnavailableContext(title: "Speech Permission Needed", message: "Speech recognition was not authorized. Text input remains available.", primaryAction: .openTextEntry, secondaryAction: .openManualCreate)))
+                sheetPresenter?(.speechUnavailable(UnavailableContext(title: "Speech Permission Needed", message: "Speech recognition was not authorized. Text input remains available.", primaryAction: .openTextEntry, secondaryAction: .openSystemSettings)))
                 return
             }
             do {
@@ -221,6 +221,7 @@ final class CommandHomeModel: ObservableObject {
         case .openManualCreate: openManualCreate(reason: "Fallback manual create")
         case .openTextEntry: sheetPresenter?(.textEntry(TextEntryContext()))
         case .openSettings: sheetPresenter?(.settings(.diagnostics))
+        case .openSystemSettings: break
         case .dismiss: break
         }
     }

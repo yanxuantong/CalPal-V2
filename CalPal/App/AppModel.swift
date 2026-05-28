@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import UIKit
 
 @MainActor
 final class AppModel: ObservableObject {
@@ -71,6 +72,10 @@ final class AppModel: ObservableObject {
     }
     func dismissSheet() { activeSheet = nil }
     func refreshCapabilities() { capabilitySummary = dependencies.capabilityService.currentSummary() }
+}
+
+enum AppSettingsLink {
+    static let url = URL(string: UIApplication.openSettingsURLString)!
 }
 
 enum AppSheet: Identifiable, Equatable {

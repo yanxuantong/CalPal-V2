@@ -64,6 +64,7 @@ enum UnavailableAction: String, Equatable, Codable, Identifiable {
     case openManualCreate
     case openTextEntry
     case openSettings
+    case openSystemSettings
     case dismiss
 
     var id: String { rawValue }
@@ -71,7 +72,8 @@ enum UnavailableAction: String, Equatable, Codable, Identifiable {
         switch self {
         case .openManualCreate: return "Create Manually"
         case .openTextEntry: return "Type Instead"
-        case .openSettings: return "Open Settings"
+        case .openSettings: return "Open Diagnostics"
+        case .openSystemSettings: return "Open iOS Settings"
         case .dismiss: return "Dismiss"
         }
     }

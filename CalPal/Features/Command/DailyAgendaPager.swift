@@ -30,7 +30,7 @@ struct DailyAgendaPager: View {
         case .loaded:
             if events.isEmpty { EmptyAgendaView(onManualCreate: onManualCreate) } else { DayAgendaTimeline(day: selectedDay, events: events, onSelectEvent: onSelectEvent) }
         case .denied(let error):
-            AgendaFailureCard(error: error, primaryTitle: "Open Settings", primarySystemImage: "gearshape", primaryAction: onOpenSettings, secondaryTitle: "Try Again", secondarySystemImage: "arrow.clockwise", secondaryAction: onRetryAgenda)
+            AgendaFailureCard(error: error, primaryTitle: "Open iOS Settings", primarySystemImage: "gearshape", primaryAction: onOpenSettings, secondaryTitle: "Try Again", secondarySystemImage: "arrow.clockwise", secondaryAction: onRetryAgenda)
                 .frame(maxWidth: .infinity, alignment: .top)
         case .failed(let error):
             AgendaFailureCard(error: error, primaryTitle: "Try Again", primarySystemImage: "arrow.clockwise", primaryAction: onRetryAgenda, secondaryTitle: "Open Settings", secondarySystemImage: "gearshape", secondaryAction: onOpenSettings)
