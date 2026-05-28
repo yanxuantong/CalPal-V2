@@ -58,7 +58,7 @@ Only App Store-listed products were used as references:
 ## Verification Plan
 
 - Run targeted unit tests for `V2UsabilityRegressionTests` on iOS Simulator.
-- Run each XCTest suite on iOS Simulator. The full suite currently covers 60 tests.
+- Run each XCTest suite on iOS Simulator. The full suite currently covers 62 tests.
 - Build the app for an iOS Simulator destination with code signing disabled.
 - Do not run any real-device install, launch, or debug command in this checkpoint.
 
@@ -74,7 +74,8 @@ Only App Store-listed products were used as references:
 - Targeted recovery-path suite: 27 passed, 0 failed.
 - Targeted just-in-time permission suite: 3 passed, 0 failed.
 - Targeted agenda-failure action suite: 2 passed, 0 failed.
-- Full Simulator XCTest: 60 passed, 0 failed.
+- Targeted permission-drift recovery tests: passed for access-denied search, confirmation mutation, unavailable action metadata, and pipeline recovery.
+- Full Simulator XCTest: 62 passed, 0 failed.
 - Simulator build: passed with `CODE_SIGNING_ALLOWED=NO`.
 - Release script syntax checks: passed for screenshot capture and local release gate scripts.
 - Demo screenshot capture: passed on iPhone 17 Simulator using the built app's `CFBundleIdentifier`; generated light and dark screenshots at 1206x2622.
@@ -160,3 +161,9 @@ Only App Store-listed products were used as references:
 
 - Demo screenshot capture now reads the built app's `CFBundleIdentifier` from `Info.plist` instead of relying on a hard-coded bundle id.
 - The local release gate now rejects screenshot artifacts that are readable but too small to be credible App Store review evidence.
+
+## Follow-Up Pass - Permission Drift Recovery
+
+- Mock calendar access now fails reads and writes when authorization is denied, matching the real EventKit permission contract more closely in tests.
+- Existing-event search and confirmation-time update/delete failures now route Calendar access denial to iOS Settings plus CalPal diagnostics instead of a generic retry/manual path.
+- Unavailable-state actions now use system-icon labels, making recovery buttons easier to scan and closer to standard iOS action affordances.

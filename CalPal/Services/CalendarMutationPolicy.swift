@@ -48,6 +48,8 @@ final class CalendarMutationPolicy {
                 return .needsCorrection(CorrectionContext(title: "No Matching Event", message: "Refine the event title or choose a manual fallback.", draft: EventDraft(title: query.titleHint ?? "", startDate: query.day ?? now(), endDate: (query.day ?? now()).addingTimeInterval(3600), calendarID: nil, calendarName: nil, location: nil, notes: nil), missingFields: ["matching event"], sourceText: sourceText, parseRoute: parseRoute))
             }
             return .needsCandidateSelection(CandidateSelectionContext(operation: operation, candidates: candidates, patch: patch, sourceText: sourceText, parseRoute: parseRoute))
+        } catch CalendarRepositoryError.accessDenied {
+            return .unavailable(UnavailableContext(title: "Calendar Access Needed", message: "Allow full calendar access before CalPal searches existing events.", primaryAction: .openSystemSettings, secondaryAction: .openSettings))
         } catch {
             return .unavailable(UnavailableContext(title: "Calendar Unavailable", message: error.localizedDescription, primaryAction: .openManualCreate, secondaryAction: .openSettings))
         }

@@ -601,8 +601,54 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertEqual(createContext.secondaryAction, .openSettings)
     }
 
+    func testPolicySearchAccessDeniedRoutesToSystemSettings() async throws {
+        let repo = MockCalendarRepository()
+        repo.authorization = .denied
+        let parsed = ParsedCalendarCommand(
+            originalText: "delete Alex today",
+            localeIdentifier: "en-US",
+            intent: .delete(query: EventQuery(phrase: "Alex today", day: PreviewFixtures.now, titleHint: "Alex")),
+            confidence: 0.95,
+            missingFields: [],
+            warnings: []
+        )
+
+        let decision = await CalendarMutationPolicy(now: { PreviewFixtures.now }).decide(parsed: parsed, calendars: [], repository: repo)
+
+        guard case .unavailable(let context) = decision else { return XCTFail("Expected unavailable context") }
+        XCTAssertEqual(context.primaryAction, .openSystemSettings)
+        XCTAssertEqual(context.secondaryAction, .openSettings)
+    }
+
+    func testConfirmationAccessDeniedRoutesToSystemSettings() async throws {
+        let repo = MockCalendarRepository()
+        repo.authorization = .denied
+        let pipeline = CalendarCommandPipeline(
+            parser: NaturalLanguageCalendarParser(now: { PreviewFixtures.now }),
+            policy: CalendarMutationPolicy(now: { PreviewFixtures.now }),
+            repository: repo
+        )
+        let context = ConfirmationContext(
+            operation: .modify,
+            title: "Update Event?",
+            message: "Review before changing this existing calendar event.",
+            before: PreviewFixtures.workEvent,
+            afterDraft: nil,
+            patch: EventPatch(title: "Updated Alex 1:1", startDate: nil, endDate: nil, location: nil, notes: nil),
+            targetEventID: PreviewFixtures.workEvent.id,
+            recurrenceScope: nil
+        )
+
+        let output = await pipeline.confirm(context, decision: .confirm(recurrenceScope: nil))
+
+        guard case .unavailable(let unavailable) = output else { return XCTFail("Expected unavailable context") }
+        XCTAssertEqual(unavailable.primaryAction, .openSystemSettings)
+        XCTAssertEqual(unavailable.secondaryAction, .openSettings)
+    }
+
     func testSystemSettingsActionUsesIOSSettingsURL() {
         XCTAssertEqual(UnavailableAction.openSystemSettings.title, "Open iOS Settings")
+        XCTAssertEqual(UnavailableAction.openSystemSettings.systemImage, "gearshape")
         XCTAssertFalse(AppSettingsLink.url.absoluteString.isEmpty)
     }
 

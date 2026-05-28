@@ -77,6 +77,16 @@ enum UnavailableAction: String, Equatable, Codable, Identifiable {
         case .dismiss: return "Dismiss"
         }
     }
+
+    var systemImage: String {
+        switch self {
+        case .openManualCreate: return "calendar.badge.plus"
+        case .openTextEntry: return "keyboard"
+        case .openSettings: return "stethoscope"
+        case .openSystemSettings: return "gearshape"
+        case .dismiss: return "xmark"
+        }
+    }
 }
 
 enum ConfirmationDecision: Equatable {

@@ -28,9 +28,13 @@ final class MockCalendarRepository: CalendarRepositoryProtocol {
         requestFullAccessCount += 1
         return authorization
     }
-    func fetchCalendars() async throws -> [CalendarInfo] { calendars }
+    func fetchCalendars() async throws -> [CalendarInfo] {
+        guard authorization == .allowed else { throw CalendarRepositoryError.accessDenied }
+        return calendars
+    }
 
     func fetchEvents(for day: Date) async throws -> [CalendarEvent] {
+        guard authorization == .allowed else { throw CalendarRepositoryError.accessDenied }
         let delay = fetchEventsDelayNanoseconds(day)
         if delay > 0 {
             try await Task.sleep(nanoseconds: delay)
@@ -40,6 +44,7 @@ final class MockCalendarRepository: CalendarRepositoryProtocol {
     }
 
     func searchEvents(query: EventQuery) async throws -> [CalendarEvent] {
+        guard authorization == .allowed else { throw CalendarRepositoryError.accessDenied }
         let center = query.day ?? Date()
         let start = calendar.date(byAdding: .day, value: -query.boundedDays, to: center) ?? center
         let end = calendar.date(byAdding: .day, value: query.boundedDays, to: center) ?? center
@@ -50,6 +55,7 @@ final class MockCalendarRepository: CalendarRepositoryProtocol {
     }
 
     func createEvent(_ draft: EventDraft) async throws -> CalendarEvent {
+        guard authorization == .allowed else { throw CalendarRepositoryError.accessDenied }
         createdDrafts.append(draft)
         guard let calendarInfo = calendars.first(where: { $0.id == (draft.calendarID ?? "work") }) ?? calendars.first(where: { $0.allowsContentModifications }) else { throw CalendarRepositoryError.noWritableCalendar }
         let event = CalendarEvent(id: UUID().uuidString, title: draft.title, calendarID: calendarInfo.id, calendarName: calendarInfo.title, accountName: calendarInfo.accountName, startDate: draft.startDate, endDate: draft.endDate, isAllDay: draft.isAllDay, location: draft.location, notes: draft.notes, isRecurring: false, calendarColorHex: calendarInfo.colorHex)
@@ -58,6 +64,7 @@ final class MockCalendarRepository: CalendarRepositoryProtocol {
     }
 
     func updateEvent(id: String, patch: EventPatch, recurrenceScope: RecurrenceChangeScope?) async throws -> CalendarEvent {
+        guard authorization == .allowed else { throw CalendarRepositoryError.accessDenied }
         guard let idx = events.firstIndex(where: { $0.id == id }) else { throw CalendarRepositoryError.eventNotFound }
         if let title = patch.title { events[idx].title = title }
         if let start = patch.startDate { events[idx].startDate = start }
@@ -68,6 +75,7 @@ final class MockCalendarRepository: CalendarRepositoryProtocol {
     }
 
     func deleteEvent(id: String, recurrenceScope: RecurrenceChangeScope?) async throws {
+        guard authorization == .allowed else { throw CalendarRepositoryError.accessDenied }
         events.removeAll { $0.id == id }
     }
 }

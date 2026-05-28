@@ -79,6 +79,8 @@ final class CalendarCommandPipeline: CalendarCommandPipelineProtocol {
                 try await repository.deleteEvent(id: id, recurrenceScope: recurrenceScope ?? context.recurrenceScope)
                 return .result(CommandResultViewState(title: "Deleted Event", message: context.before?.title ?? "Calendar event removed", event: nil, actionTitle: nil, parseRoute: context.parseRoute))
             }
+        } catch CalendarRepositoryError.accessDenied {
+            return .unavailable(UnavailableContext(title: "Calendar Access Needed", message: "Allow full calendar access before changing existing Apple Calendar events.", primaryAction: .openSystemSettings, secondaryAction: .openSettings))
         } catch {
             return .failure(ErrorPresentation(title: "Calendar Change Failed", message: error.localizedDescription, recovery: "Re-fetch the agenda and try again."))
         }

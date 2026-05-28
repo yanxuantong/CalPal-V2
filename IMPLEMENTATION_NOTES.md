@@ -51,4 +51,5 @@ xcodebuild -project CalPal.xcodeproj -scheme CalPal -configuration Debug -sdk ip
 - Permission timing is now staged: onboarding completes before Calendar access is requested, and Speech/Microphone prompts remain just-in-time for the first voice command.
 - Agenda failure actions now distinguish permission denial from generic load failure: denied opens iOS Settings, while non-permission failure opens in-app diagnostics.
 - Release scripts now derive the demo screenshot bundle id from the built app and validate minimum screenshot dimensions.
+- Calendar permission drift during existing-event search or confirmation-time mutation now routes to iOS Settings, with mock repositories enforcing denied access across read and write methods.
 - Competitive reference notes and release gaps live in `AppStore/ProductionPolish/2026-05-28/README.md`.
