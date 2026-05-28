@@ -46,6 +46,7 @@ Only App Store-listed products were used as references:
 ## Apple Reference Notes
 
 - Apple Human Interface Guidelines: Loading and progress guidance informed the move from generic "Checking calendar..." feedback to state-specific progress copy. Reference: https://developer.apple.com/design/human-interface-guidelines/loading
+- Apple Human Interface Guidelines: Destructive buttons should visually communicate destructive impact; recurring delete/apply confirmations now make the selected scope explicit in both copy and action labels. Reference: https://developer.apple.com/design/human-interface-guidelines/buttons
 - Apple Foundation Models documentation: `LanguageModelSession` is the real on-device generation surface, so release docs and Settings should distinguish that route from deterministic fallback. Reference: https://developer.apple.com/documentation/FoundationModels/LanguageModelSession
 
 ## Remaining Production Gaps
@@ -58,13 +59,13 @@ Only App Store-listed products were used as references:
 ## Verification Plan
 
 - Run targeted unit tests for `V2UsabilityRegressionTests` on iOS Simulator.
-- Run each XCTest suite on iOS Simulator. The full suite currently covers 76 tests.
+- Run each XCTest suite on iOS Simulator. The full suite currently covers 77 tests.
 - Build the app for an iOS Simulator destination with code signing disabled.
 - Do not run any real-device install, launch, or debug command in this checkpoint.
 
 ## Verification Results
 
-- `V2UsabilityRegressionTests`: 26 passed, 0 failed.
+- `V2UsabilityRegressionTests`: 27 passed, 0 failed.
 - `PreferenceSummaryStoreTests`: 1 passed, 0 failed.
 - `NaturalLanguageCalendarParserTests`: 13 passed, 0 failed.
 - `CalendarMutationPolicyTests` + `LightDarkUIPresentationTests`: 9 passed, 0 failed.
@@ -79,7 +80,7 @@ Only App Store-listed products were used as references:
 - Targeted manual-form calendar target tests: passed for selected-calendar display state and default-writable fallback copy.
 - Targeted draft normalization tests: passed for trimming title/location/notes before save and rejecting whitespace-only titles before repository writes.
 - Targeted patch normalization tests: passed for trimming update patches before EventKit mutation, preserving clear-field intent, and rejecting no-op patches after normalization.
-- Full Simulator XCTest: 76 passed, 0 failed.
+- Full Simulator XCTest: 77 passed, 0 failed.
 - Simulator build: passed with `CODE_SIGNING_ALLOWED=NO`.
 - Release script syntax checks: passed for screenshot capture and local release gate scripts.
 - Demo screenshot capture: passed on iPhone 17 Simulator using the built app's `CFBundleIdentifier`; generated light and dark screenshots at 1206x2622.
@@ -232,3 +233,9 @@ Only App Store-listed products were used as references:
 - Confirmation `Before` cards now include event time, calendar, location, notes, and repeating-event status when present.
 - Location and notes are trimmed before display, keeping review copy aligned with the normalized save path.
 - Regression coverage locks the confirmation detail model and accessibility summary for recurring events with location and notes.
+
+## Follow-Up Pass - Recurring Scope Confirmation Clarity
+
+- Recurring modify/delete confirmations now show a scope-specific impact card after the segmented control.
+- The primary confirmation button changes from generic copy to explicit labels such as `Delete This Event` or `Delete This and Future Events`.
+- Regression coverage locks the recurrence-scope action labels and warning copy so future changes keep destructive scope visible.

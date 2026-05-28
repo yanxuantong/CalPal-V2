@@ -62,4 +62,5 @@ xcodebuild -project CalPal.xcodeproj -scheme CalPal -configuration Debug -sdk ip
 - Text command entry now shows inline send readiness and uses the same readiness model for main and toolbar send actions.
 - Calendar chooser rows now show writable/read-only status, include stable row identifiers, and provide an explicit Cancel action.
 - Confirmation `Before` cards now include location, notes, and repeating-event status when present.
+- Recurring confirmation sheets now show selected-scope impact copy and explicit primary button labels for one-event versus future-event changes.
 - Competitive reference notes and release gaps live in `AppStore/ProductionPolish/2026-05-28/README.md`.

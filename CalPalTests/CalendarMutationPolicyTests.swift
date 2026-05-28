@@ -837,6 +837,36 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertTrue(event.confirmationAccessibilitySummary(prefix: "Before").contains("Repeating event"))
     }
 
+    func testRecurringConfirmationActionCopyReflectsSelectedScope() {
+        let deleteContext = ConfirmationContext(
+            operation: .delete,
+            title: "Delete Event?",
+            message: "This is a repeating event.",
+            before: PreviewFixtures.workEvent,
+            afterDraft: nil,
+            patch: nil,
+            targetEventID: PreviewFixtures.workEvent.id,
+            recurrenceScope: .thisEvent
+        )
+        let modifyContext = ConfirmationContext(
+            operation: .modify,
+            title: "Review Change",
+            message: "This is a repeating event.",
+            before: PreviewFixtures.workEvent,
+            afterDraft: nil,
+            patch: EventPatch(title: "Updated", startDate: nil, endDate: nil, location: nil, notes: nil),
+            targetEventID: PreviewFixtures.workEvent.id,
+            recurrenceScope: .thisEvent
+        )
+
+        XCTAssertEqual(deleteContext.confirmationActionTitle(selectedScope: .thisEvent), "Delete This Event")
+        XCTAssertEqual(deleteContext.confirmationActionTitle(selectedScope: .futureEvents), "Delete This and Future Events")
+        XCTAssertEqual(modifyContext.confirmationActionTitle(selectedScope: .thisEvent), "Apply to This Event")
+        XCTAssertEqual(modifyContext.confirmationActionTitle(selectedScope: .futureEvents), "Apply to This and Future Events")
+        XCTAssertEqual(RecurrenceChangeScope.futureEvents.reviewTitle(for: .delete), "Deleting future occurrences")
+        XCTAssertEqual(RecurrenceChangeScope.futureEvents.reviewMessage(for: .delete), "This event and later repeats are removed. Earlier events stay unchanged.")
+    }
+
     func testConfirmationRejectsPatchWithNoChangesAfterNormalization() async throws {
         let repo = MockCalendarRepository()
         let pipeline = CalendarCommandPipeline(

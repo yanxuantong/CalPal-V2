@@ -19,7 +19,10 @@ struct ConfirmationView: View {
                     header
                     if let before = context.before { EventSummaryCard(title: "Before", event: before) }
                     if let patch = context.patch { PatchSummaryCard(patch: patch) }
-                    if context.recurrenceScope != nil { recurrencePicker }
+                    if context.recurrenceScope != nil {
+                        recurrencePicker
+                        RecurrenceScopeReviewCard(scope: selectedScope, operation: context.operation)
+                    }
                     actionButtons
                 }
                 .padding()
@@ -61,15 +64,49 @@ struct ConfirmationView: View {
 
     private var actionButtons: some View {
         VStack(spacing: CalPalTheme.Spacing.sm) {
-            Button(context.isDestructive ? "Delete Event" : "Apply Change") { onDecision(.confirm(recurrenceScope: context.recurrenceScope == nil ? nil : selectedScope)) }
+            Button(role: context.isDestructive ? .destructive : nil) { onDecision(.confirm(recurrenceScope: context.recurrenceScope == nil ? nil : selectedScope)) } label: {
+                Text(context.confirmationActionTitle(selectedScope: selectedScope))
+                    .frame(maxWidth: .infinity)
+            }
                 .buttonStyle(.borderedProminent)
                 .tint(context.isDestructive ? CalPalTheme.Colors.destructive : CalPalTheme.Colors.brandPrimary)
                 .controlSize(.large)
-            Button("Cancel") { onDecision(.cancel) }
+                .accessibilityIdentifier("confirmationPrimaryAction")
+            Button(role: .cancel) { onDecision(.cancel) } label: {
+                Text("Cancel")
+                    .frame(maxWidth: .infinity)
+            }
                 .buttonStyle(.bordered)
                 .controlSize(.large)
         }
         .frame(maxWidth: .infinity)
+    }
+}
+
+private struct RecurrenceScopeReviewCard: View {
+    let scope: RecurrenceChangeScope
+    let operation: CommandOperation
+
+    var body: some View {
+        Label {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(scope.reviewTitle(for: operation))
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(CalPalTheme.Colors.textPrimary)
+                Text(scope.reviewMessage(for: operation))
+                    .font(.caption)
+                    .foregroundStyle(CalPalTheme.Colors.textSecondary)
+            }
+        } icon: {
+            Image(systemName: scope == .futureEvents ? "repeat.badge.exclamationmark" : "repeat.1")
+                .foregroundStyle(scope == .futureEvents ? CalPalTheme.Colors.warning : CalPalTheme.Colors.brandPrimary)
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .glassCard()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(scope.reviewTitle(for: operation)). \(scope.reviewMessage(for: operation))")
+        .accessibilityIdentifier("confirmationRecurrenceScopeReview")
     }
 }
 
@@ -201,6 +238,59 @@ extension EventPatch {
         let changes = confirmationSummaryChanges.map { "\($0.label): \($0.value)" }
         guard !changes.isEmpty else { return "After update, no visible field changes" }
         return "After update, " + changes.joined(separator: ", ")
+    }
+}
+
+extension ConfirmationContext {
+    func confirmationActionTitle(selectedScope: RecurrenceChangeScope) -> String {
+        guard recurrenceScope != nil else {
+            return isDestructive ? "Delete Event" : "Apply Change"
+        }
+
+        switch (operation, selectedScope) {
+        case (.delete, .thisEvent):
+            return "Delete This Event"
+        case (.delete, .futureEvents):
+            return "Delete This and Future Events"
+        case (.modify, .thisEvent):
+            return "Apply to This Event"
+        case (.modify, .futureEvents):
+            return "Apply to This and Future Events"
+        case (.create, _):
+            return "Create Event"
+        }
+    }
+}
+
+extension RecurrenceChangeScope {
+    func reviewTitle(for operation: CommandOperation) -> String {
+        switch (operation, self) {
+        case (.delete, .thisEvent):
+            return "Deleting one occurrence"
+        case (.delete, .futureEvents):
+            return "Deleting future occurrences"
+        case (.modify, .thisEvent):
+            return "Changing one occurrence"
+        case (.modify, .futureEvents):
+            return "Changing future occurrences"
+        case (.create, _):
+            return rawValue
+        }
+    }
+
+    func reviewMessage(for operation: CommandOperation) -> String {
+        switch (operation, self) {
+        case (.delete, .thisEvent):
+            return "Only this event is removed. Future repeats stay on your calendar."
+        case (.delete, .futureEvents):
+            return "This event and later repeats are removed. Earlier events stay unchanged."
+        case (.modify, .thisEvent):
+            return "Only this event changes. Future repeats keep their current details."
+        case (.modify, .futureEvents):
+            return "This event and later repeats use the reviewed changes."
+        case (.create, _):
+            return "The selected recurrence scope will be used for this calendar change."
+        }
     }
 }
 
