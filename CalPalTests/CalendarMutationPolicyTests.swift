@@ -709,6 +709,27 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertEqual(items.first { $0.id == "deterministic-parser" }?.state, .ready)
     }
 
+    func testDraftTimeRangePreservesDurationWhenStartMoves() {
+        let start = PreviewFixtures.now
+        let end = start.addingTimeInterval(5400)
+        let movedStart = start.addingTimeInterval(7200)
+
+        let adjustedEnd = DraftTimeRangePolicy.endDateAfterMovingStart(oldStart: start, oldEnd: end, newStart: movedStart)
+
+        XCTAssertEqual(adjustedEnd.timeIntervalSince(movedStart), 5400, accuracy: 0.1)
+        XCTAssertGreaterThan(adjustedEnd, movedStart)
+    }
+
+    func testDraftTimeRangeRepairsInvalidEndDate() {
+        let start = PreviewFixtures.now
+        let invalidEnd = start.addingTimeInterval(-300)
+
+        let adjustedEnd = DraftTimeRangePolicy.validEndDate(start: start, proposedEnd: invalidEnd)
+
+        XCTAssertEqual(adjustedEnd.timeIntervalSince(start), DraftTimeRangePolicy.minimumDuration, accuracy: 0.1)
+        XCTAssertGreaterThan(adjustedEnd, start)
+    }
+
     func testSettingsSectionDeepLinksMatchRecoveryTargets() {
         XCTAssertEqual(SettingsSection.diagnostics.title, "v0.3 Readiness")
         XCTAssertEqual(SettingsSection.diagnostics.accessibilityIdentifier, "settingsSection-diagnostics")

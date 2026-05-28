@@ -3,6 +3,7 @@ import SwiftUI
 struct CorrectionView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var draft: EventDraft
+    @State private var isSaving = false
     let context: CorrectionContext
     let onSave: (EventDraft) -> Void
 
@@ -33,9 +34,19 @@ struct CorrectionView: View {
             .navigationTitle(context.title)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) { Button("Save Event") { onSave(draft) }.disabled(!draft.hasRequiredFields) }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save Event", action: submit)
+                        .disabled(!draft.hasRequiredFields || isSaving)
+                        .accessibilityIdentifier("correctionSaveEvent")
+                }
             }
         }
+    }
+
+    private func submit() {
+        guard draft.hasRequiredFields, !isSaving else { return }
+        isSaving = true
+        onSave(draft)
     }
 }
 
@@ -86,9 +97,48 @@ struct MissingFieldChips: View {
 struct StartEndTimePicker: View {
     @Binding var start: Date
     @Binding var end: Date
+
     var body: some View {
-        DatePicker("Starts", selection: $start, displayedComponents: [.date, .hourAndMinute])
-        DatePicker("Ends", selection: $end, in: start..., displayedComponents: [.date, .hourAndMinute])
+        DatePicker("Starts", selection: startBinding, displayedComponents: [.date, .hourAndMinute])
+        DatePicker("Ends", selection: endBinding, in: DraftTimeRangePolicy.minimumEndDate(for: start)..., displayedComponents: [.date, .hourAndMinute])
+    }
+
+    private var startBinding: Binding<Date> {
+        Binding(
+            get: { start },
+            set: { newStart in
+                end = DraftTimeRangePolicy.endDateAfterMovingStart(oldStart: start, oldEnd: end, newStart: newStart)
+                start = newStart
+            }
+        )
+    }
+
+    private var endBinding: Binding<Date> {
+        Binding(
+            get: { DraftTimeRangePolicy.validEndDate(start: start, proposedEnd: end) },
+            set: { newEnd in
+                end = DraftTimeRangePolicy.validEndDate(start: start, proposedEnd: newEnd)
+            }
+        )
+    }
+}
+
+enum DraftTimeRangePolicy {
+    static let minimumDuration: TimeInterval = 60
+    static let fallbackDuration: TimeInterval = 1800
+
+    static func minimumEndDate(for start: Date) -> Date {
+        start.addingTimeInterval(minimumDuration)
+    }
+
+    static func endDateAfterMovingStart(oldStart: Date, oldEnd: Date, newStart: Date) -> Date {
+        let preservedDuration = max(oldEnd.timeIntervalSince(oldStart), fallbackDuration)
+        return newStart.addingTimeInterval(preservedDuration)
+    }
+
+    static func validEndDate(start: Date, proposedEnd: Date) -> Date {
+        guard proposedEnd > start else { return minimumEndDate(for: start) }
+        return proposedEnd
     }
 }
 

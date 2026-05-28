@@ -58,20 +58,20 @@ Only App Store-listed products were used as references:
 ## Verification Plan
 
 - Run targeted unit tests for `V2UsabilityRegressionTests` on iOS Simulator.
-- Run each XCTest suite on iOS Simulator. The full suite currently covers 54 tests.
+- Run each XCTest suite on iOS Simulator. The full suite currently covers 56 tests.
 - Build the app for an iOS Simulator destination with code signing disabled.
 - Do not run any real-device install, launch, or debug command in this checkpoint.
 
 ## Verification Results
 
-- `V2UsabilityRegressionTests`: 18 passed, 0 failed.
+- `V2UsabilityRegressionTests`: 20 passed, 0 failed.
 - `PreferenceSummaryStoreTests`: 1 passed, 0 failed.
 - `NaturalLanguageCalendarParserTests`: 13 passed, 0 failed.
 - `CalendarMutationPolicyTests` + `LightDarkUIPresentationTests`: 9 passed, 0 failed.
 - `MVPBugFixRegressionTests`: 9 passed, 0 failed.
 - `VisualSnapshotRenderingTests`: 4 passed, 0 failed.
-- Targeted confirmation-cancel suite: 18 passed, 0 failed.
-- Full Simulator XCTest: 54 passed, 0 failed.
+- Targeted draft-form guardrail suite: 20 passed, 0 failed.
+- Full Simulator XCTest: 56 passed, 0 failed.
 - Simulator build: passed with `CODE_SIGNING_ALLOWED=NO`.
 
 ## Follow-Up Pass - Safety Settings
@@ -121,3 +121,8 @@ Only App Store-listed products were used as references:
 
 - Cancelling a confirmation is now treated as a normal no-op instead of a failed calendar command.
 - The home model no longer enters the command pipeline for `.cancel`, so cancel cannot mutate EventKit and does not show a `Change Cancelled` error card.
+
+## Follow-Up Pass - Draft Form Guardrails
+
+- Manual-create and correction sheets now disable their save action after the first valid submit, preventing fast repeated taps from dispatching duplicate saves.
+- Start/end time editing now keeps a valid event range. Moving the start time preserves the existing duration when possible, and invalid end times are repaired to the minimum valid end time.

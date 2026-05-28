@@ -3,6 +3,7 @@ import SwiftUI
 struct ManualEventFormView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var draft: EventDraft
+    @State private var isSaving = false
     let context: ManualEventContext
     let onSave: (EventDraft) -> Void
 
@@ -28,9 +29,19 @@ struct ManualEventFormView: View {
             .navigationTitle("Manual create")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) { Button("Save Event") { onSave(draft) }.disabled(!draft.hasRequiredFields) }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save Event", action: submit)
+                        .disabled(!draft.hasRequiredFields || isSaving)
+                        .accessibilityIdentifier("manualEventSave")
+                }
             }
         }
+    }
+
+    private func submit() {
+        guard draft.hasRequiredFields, !isSaving else { return }
+        isSaving = true
+        onSave(draft)
     }
 }
 
