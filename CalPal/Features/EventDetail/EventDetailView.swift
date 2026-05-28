@@ -125,7 +125,7 @@ struct EventDetailReviewState: Equatable {
     enum Status: Equatable {
         case missingTitle
         case unchanged
-        case ready(changeCount: Int)
+        case ready(changeCount: Int, clearCount: Int)
     }
 
     var status: Status
@@ -136,7 +136,8 @@ struct EventDetailReviewState: Equatable {
         } else if !patch.hasChanges {
             status = .unchanged
         } else {
-            status = .ready(changeCount: patch.confirmationSummaryChanges.count)
+            let changes = patch.confirmationSummaryChanges
+            status = .ready(changeCount: changes.count, clearCount: changes.filter(\.isClearIntent).count)
         }
     }
 
@@ -151,8 +152,11 @@ struct EventDetailReviewState: Equatable {
             return "Title is required before review."
         case .unchanged:
             return "Make a change to review before saving."
-        case .ready(let changeCount):
-            return "Review \(changeCount) change\(changeCount == 1 ? "" : "s") before saving."
+        case .ready(let changeCount, let clearCount):
+            let changeCopy = "\(changeCount) change\(changeCount == 1 ? "" : "s")"
+            guard clearCount > 0 else { return "Review \(changeCopy) before saving." }
+            let clearCopy = "\(clearCount) clear\(clearCount == 1 ? "" : "s")"
+            return "Review \(changeCopy), including \(clearCopy), before saving."
         }
     }
 

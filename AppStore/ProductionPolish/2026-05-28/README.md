@@ -275,3 +275,9 @@ Only App Store-listed products were used as references:
 - Agenda event rows now display `Calendar · Account · Time` instead of calendar title plus time only.
 - Agenda row accessibility summaries include the account/source before users open event detail and update options.
 - The calendar/account summary now lives on `CalendarEvent`, keeping agenda, candidate selection, confirmation, and result feedback aligned.
+
+## Follow-Up Pass - Event Detail Clear-Intent Readiness
+
+- Event detail quick updates now surface clear intents in the inline readiness hint before opening the confirmation sheet.
+- Clearing optional fields such as location or notes is described as part of the review state instead of only appearing later in the confirmation card.
+- Regression coverage locks the clear-count copy for quick-update readiness feedback.

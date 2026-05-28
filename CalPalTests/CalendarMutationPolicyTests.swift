@@ -682,7 +682,7 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertFalse(missingTitle.canReview)
         XCTAssertEqual(missingTitle.message, "Title is required before review.")
         XCTAssertTrue(ready.canReview)
-        XCTAssertEqual(ready.message, "Review 2 changes before saving.")
+        XCTAssertEqual(ready.message, "Review 2 changes, including 1 clear, before saving.")
     }
 
     func testCalendarResultsCarryAppleCalendarDeepLink() async throws {

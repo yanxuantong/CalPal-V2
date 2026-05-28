@@ -69,4 +69,5 @@ xcodebuild -project CalPal.xcodeproj -scheme CalPal -configuration Debug -sdk ip
 - Delete success result cards now include deleted-event time, calendar/account, and recurring scope when available.
 - Ambiguous candidate-selection rows now include calendar account/source in visible and accessibility summaries.
 - Agenda event rows now include calendar account/source in visible and accessibility summaries.
+- Event detail quick-update readiness copy now calls out clear intents before confirmation.
 - Competitive reference notes and release gaps live in `AppStore/ProductionPolish/2026-05-28/README.md`.
