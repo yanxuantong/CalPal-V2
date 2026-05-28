@@ -752,14 +752,23 @@ final class V2UsabilityRegressionTests: XCTestCase {
             policy: CalendarMutationPolicy(now: { PreviewFixtures.now }),
             repository: repo
         )
+        let target = try await repo.createEvent(EventDraft(
+            title: "Alex 1:1",
+            startDate: PreviewFixtures.now.addingTimeInterval(3600),
+            endDate: PreviewFixtures.now.addingTimeInterval(7200),
+            calendarID: nil,
+            calendarName: nil,
+            location: "Room 2",
+            notes: "Bring agenda"
+        ))
         let context = ConfirmationContext(
             operation: .modify,
             title: "Update Event?",
             message: "Review before changing this existing calendar event.",
-            before: PreviewFixtures.workEvent,
+            before: target,
             afterDraft: nil,
             patch: EventPatch(title: "  Updated Alex 1:1  ", startDate: nil, endDate: nil, location: "   ", notes: "  Bring notes  "),
-            targetEventID: "alex",
+            targetEventID: target.id,
             recurrenceScope: nil
         )
 
@@ -767,7 +776,7 @@ final class V2UsabilityRegressionTests: XCTestCase {
 
         guard case .result(let result) = output else { return XCTFail("Expected updated result") }
         XCTAssertEqual(result.event?.title, "Updated Alex 1:1")
-        XCTAssertNil(result.event?.location)
+        XCTAssertEqual(result.event?.location, "")
         XCTAssertEqual(result.event?.notes, "Bring notes")
     }
 

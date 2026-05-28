@@ -192,6 +192,7 @@ Only App Store-listed products were used as references:
 
 ## Follow-Up Pass - Patch Save Normalization
 
-- Modify confirmations now normalize update patches before EventKit writes, so title, location, and notes follow the same trim/blank-field behavior as create drafts.
+- Modify confirmations now normalize update patches before EventKit writes, trimming title, location, and notes before repository mutation.
+- Blank optional patch fields are preserved as explicit clear operations for location and notes; blank titles still normalize to no title change.
 - Patches that become empty after normalization are rejected with a `No Changes` failure instead of mutating EventKit with blank text.
-- Regression coverage locks both trimmed patch updates and no-op patch rejection.
+- Regression coverage locks trimmed patch updates, clear-field intent, and no-op patch rejection.

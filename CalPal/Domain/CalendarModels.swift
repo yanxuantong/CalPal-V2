@@ -69,8 +69,8 @@ struct EventPatch: Equatable, Codable, Hashable {
             title: title?.nilIfBlank,
             startDate: startDate,
             endDate: endDate,
-            location: location?.nilIfBlank,
-            notes: notes?.nilIfBlank
+            location: location?.trimmedForPatch,
+            notes: notes?.trimmedForPatch
         )
     }
 }
@@ -99,5 +99,9 @@ private extension String {
     var nilIfBlank: String? {
         let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? nil : trimmed
+    }
+
+    var trimmedForPatch: String {
+        trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
