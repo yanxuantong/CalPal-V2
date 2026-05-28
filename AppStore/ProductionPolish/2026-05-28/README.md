@@ -58,7 +58,7 @@ Only App Store-listed products were used as references:
 ## Verification Plan
 
 - Run targeted unit tests for `V2UsabilityRegressionTests` on iOS Simulator.
-- Run each XCTest suite on iOS Simulator. The full suite currently covers 59 tests.
+- Run each XCTest suite on iOS Simulator. The full suite currently covers 60 tests.
 - Build the app for an iOS Simulator destination with code signing disabled.
 - Do not run any real-device install, launch, or debug command in this checkpoint.
 
@@ -73,7 +73,8 @@ Only App Store-listed products were used as references:
 - Targeted draft-form guardrail suite: 20 passed, 0 failed.
 - Targeted recovery-path suite: 27 passed, 0 failed.
 - Targeted just-in-time permission suite: 3 passed, 0 failed.
-- Full Simulator XCTest: 59 passed, 0 failed.
+- Targeted agenda-failure action suite: 2 passed, 0 failed.
+- Full Simulator XCTest: 60 passed, 0 failed.
 - Simulator build: passed with `CODE_SIGNING_ALLOWED=NO`.
 
 ## Follow-Up Pass - Safety Settings
@@ -146,3 +147,9 @@ Only App Store-listed products were used as references:
 - Onboarding now explains that Calendar access is requested after Continue, while voice permissions are requested only when the user uses voice.
 - Startup initialization no longer requests system permissions while onboarding is still visible.
 - Initial app setup requests Calendar access for the agenda but leaves Speech/Microphone prompts to the first recording attempt.
+
+## Follow-Up Pass - Agenda Failure Action Routing
+
+- Agenda permission-denied states now route their primary action to iOS Settings, where the user can grant Calendar access.
+- Generic agenda load failures now route secondary recovery to CalPal diagnostics instead of the system Settings app.
+- Regression coverage locks the denied-versus-failed action split so future UI copy cannot silently point to the wrong recovery surface.

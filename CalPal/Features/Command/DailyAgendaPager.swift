@@ -7,7 +7,8 @@ struct DailyAgendaPager: View {
     var onSelectEvent: (CalendarEvent) -> Void = { _ in }
     var onManualCreate: () -> Void = {}
     var onRetryAgenda: () -> Void = {}
-    var onOpenSettings: () -> Void = {}
+    var onOpenSystemSettings: () -> Void = {}
+    var onOpenDiagnostics: () -> Void = {}
     let onSelectDay: (Date) -> Void
     private let calendar = Calendar.current
 
@@ -30,16 +31,38 @@ struct DailyAgendaPager: View {
         case .loaded:
             if events.isEmpty { EmptyAgendaView(onManualCreate: onManualCreate) } else { DayAgendaTimeline(day: selectedDay, events: events, onSelectEvent: onSelectEvent) }
         case .denied(let error):
-            AgendaFailureCard(error: error, primaryTitle: "Open iOS Settings", primarySystemImage: "gearshape", primaryAction: onOpenSettings, secondaryTitle: "Try Again", secondarySystemImage: "arrow.clockwise", secondaryAction: onRetryAgenda)
+            AgendaFailureCard(error: error, primaryTitle: "Open iOS Settings", primarySystemImage: "gearshape", primaryAction: onOpenSystemSettings, secondaryTitle: "Try Again", secondarySystemImage: "arrow.clockwise", secondaryAction: onRetryAgenda)
                 .frame(maxWidth: .infinity, alignment: .top)
         case .failed(let error):
-            AgendaFailureCard(error: error, primaryTitle: "Try Again", primarySystemImage: "arrow.clockwise", primaryAction: onRetryAgenda, secondaryTitle: "Open Settings", secondarySystemImage: "gearshape", secondaryAction: onOpenSettings)
+            AgendaFailureCard(error: error, primaryTitle: "Try Again", primarySystemImage: "arrow.clockwise", primaryAction: onRetryAgenda, secondaryTitle: "Open Diagnostics", secondarySystemImage: "stethoscope", secondaryAction: onOpenDiagnostics)
                 .frame(maxWidth: .infinity, alignment: .top)
         }
     }
 
     private func moveDay(_ offset: Int) {
         if let next = calendar.date(byAdding: .day, value: offset, to: selectedDay) { onSelectDay(next) }
+    }
+
+    func performAgendaFailurePrimaryAction() {
+        switch state {
+        case .denied:
+            onOpenSystemSettings()
+        case .failed:
+            onRetryAgenda()
+        case .idle, .loading, .loaded:
+            break
+        }
+    }
+
+    func performAgendaFailureSecondaryAction() {
+        switch state {
+        case .denied:
+            onRetryAgenda()
+        case .failed:
+            onOpenDiagnostics()
+        case .idle, .loading, .loaded:
+            break
+        }
     }
 }
 

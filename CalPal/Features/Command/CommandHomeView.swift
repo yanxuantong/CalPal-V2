@@ -16,8 +16,10 @@ struct CommandHomeView: View {
                     model.openManualCreate(reason: "Create an event from an empty agenda.")
                 }, onRetryAgenda: {
                     Task { await model.loadAgenda() }
-                }, onOpenSettings: {
+                }, onOpenSystemSettings: {
                     openURL(AppSettingsLink.url)
+                }, onOpenDiagnostics: {
+                    appModel.openSettings(.diagnostics)
                 }) { day in
                     model.selectDay(day)
                 }

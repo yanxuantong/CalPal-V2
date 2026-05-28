@@ -49,4 +49,5 @@ xcodebuild -project CalPal.xcodeproj -scheme CalPal -configuration Debug -sdk ip
 - Calendar-access failures now provide actionable Settings/Try Again recovery and avoid sending users into manual-create flows that cannot save without EventKit access.
 - Permission recovery now distinguishes CalPal diagnostics from iOS system Settings; denied Calendar/Speech permissions can route to the system Settings URL.
 - Permission timing is now staged: onboarding completes before Calendar access is requested, and Speech/Microphone prompts remain just-in-time for the first voice command.
+- Agenda failure actions now distinguish permission denial from generic load failure: denied opens iOS Settings, while non-permission failure opens in-app diagnostics.
 - Competitive reference notes and release gaps live in `AppStore/ProductionPolish/2026-05-28/README.md`.

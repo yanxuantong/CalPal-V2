@@ -810,6 +810,45 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertFalse(app.commandHomeModel.showsCommandHint)
     }
 
+    @MainActor
+    func testAgendaFailureActionsRouteByFailureType() {
+        var systemSettingsCount = 0
+        var diagnosticsCount = 0
+        var retryCount = 0
+
+        let denied = DailyAgendaPager(
+            selectedDay: PreviewFixtures.now,
+            events: [],
+            state: .denied(ErrorPresentation(title: "Denied", message: "Calendar access denied", recovery: nil)),
+            onRetryAgenda: { retryCount += 1 },
+            onOpenSystemSettings: { systemSettingsCount += 1 },
+            onOpenDiagnostics: { diagnosticsCount += 1 },
+            onSelectDay: { _ in }
+        )
+        denied.performAgendaFailurePrimaryAction()
+        denied.performAgendaFailureSecondaryAction()
+
+        XCTAssertEqual(systemSettingsCount, 1)
+        XCTAssertEqual(retryCount, 1)
+        XCTAssertEqual(diagnosticsCount, 0)
+
+        let failed = DailyAgendaPager(
+            selectedDay: PreviewFixtures.now,
+            events: [],
+            state: .failed(ErrorPresentation(title: "Load Failed", message: "Unexpected error", recovery: nil)),
+            onRetryAgenda: { retryCount += 1 },
+            onOpenSystemSettings: { systemSettingsCount += 1 },
+            onOpenDiagnostics: { diagnosticsCount += 1 },
+            onSelectDay: { _ in }
+        )
+        failed.performAgendaFailurePrimaryAction()
+        failed.performAgendaFailureSecondaryAction()
+
+        XCTAssertEqual(systemSettingsCount, 1)
+        XCTAssertEqual(retryCount, 2)
+        XCTAssertEqual(diagnosticsCount, 1)
+    }
+
     func testBlankTextCommandDoesNotEnterPipeline() async {
         let pipeline = CountingCommandPipeline(output: .failure(ErrorPresentation(title: "Unexpected", message: "Should not run", recovery: nil)))
         let repo = MockCalendarRepository()
