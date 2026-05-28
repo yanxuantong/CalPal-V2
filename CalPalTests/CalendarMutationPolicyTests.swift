@@ -780,6 +780,26 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertEqual(result.event?.notes, "Bring notes")
     }
 
+    func testConfirmationPatchSummaryShowsClearIntentForOptionalFields() {
+        let patch = EventPatch(
+            title: "  Updated Alex 1:1  ",
+            startDate: nil,
+            endDate: nil,
+            location: "   ",
+            notes: "  Bring notes  "
+        )
+
+        let changes = patch.confirmationSummaryChanges
+
+        XCTAssertEqual(changes.map(\.id), ["title", "location", "notes"])
+        XCTAssertEqual(changes[0].value, "Updated Alex 1:1")
+        XCTAssertEqual(changes[1].value, "Clear location")
+        XCTAssertTrue(changes[1].isClearIntent)
+        XCTAssertEqual(changes[2].value, "Bring notes")
+        XCTAssertFalse(changes[2].isClearIntent)
+        XCTAssertEqual(patch.confirmationAccessibilitySummary, "After update, Title: Updated Alex 1:1, Location: Clear location, Notes: Bring notes")
+    }
+
     func testConfirmationRejectsPatchWithNoChangesAfterNormalization() async throws {
         let repo = MockCalendarRepository()
         let pipeline = CalendarCommandPipeline(

@@ -56,4 +56,5 @@ xcodebuild -project CalPal.xcodeproj -scheme CalPal -configuration Debug -sdk ip
 - Manual and correction forms now show the target calendar before save, with fallback copy for EventKit's default writable calendar behavior.
 - Draft saves now normalize title, location, and notes in the command pipeline before EventKit writes, and whitespace-only titles are rejected before repository mutation.
 - Modify patches now normalize title, location, and notes before EventKit writes; blank location/notes are preserved as explicit clear operations, while patches that become empty after normalization fail as `No Changes`.
+- Confirmation review now shows location and notes changes, including explicit clear intents, before update mutations are applied.
 - Competitive reference notes and release gaps live in `AppStore/ProductionPolish/2026-05-28/README.md`.

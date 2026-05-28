@@ -96,13 +96,83 @@ struct PatchSummaryCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("AFTER").font(.caption.bold()).foregroundStyle(CalPalTheme.Colors.brandPrimary)
-            if let title = patch.title { Text(title).font(.headline).foregroundStyle(CalPalTheme.Colors.textPrimary) }
-            if let start = patch.startDate { Text(start.formatted(date: .abbreviated, time: .shortened)).foregroundStyle(CalPalTheme.Colors.textSecondary) }
-            if let end = patch.endDate { Text("Ends " + end.formatted(date: .omitted, time: .shortened)).foregroundStyle(CalPalTheme.Colors.textSecondary) }
+            ForEach(patch.confirmationSummaryChanges) { change in
+                Label {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(change.label)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(CalPalTheme.Colors.textSecondary)
+                        Text(change.value)
+                            .font(change.id == "title" ? .headline : .callout)
+                            .foregroundStyle(change.isClearIntent ? CalPalTheme.Colors.warning : CalPalTheme.Colors.textPrimary)
+                    }
+                } icon: {
+                    Image(systemName: change.systemImage)
+                        .foregroundStyle(change.isClearIntent ? CalPalTheme.Colors.warning : CalPalTheme.Colors.brandPrimary)
+                }
+            }
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
         .glassCard()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(patch.confirmationAccessibilitySummary)
+    }
+}
+
+struct PatchSummaryChange: Identifiable, Equatable {
+    var id: String
+    var label: String
+    var value: String
+    var systemImage: String
+    var isClearIntent: Bool = false
+}
+
+extension EventPatch {
+    var confirmationSummaryChanges: [PatchSummaryChange] {
+        var changes: [PatchSummaryChange] = []
+        if let title = title?.trimmedConfirmationText, !title.isEmpty {
+            changes.append(PatchSummaryChange(id: "title", label: "Title", value: title, systemImage: "textformat"))
+        }
+        if let startDate {
+            changes.append(PatchSummaryChange(id: "start", label: "Starts", value: startDate.formatted(date: .abbreviated, time: .shortened), systemImage: "clock"))
+        }
+        if let endDate {
+            changes.append(PatchSummaryChange(id: "end", label: "Ends", value: endDate.formatted(date: .omitted, time: .shortened), systemImage: "clock.badge.checkmark"))
+        }
+        if let location {
+            let trimmed = location.trimmedConfirmationText
+            changes.append(PatchSummaryChange(
+                id: "location",
+                label: "Location",
+                value: trimmed.isEmpty ? "Clear location" : trimmed,
+                systemImage: trimmed.isEmpty ? "location.slash" : "location",
+                isClearIntent: trimmed.isEmpty
+            ))
+        }
+        if let notes {
+            let trimmed = notes.trimmedConfirmationText
+            changes.append(PatchSummaryChange(
+                id: "notes",
+                label: "Notes",
+                value: trimmed.isEmpty ? "Clear notes" : trimmed,
+                systemImage: "note.text",
+                isClearIntent: trimmed.isEmpty
+            ))
+        }
+        return changes
+    }
+
+    var confirmationAccessibilitySummary: String {
+        let changes = confirmationSummaryChanges.map { "\($0.label): \($0.value)" }
+        guard !changes.isEmpty else { return "After update, no visible field changes" }
+        return "After update, " + changes.joined(separator: ", ")
+    }
+}
+
+private extension String {
+    var trimmedConfirmationText: String {
+        trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
 
