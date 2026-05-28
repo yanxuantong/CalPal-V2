@@ -239,3 +239,9 @@ Only App Store-listed products were used as references:
 - Recurring modify/delete confirmations now show a scope-specific impact card after the segmented control.
 - The primary confirmation button changes from generic copy to explicit labels such as `Delete This Event` or `Delete This and Future Events`.
 - Regression coverage locks the recurrence-scope action labels and warning copy so future changes keep destructive scope visible.
+
+## Follow-Up Pass - Calendar Target Account Clarity
+
+- Manual-create, correction, and default-calendar readiness copy now include the calendar account/source when it is known.
+- Draft write targets render as `Calendar · Account`, reducing ambiguity when users have duplicate calendar names across iCloud, Google, or other accounts.
+- Regression coverage locks selected-calendar and policy-applied draft summaries so the pre-save review copy matches the actual writable target.

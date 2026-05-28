@@ -85,6 +85,7 @@ final class CalendarMutationPolicy {
             if let selected {
                 copy.calendarID = selected.id
                 copy.calendarName = selected.title
+                copy.calendarAccountName = selected.accountName
             }
         }
         return copy

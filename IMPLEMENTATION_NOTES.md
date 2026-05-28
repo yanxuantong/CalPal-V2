@@ -63,4 +63,5 @@ xcodebuild -project CalPal.xcodeproj -scheme CalPal -configuration Debug -sdk ip
 - Calendar chooser rows now show writable/read-only status, include stable row identifiers, and provide an explicit Cancel action.
 - Confirmation `Before` cards now include location, notes, and repeating-event status when present.
 - Recurring confirmation sheets now show selected-scope impact copy and explicit primary button labels for one-event versus future-event changes.
+- Draft target-calendar summaries now include the calendar account/source when known, so pre-save review can distinguish duplicate calendar names.
 - Competitive reference notes and release gaps live in `AppStore/ProductionPolish/2026-05-28/README.md`.

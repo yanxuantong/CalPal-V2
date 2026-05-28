@@ -369,6 +369,7 @@ final class MVPBugFixRegressionTests: XCTestCase {
         guard case .result(let result) = output else { return XCTFail("Expected successful auto-apply result") }
         XCTAssertEqual(result.event?.calendarID, "personal")
         XCTAssertEqual(repo.createdDrafts.first?.calendarID, "personal")
+        XCTAssertEqual(repo.createdDrafts.first?.targetCalendarSummary, "Personal · Google")
     }
 
     func testMockCreateFallsBackWhenPreferredCalendarIsReadOnly() async throws {
@@ -1247,13 +1248,15 @@ final class V2UsabilityRegressionTests: XCTestCase {
 
         guard case .manualEventForm(let context)? = presented else { return XCTFail("Expected manual event form") }
         XCTAssertEqual(context.draft.calendarID, "personal")
-        XCTAssertEqual(context.draft.targetCalendarSummary, "Personal")
+        XCTAssertEqual(context.draft.targetCalendarSummary, "Personal · Google")
     }
 
     func testDraftTargetCalendarSummaryFallsBackToDefaultWritableCalendar() {
         let draft = EventDraft(title: "Focus", startDate: PreviewFixtures.now, endDate: PreviewFixtures.now.addingTimeInterval(3600), calendarID: nil, calendarName: nil, location: nil, notes: nil)
+        let accountDraft = EventDraft(title: "Focus", startDate: PreviewFixtures.now, endDate: PreviewFixtures.now.addingTimeInterval(3600), calendarID: "work", calendarName: "Work Calendar", calendarAccountName: "iCloud", location: nil, notes: nil)
 
         XCTAssertEqual(draft.targetCalendarSummary, "Default writable calendar")
+        XCTAssertEqual(accountDraft.targetCalendarSummary, "Work Calendar · iCloud")
     }
 
     func testCalendarChooserRowsExposeWritableAndSelectedState() {

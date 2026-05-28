@@ -8,6 +8,7 @@ struct CalendarInfo: Identifiable, Equatable, Codable, Hashable {
     var colorHex: String?
 
     var subtitle: String { "\(accountName) · \(allowsContentModifications ? "writable" : "read-only")" }
+    var targetSummary: String { "\(title) · \(accountName)" }
 }
 
 struct CalendarEvent: Identifiable, Equatable, Codable, Hashable {
@@ -32,16 +33,45 @@ struct EventDraft: Identifiable, Equatable, Codable, Hashable {
     var endDate: Date
     var calendarID: String?
     var calendarName: String?
+    var calendarAccountName: String?
     var location: String?
     var notes: String?
     var isAllDay: Bool = false
+
+    init(
+        id: UUID = UUID(),
+        title: String,
+        startDate: Date,
+        endDate: Date,
+        calendarID: String?,
+        calendarName: String?,
+        calendarAccountName: String? = nil,
+        location: String?,
+        notes: String?,
+        isAllDay: Bool = false
+    ) {
+        self.id = id
+        self.title = title
+        self.startDate = startDate
+        self.endDate = endDate
+        self.calendarID = calendarID
+        self.calendarName = calendarName
+        self.calendarAccountName = calendarAccountName
+        self.location = location
+        self.notes = notes
+        self.isAllDay = isAllDay
+    }
 
     var hasRequiredFields: Bool {
         !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && endDate > startDate
     }
 
     var targetCalendarSummary: String {
-        calendarName ?? "Default writable calendar"
+        guard let calendarName else { return "Default writable calendar" }
+        guard let calendarAccountName, !calendarAccountName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return calendarName
+        }
+        return "\(calendarName) · \(calendarAccountName)"
     }
 
     var normalizedForSave: EventDraft {

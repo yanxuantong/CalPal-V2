@@ -213,7 +213,7 @@ final class CommandHomeModel: ObservableObject {
 
     func openManualCreate(reason: String = "Create the event manually.") {
         let start = calendar.date(byAdding: .hour, value: 1, to: now()) ?? now().addingTimeInterval(3600)
-        sheetPresenter?(.manualEventForm(ManualEventContext(reason: reason, draft: EventDraft(title: "", startDate: start, endDate: start.addingTimeInterval(3600), calendarID: selectedCalendar?.id, calendarName: selectedCalendar?.title, location: nil, notes: nil))))
+        sheetPresenter?(.manualEventForm(ManualEventContext(reason: reason, draft: EventDraft(title: "", startDate: start, endDate: start.addingTimeInterval(3600), calendarID: selectedCalendar?.id, calendarName: selectedCalendar?.title, calendarAccountName: selectedCalendar?.accountName, location: nil, notes: nil))))
     }
 
     func handleUnavailableAction(_ action: UnavailableAction) {

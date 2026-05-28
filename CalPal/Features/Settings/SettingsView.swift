@@ -196,7 +196,7 @@ enum AppStoreReadinessChecklist {
             ReadinessChecklistItem(
                 id: "writable-calendar",
                 title: "Writable calendar",
-                detail: writableCalendarCount > 0 ? "New events can be written to \(selectedCalendar?.title ?? "an available calendar")." : "Enable at least one writable calendar.",
+                detail: writableCalendarCount > 0 ? "New events can be written to \(selectedCalendar?.targetSummary ?? "an available calendar")." : "Enable at least one writable calendar.",
                 state: writableCalendarCount > 0 ? .ready : .needsAttention
             ),
             ReadinessChecklistItem(
