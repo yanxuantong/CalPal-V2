@@ -1211,6 +1211,18 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertEqual(draft.targetCalendarSummary, "Default writable calendar")
     }
 
+    func testCalendarChooserRowsExposeWritableAndSelectedState() {
+        let writable = CalendarInfo(id: "work", title: "Work Calendar", accountName: "iCloud", allowsContentModifications: true, colorHex: "#0A84FF")
+        let readOnly = CalendarInfo(id: "birthdays", title: "Birthdays", accountName: "iCloud", allowsContentModifications: false, colorHex: nil)
+        let selectedImage = render(CalendarChooserRow(calendar: writable, isSelected: true), colorScheme: .light, size: CGSize(width: 360, height: 96))
+        let readOnlyImage = render(CalendarChooserRow(calendar: readOnly, isSelected: false), colorScheme: .light, size: CGSize(width: 360, height: 96))
+
+        XCTAssertGreaterThan(selectedImage.pngData()?.count ?? 0, 2_000)
+        XCTAssertGreaterThan(readOnlyImage.pngData()?.count ?? 0, 2_000)
+        XCTAssertTrue(writable.allowsContentModifications)
+        XCTAssertFalse(readOnly.allowsContentModifications)
+    }
+
     func testStaleAgendaLoadCannotOverwriteNewerSelectedDay() async throws {
         let today = PreviewFixtures.now
         let tomorrow = try XCTUnwrap(Calendar.current.date(byAdding: .day, value: 1, to: today))
@@ -1277,6 +1289,20 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertEqual(model.commandState, .idle)
         XCTAssertNil(model.latestResult)
         XCTAssertNil(model.latestError)
+    }
+
+    private func render<V: View>(_ view: V, colorScheme: ColorScheme, size: CGSize) -> UIImage {
+        let controller = UIHostingController(rootView: view.environment(\.colorScheme, colorScheme))
+        controller.view.bounds = CGRect(origin: .zero, size: size)
+        controller.view.backgroundColor = .clear
+        let window = UIWindow(frame: CGRect(origin: .zero, size: size))
+        window.rootViewController = controller
+        window.makeKeyAndVisible()
+        controller.view.setNeedsLayout()
+        controller.view.layoutIfNeeded()
+        return UIGraphicsImageRenderer(size: size).image { _ in
+            controller.view.drawHierarchy(in: controller.view.bounds, afterScreenUpdates: true)
+        }
     }
 }
 

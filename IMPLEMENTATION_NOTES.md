@@ -60,4 +60,5 @@ xcodebuild -project CalPal.xcodeproj -scheme CalPal -configuration Debug -sdk ip
 - Event detail quick updates now show inline review readiness and disable review when the edited title is blank.
 - Manual-create and correction forms now show inline save readiness and use the same readiness model to gate their save actions.
 - Text command entry now shows inline send readiness and uses the same readiness model for main and toolbar send actions.
+- Calendar chooser rows now show writable/read-only status, include stable row identifiers, and provide an explicit Cancel action.
 - Competitive reference notes and release gaps live in `AppStore/ProductionPolish/2026-05-28/README.md`.
