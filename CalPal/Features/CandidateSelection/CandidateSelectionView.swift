@@ -88,7 +88,7 @@ private struct CandidateEventRow: View {
                     .foregroundStyle(CalPalTheme.Colors.textPrimary)
                 Text(event.startDate.formatted(date: .abbreviated, time: .shortened))
                     .foregroundStyle(CalPalTheme.Colors.textSecondary)
-                Text(event.calendarName)
+                Text(event.calendarAccountSummary)
                     .font(.caption)
                     .foregroundStyle(CalPalTheme.Colors.textSecondary)
                 if event.isRecurring {
@@ -104,9 +104,15 @@ private struct CandidateEventRow: View {
     }
 
     private var accessibilitySummary: String {
-        var parts = [event.title, event.formattedRange, event.calendarName]
+        var parts = [event.title, event.formattedRange, event.calendarAccountSummary]
         if event.isRecurring { parts.append("Repeating") }
         return parts.joined(separator: ", ")
+    }
+}
+
+extension CalendarEvent {
+    var calendarAccountSummary: String {
+        "\(calendarName) · \(accountName)"
     }
 }
 
