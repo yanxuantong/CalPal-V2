@@ -418,6 +418,58 @@ final class MVPBugFixRegressionTests: XCTestCase {
         XCTAssertTrue(repo.createdDrafts.isEmpty)
     }
 
+    func testPipelineNormalizesDraftBeforeSaving() async throws {
+        let repo = MockCalendarRepository()
+        let pipeline = CalendarCommandPipeline(
+            parser: NaturalLanguageCalendarParser(now: { PreviewFixtures.now }),
+            policy: CalendarMutationPolicy(now: { PreviewFixtures.now }),
+            repository: repo
+        )
+        let draft = EventDraft(
+            title: "  Planning review  ",
+            startDate: PreviewFixtures.now,
+            endDate: PreviewFixtures.now.addingTimeInterval(3600),
+            calendarID: "work",
+            calendarName: "Work Calendar",
+            location: "   ",
+            notes: "  Bring agenda  "
+        )
+
+        let output = await pipeline.apply(draft: draft)
+
+        guard case .result(let result) = output else { return XCTFail("Expected successful create result") }
+        XCTAssertEqual(result.event?.title, "Planning review")
+        XCTAssertNil(result.event?.location)
+        XCTAssertEqual(result.event?.notes, "Bring agenda")
+        XCTAssertEqual(repo.createdDrafts.first?.title, "Planning review")
+        XCTAssertNil(repo.createdDrafts.first?.location)
+        XCTAssertEqual(repo.createdDrafts.first?.notes, "Bring agenda")
+    }
+
+    func testPipelineRejectsWhitespaceOnlyDraftTitleBeforeRepositoryWrite() async throws {
+        let repo = MockCalendarRepository()
+        let pipeline = CalendarCommandPipeline(
+            parser: NaturalLanguageCalendarParser(now: { PreviewFixtures.now }),
+            policy: CalendarMutationPolicy(now: { PreviewFixtures.now }),
+            repository: repo
+        )
+        let draft = EventDraft(
+            title: "   ",
+            startDate: PreviewFixtures.now,
+            endDate: PreviewFixtures.now.addingTimeInterval(3600),
+            calendarID: "work",
+            calendarName: "Work Calendar",
+            location: nil,
+            notes: nil
+        )
+
+        let output = await pipeline.apply(draft: draft)
+
+        guard case .failure(let error) = output else { return XCTFail("Expected validation failure") }
+        XCTAssertEqual(error.title, "Could Not Save Event")
+        XCTAssertTrue(repo.createdDrafts.isEmpty)
+    }
+
     func testNaturalLanguageParserUsesInjectedCurrentTimezone() throws {
         var losAngelesCalendar = Calendar(identifier: .gregorian)
         let losAngeles = TimeZone(identifier: "America/Los_Angeles")!

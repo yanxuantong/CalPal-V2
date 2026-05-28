@@ -43,6 +43,14 @@ struct EventDraft: Identifiable, Equatable, Codable, Hashable {
     var targetCalendarSummary: String {
         calendarName ?? "Default writable calendar"
     }
+
+    var normalizedForSave: EventDraft {
+        var copy = self
+        copy.title = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        copy.location = location?.nilIfBlank
+        copy.notes = notes?.nilIfBlank
+        return copy
+    }
 }
 
 struct EventPatch: Equatable, Codable, Hashable {
@@ -70,5 +78,12 @@ struct EventQuery: Equatable, Codable, Hashable {
 enum CalendarDeepLink {
     static func appleCalendarURL(for date: Date) -> URL? {
         URL(string: "calshow:\(date.timeIntervalSinceReferenceDate)")
+    }
+}
+
+private extension String {
+    var nilIfBlank: String? {
+        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
     }
 }

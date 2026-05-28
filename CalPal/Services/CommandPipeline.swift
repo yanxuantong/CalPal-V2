@@ -50,7 +50,11 @@ final class CalendarCommandPipeline: CalendarCommandPipelineProtocol {
         do {
             let status = await repository.requestFullAccessIfNeeded()
             guard status == .allowed else { throw CalendarRepositoryError.accessDenied }
-            let event = try await repository.createEvent(draft)
+            let normalizedDraft = draft.normalizedForSave
+            guard normalizedDraft.hasRequiredFields else {
+                throw CalendarRepositoryError.invalidDraft("Title and a valid time range are required.")
+            }
+            let event = try await repository.createEvent(normalizedDraft)
             return .result(CommandResultViewState(title: "Added to Calendar", message: "\(event.title) · \(event.formattedRange)", event: event, actionTitle: "Open in Calendar", actionURL: CalendarDeepLink.appleCalendarURL(for: event.startDate)))
         } catch CalendarRepositoryError.accessDenied {
             return .unavailable(UnavailableContext(title: "Calendar Access Needed", message: "Allow full calendar access before saving events to Apple Calendar.", primaryAction: .openSystemSettings, secondaryAction: .openSettings))

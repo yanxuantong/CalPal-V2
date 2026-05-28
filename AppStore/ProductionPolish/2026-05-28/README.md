@@ -58,7 +58,7 @@ Only App Store-listed products were used as references:
 ## Verification Plan
 
 - Run targeted unit tests for `V2UsabilityRegressionTests` on iOS Simulator.
-- Run each XCTest suite on iOS Simulator. The full suite currently covers 66 tests.
+- Run each XCTest suite on iOS Simulator. The full suite currently covers 68 tests.
 - Build the app for an iOS Simulator destination with code signing disabled.
 - Do not run any real-device install, launch, or debug command in this checkpoint.
 
@@ -77,7 +77,8 @@ Only App Store-listed products were used as references:
 - Targeted permission-drift recovery tests: passed for access-denied search, confirmation mutation, unavailable action metadata, and pipeline recovery.
 - Targeted writable-calendar tests: passed for read-only preferred-calendar fallback and no-writable-calendar recovery.
 - Targeted manual-form calendar target tests: passed for selected-calendar display state and default-writable fallback copy.
-- Full Simulator XCTest: 66 passed, 0 failed.
+- Targeted draft normalization tests: passed for trimming title/location/notes before save and rejecting whitespace-only titles before repository writes.
+- Full Simulator XCTest: 68 passed, 0 failed.
 - Simulator build: passed with `CODE_SIGNING_ALLOWED=NO`.
 - Release script syntax checks: passed for screenshot capture and local release gate scripts.
 - Demo screenshot capture: passed on iPhone 17 Simulator using the built app's `CFBundleIdentifier`; generated light and dark screenshots at 1206x2622.
@@ -181,3 +182,9 @@ Only App Store-listed products were used as references:
 - Manual and correction event forms now show the target calendar row before save, reducing uncertainty about where the event will be written.
 - Drafts without an explicit selected calendar show `Default writable calendar`, matching EventKit's write-target fallback behavior.
 - Regression coverage locks selected-calendar display state and the fallback target copy.
+
+## Follow-Up Pass - Draft Save Normalization
+
+- Drafts are normalized in the command pipeline before EventKit writes: title, location, and notes are trimmed, and blank optional fields become absent values.
+- Whitespace-only titles are rejected before reaching the calendar repository, keeping manual, correction, and AI-generated save paths on the same validation contract.
+- Regression coverage locks both successful normalization and pre-repository rejection for invalid titles.
