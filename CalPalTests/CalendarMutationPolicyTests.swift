@@ -159,6 +159,7 @@ final class VisualSnapshotRenderingTests: XCTestCase {
             size: CGSize(width: 390, height: 844)
         )
         let textEntryDark = render(TextEntryView { _ in }, colorScheme: .dark, size: CGSize(width: 390, height: 520))
+        let onboardingLight = render(OnboardingView(onContinue: {}), colorScheme: .light, size: CGSize(width: 390, height: 720))
         let correctionContext = CorrectionContext(
             title: "Review Event Details",
             message: "Some required details were missing or uncertain.",
@@ -210,6 +211,7 @@ final class VisualSnapshotRenderingTests: XCTestCase {
         assertSnapshot(homeLight, size: CGSize(width: 390, height: 844))
         assertSnapshot(homeDark, size: CGSize(width: 390, height: 844))
         assertSnapshot(textEntryDark, size: CGSize(width: 390, height: 520))
+        assertSnapshot(onboardingLight, size: CGSize(width: 390, height: 720))
         assertSnapshot(correctionLight, size: CGSize(width: 390, height: 640))
         assertSnapshot(confirmationLight, size: CGSize(width: 390, height: 620))
         assertSnapshot(routedConfirmationLight, size: CGSize(width: 390, height: 660))
@@ -324,7 +326,7 @@ final class MVPBugFixRegressionTests: XCTestCase {
         XCTAssertEqual(repo.createdDrafts.count, 1)
     }
 
-    func testInitialPermissionInitializationRequestsSpeechAndCalendarOnce() async throws {
+    func testInitialPermissionInitializationWaitsForOnboardingAndRequestsCalendarOnce() async throws {
         let repo = MockCalendarRepository()
         let speech = MockSpeechService()
         let prefs = InMemoryPreferenceSummaryStore()
@@ -339,10 +341,18 @@ final class MVPBugFixRegressionTests: XCTestCase {
         let defaults = UserDefaults(suiteName: UUID().uuidString)!
         let app = AppModel(dependencies: dependencies, defaults: defaults)
 
-        await app.initializeRequiredPermissionsIfNeeded()
+        app.presentOnboardingIfNeeded()
         await app.initializeRequiredPermissionsIfNeeded()
 
-        XCTAssertEqual(speech.requestAuthorizationCount, 1)
+        XCTAssertEqual(app.activeSheet, .onboarding)
+        XCTAssertEqual(speech.requestAuthorizationCount, 0)
+        XCTAssertEqual(repo.requestFullAccessCount, 0)
+
+        app.completeOnboarding()
+        try await Task.sleep(nanoseconds: 80_000_000)
+        await app.initializeRequiredPermissionsIfNeeded()
+
+        XCTAssertEqual(speech.requestAuthorizationCount, 0)
         XCTAssertEqual(repo.requestFullAccessCount, 1)
         XCTAssertEqual(app.capabilitySummary.calendar, .allowed)
     }

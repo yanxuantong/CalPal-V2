@@ -19,6 +19,9 @@ struct OnboardingView: View {
             Text("Modify/delete actions are reviewed before changing your calendar.")
                 .font(.callout)
                 .foregroundStyle(.secondary)
+            Text("Continue asks for Calendar access so CalPal can show and save events. Voice permissions are requested only when you use voice.")
+                .font(.footnote)
+                .foregroundStyle(CalPalTheme.Colors.textSecondary)
             Spacer()
             Button("Continue", action: onContinue).buttonStyle(.borderedProminent).controlSize(.large).frame(maxWidth: .infinity)
         }

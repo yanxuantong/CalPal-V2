@@ -72,6 +72,7 @@ Only App Store-listed products were used as references:
 - `VisualSnapshotRenderingTests`: 4 passed, 0 failed.
 - Targeted draft-form guardrail suite: 20 passed, 0 failed.
 - Targeted recovery-path suite: 27 passed, 0 failed.
+- Targeted just-in-time permission suite: 3 passed, 0 failed.
 - Full Simulator XCTest: 59 passed, 0 failed.
 - Simulator build: passed with `CODE_SIGNING_ALLOWED=NO`.
 
@@ -139,3 +140,9 @@ Only App Store-listed products were used as references:
 - Permission recovery now distinguishes iOS Settings from CalPal's in-app diagnostics. Denied Calendar access opens the system Settings URL so users can actually grant access.
 - Calendar-denied command flows use `Open iOS Settings` as the primary action and keep in-app diagnostics as the secondary context action.
 - Speech permission denial keeps text entry as the primary fallback and adds `Open iOS Settings` as the recovery path.
+
+## Follow-Up Pass - Just-In-Time Permission Timing
+
+- Onboarding now explains that Calendar access is requested after Continue, while voice permissions are requested only when the user uses voice.
+- Startup initialization no longer requests system permissions while onboarding is still visible.
+- Initial app setup requests Calendar access for the agenda but leaves Speech/Microphone prompts to the first recording attempt.

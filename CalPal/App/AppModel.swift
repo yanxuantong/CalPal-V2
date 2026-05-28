@@ -10,7 +10,7 @@ final class AppModel: ObservableObject {
     let dependencies: DependencyContainer
     let commandHomeModel: CommandHomeModel
     private let onboardingKey = "calpal.hasSeenOnboarding"
-    private let initializationKey = "calpal.hasRequestedInitialPermissions"
+    private let calendarPermissionInitializationKey = "calpal.hasRequestedInitialCalendarPermission"
     private let defaults: UserDefaults
     private let runtime: AppRuntimeConfiguration
     private var isInitializingPermissions = false
@@ -41,7 +41,11 @@ final class AppModel: ObservableObject {
             if runtime.preloadsAgenda { await commandHomeModel.loadAgenda() }
             return
         }
-        guard !defaults.bool(forKey: initializationKey) else {
+        guard activeSheet != .onboarding else {
+            refreshCapabilities()
+            return
+        }
+        guard !defaults.bool(forKey: calendarPermissionInitializationKey) else {
             refreshCapabilities()
             if dependencies.calendarRepository.authorizationStatus() == .allowed { await commandHomeModel.loadAgenda() }
             return
@@ -49,9 +53,8 @@ final class AppModel: ObservableObject {
         isInitializingPermissions = true
         defer { isInitializingPermissions = false }
 
-        _ = await dependencies.speechService.requestAuthorization()
         _ = await dependencies.calendarRepository.requestFullAccessIfNeeded()
-        defaults.set(true, forKey: initializationKey)
+        defaults.set(true, forKey: calendarPermissionInitializationKey)
         refreshCapabilities()
         if dependencies.calendarRepository.authorizationStatus() == .allowed { await commandHomeModel.loadAgenda() }
     }

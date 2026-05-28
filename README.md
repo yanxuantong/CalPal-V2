@@ -93,6 +93,7 @@ bash Scripts/verify_public_release_readiness.sh
 
 - Foundation Models runtime behavior depends on Apple Intelligence availability; the deterministic parser is used as a privacy-preserving fallback.
 - Voice entry uses tap once to start recording and tap again to finish; the initial "Tap to speak" hint fades after first use.
+- Onboarding explains Calendar access before the first system prompt, and Speech/Microphone permissions are requested just-in-time on first voice use.
 - Created/updated-event success cards auto-dismiss, can be tapped to focus the agenda preview on the event date, and expose an Apple Calendar open action.
 - EventKit create success is verified against the system calendar, and local wall-clock times use the device timezone.
 - Settings includes a v0.3 readiness checklist for calendar access, writable calendars, speech, the bundled privacy manifest, Calendar opening, and store-material gates.

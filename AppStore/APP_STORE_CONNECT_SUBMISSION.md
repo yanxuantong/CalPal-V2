@@ -57,16 +57,17 @@ Build:
 
 What to Test in TestFlight:
 
-1. Complete onboarding and grant Calendar Full Access, Speech Recognition, and Microphone permissions.
+1. Complete onboarding and grant Calendar Full Access.
 2. Confirm today's agenda loads from Apple Calendar.
-3. Create an event by voice: "Meeting with Alex tomorrow at 3 PM."
-4. Confirm the event appears in CalPal and Apple Calendar.
-5. Create an event by text using Chinese input: "明天下午三点和 Alex 开会."
-6. Tap a result card's Open in Calendar action and confirm Apple Calendar opens near the event date.
-7. Open an event from the agenda and stage a title or location update.
-8. Confirm modify and delete flows require review, especially for recurring events.
-9. Deny Speech Recognition on a fresh install and verify text/manual fallbacks.
-10. Check Light Mode, Dark Mode, Dynamic Type, Reduce Motion, and Reduce Transparency.
+3. Start the first voice command and grant Speech Recognition and Microphone permissions when prompted.
+4. Create an event by voice: "Meeting with Alex tomorrow at 3 PM."
+5. Confirm the event appears in CalPal and Apple Calendar.
+6. Create an event by text using Chinese input: "明天下午三点和 Alex 开会."
+7. Tap a result card's Open in Calendar action and confirm Apple Calendar opens near the event date.
+8. Open an event from the agenda and stage a title or location update.
+9. Confirm modify and delete flows require review, especially for recurring events.
+10. Deny Speech Recognition on a fresh install and verify text/manual fallbacks.
+11. Check Light Mode, Dark Mode, Dynamic Type, Reduce Motion, and Reduce Transparency.
 
 ## App Review Notes
 

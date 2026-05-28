@@ -48,4 +48,5 @@ xcodebuild -project CalPal.xcodeproj -scheme CalPal -configuration Debug -sdk ip
 - Manual-create and correction forms now guard against duplicate save taps and keep start/end edits in a valid time range.
 - Calendar-access failures now provide actionable Settings/Try Again recovery and avoid sending users into manual-create flows that cannot save without EventKit access.
 - Permission recovery now distinguishes CalPal diagnostics from iOS system Settings; denied Calendar/Speech permissions can route to the system Settings URL.
+- Permission timing is now staged: onboarding completes before Calendar access is requested, and Speech/Microphone prompts remain just-in-time for the first voice command.
 - Competitive reference notes and release gaps live in `AppStore/ProductionPolish/2026-05-28/README.md`.

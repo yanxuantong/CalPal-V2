@@ -77,17 +77,18 @@ bash Scripts/verify_public_release_readiness.sh
 Run this on a physical iPhone before public App Store submission:
 
 1. Fresh install, first launch, complete onboarding.
-2. Grant Calendar Full Access, Speech Recognition, and Microphone permissions.
-3. Open Settings and confirm Calendar access plus Writable calendar show as ready in the v0.3 readiness section.
-4. Confirm Privacy manifest shows as ready in the v0.3 readiness section.
-5. Create by voice: "Meeting with Alex tomorrow at 3 PM."
-6. Confirm the event appears in CalPal and the system Calendar app.
-7. Tap the result card's Open in Calendar action and confirm Calendar opens near the event date.
-8. Create by text using a Chinese command, for example "明天下午三点和 Alex 开会."
-9. Open an existing event from the agenda and stage a title or location update.
-10. Confirm modify/delete flows still require review, especially for recurring events.
-11. Deny Speech Recognition on a second install or reset permissions and verify text/manual fallbacks.
-12. Check Light Mode, Dark Mode, Dynamic Type, Reduce Motion, and Reduce Transparency.
+2. Grant Calendar Full Access after onboarding.
+3. Start the first voice command and grant Speech Recognition and Microphone permissions when prompted.
+4. Open Settings and confirm Calendar access plus Writable calendar show as ready in the v0.3 readiness section.
+5. Confirm Privacy manifest shows as ready in the v0.3 readiness section.
+6. Create by voice: "Meeting with Alex tomorrow at 3 PM."
+7. Confirm the event appears in CalPal and the system Calendar app.
+8. Tap the result card's Open in Calendar action and confirm Calendar opens near the event date.
+9. Create by text using a Chinese command, for example "明天下午三点和 Alex 开会."
+10. Open an existing event from the agenda and stage a title or location update.
+11. Confirm modify/delete flows still require review, especially for recurring events.
+12. Deny Speech Recognition on a second install or reset permissions and verify text/manual fallbacks.
+13. Check Light Mode, Dark Mode, Dynamic Type, Reduce Motion, and Reduce Transparency.
 
 ## App Store Metadata Draft
 
