@@ -81,10 +81,11 @@ struct EventDetailView: View {
             TextField("Notes", text: $notes, axis: .vertical)
                 .lineLimit(2...4)
                 .textFieldStyle(.roundedBorder)
+            EventDetailReviewHint(state: reviewState)
             Button("Review Update") { onUpdate(updatePatch) }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
-                .disabled(!updatePatch.hasChanges)
+                .disabled(!reviewState.canReview)
                 .accessibilityIdentifier("eventDetailReviewUpdate")
         }
         .padding()
@@ -102,6 +103,10 @@ struct EventDetailView: View {
         )
     }
 
+    private var reviewState: EventDetailReviewState {
+        EventDetailReviewState(title: title, patch: updatePatch)
+    }
+
     private var fullDateRange: String {
         "\(context.event.startDate.formatted(date: .abbreviated, time: .shortened)) – \(context.event.endDate.formatted(date: .abbreviated, time: .shortened))"
     }
@@ -113,6 +118,75 @@ struct EventDetailView: View {
     private func emptyFallback(_ text: String?) -> String {
         guard let text, !text.isEmpty else { return "None" }
         return text
+    }
+}
+
+struct EventDetailReviewState: Equatable {
+    enum Status: Equatable {
+        case missingTitle
+        case unchanged
+        case ready(changeCount: Int)
+    }
+
+    var status: Status
+
+    init(title: String, patch: EventPatch) {
+        if title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            status = .missingTitle
+        } else if !patch.hasChanges {
+            status = .unchanged
+        } else {
+            status = .ready(changeCount: patch.confirmationSummaryChanges.count)
+        }
+    }
+
+    var canReview: Bool {
+        if case .ready = status { return true }
+        return false
+    }
+
+    var message: String {
+        switch status {
+        case .missingTitle:
+            return "Title is required before review."
+        case .unchanged:
+            return "Make a change to review before saving."
+        case .ready(let changeCount):
+            return "Review \(changeCount) change\(changeCount == 1 ? "" : "s") before saving."
+        }
+    }
+
+    var systemImage: String {
+        switch status {
+        case .missingTitle:
+            return "exclamationmark.circle.fill"
+        case .unchanged:
+            return "info.circle"
+        case .ready:
+            return "checkmark.circle.fill"
+        }
+    }
+
+    var palette: CalPalTheme.ChipPalette {
+        switch status {
+        case .missingTitle:
+            return CalPalTheme.Colors.warningChip
+        case .unchanged:
+            return CalPalTheme.Colors.aiChip
+        case .ready:
+            return CalPalTheme.Colors.successChip
+        }
+    }
+}
+
+private struct EventDetailReviewHint: View {
+    let state: EventDetailReviewState
+
+    var body: some View {
+        Label(state.message, systemImage: state.systemImage)
+            .font(.caption.weight(.semibold))
+            .quietChip(state.palette)
+            .accessibilityIdentifier("eventDetailReviewHint")
     }
 }
 

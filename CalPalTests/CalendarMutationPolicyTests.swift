@@ -661,6 +661,28 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertNil(confirmation.afterDraft)
     }
 
+    func testEventDetailReviewStateRequiresTitleAndChanges() {
+        let noChanges = EventDetailReviewState(
+            title: "Alex 1:1",
+            patch: EventPatch(title: nil, startDate: nil, endDate: nil, location: nil, notes: nil)
+        )
+        let missingTitle = EventDetailReviewState(
+            title: "   ",
+            patch: EventPatch(title: "   ", startDate: nil, endDate: nil, location: nil, notes: "Bring notes")
+        )
+        let ready = EventDetailReviewState(
+            title: "Alex 1:1",
+            patch: EventPatch(title: nil, startDate: nil, endDate: nil, location: "", notes: "Bring notes")
+        )
+
+        XCTAssertFalse(noChanges.canReview)
+        XCTAssertEqual(noChanges.message, "Make a change to review before saving.")
+        XCTAssertFalse(missingTitle.canReview)
+        XCTAssertEqual(missingTitle.message, "Title is required before review.")
+        XCTAssertTrue(ready.canReview)
+        XCTAssertEqual(ready.message, "Review 2 changes before saving.")
+    }
+
     func testCalendarResultsCarryAppleCalendarDeepLink() async throws {
         let repo = MockCalendarRepository()
         let pipeline = CalendarCommandPipeline(
