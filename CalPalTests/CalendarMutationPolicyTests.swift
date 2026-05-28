@@ -1259,6 +1259,26 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertEqual(accountDraft.targetCalendarSummary, "Work Calendar · iCloud")
     }
 
+    func testNoMatchCorrectionUsesPreferredWritableCalendarTarget() async {
+        let repo = MockCalendarRepository()
+        let policy = CalendarMutationPolicy(now: { PreviewFixtures.now }, preferredCalendarID: { "personal" })
+        let parsed = ParsedCalendarCommand(
+            originalText: "delete budget review",
+            localeIdentifier: "en-US",
+            intent: .delete(query: EventQuery(phrase: "budget review", day: PreviewFixtures.now, titleHint: "budget review")),
+            confidence: 0.9,
+            missingFields: [],
+            warnings: []
+        )
+
+        let decision = await policy.decide(parsed: parsed, calendars: repo.calendars, repository: repo)
+
+        guard case .needsCorrection(let context) = decision else { return XCTFail("Expected correction for no matching event") }
+        XCTAssertEqual(context.title, "No Matching Event")
+        XCTAssertEqual(context.draft.calendarID, "personal")
+        XCTAssertEqual(context.draft.targetCalendarSummary, "Personal · Google")
+    }
+
     func testCalendarChooserRowsExposeWritableAndSelectedState() {
         let writable = CalendarInfo(id: "work", title: "Work Calendar", accountName: "iCloud", allowsContentModifications: true, colorHex: "#0A84FF")
         let readOnly = CalendarInfo(id: "birthdays", title: "Birthdays", accountName: "iCloud", allowsContentModifications: false, colorHex: nil)

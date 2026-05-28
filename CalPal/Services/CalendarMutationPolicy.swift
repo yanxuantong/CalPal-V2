@@ -32,20 +32,33 @@ final class CalendarMutationPolicy {
             }
             return .autoApply(prepared)
         case .modify(let query, let patch):
-            return await candidateDecision(operation: .modify, query: query, patch: patch, sourceText: parsed.originalText, parseRoute: parsed.parseRoute, repository: repository)
+            return await candidateDecision(operation: .modify, query: query, patch: patch, sourceText: parsed.originalText, parseRoute: parsed.parseRoute, calendars: calendars, repository: repository)
         case .delete(let query):
-            return await candidateDecision(operation: .delete, query: query, patch: nil, sourceText: parsed.originalText, parseRoute: parsed.parseRoute, repository: repository)
+            return await candidateDecision(operation: .delete, query: query, patch: nil, sourceText: parsed.originalText, parseRoute: parsed.parseRoute, calendars: calendars, repository: repository)
         }
     }
 
-    private func candidateDecision(operation: CommandOperation, query: EventQuery, patch: EventPatch?, sourceText: String, parseRoute: CalendarParseRoute, repository: CalendarRepositoryProtocol) async -> CommandDecision {
+    private func candidateDecision(operation: CommandOperation, query: EventQuery, patch: EventPatch?, sourceText: String, parseRoute: CalendarParseRoute, calendars: [CalendarInfo], repository: CalendarRepositoryProtocol) async -> CommandDecision {
         do {
             let candidates = try await repository.searchEvents(query: query)
             if candidates.count == 1, let target = candidates.first {
                 return .needsConfirmation(confirmationContext(operation: operation, target: target, patch: patch, parseRoute: parseRoute))
             }
             if candidates.isEmpty {
-                return .needsCorrection(CorrectionContext(title: "No Matching Event", message: "Refine the event title or choose a manual fallback.", draft: EventDraft(title: query.titleHint ?? "", startDate: query.day ?? now(), endDate: (query.day ?? now()).addingTimeInterval(3600), calendarID: nil, calendarName: nil, location: nil, notes: nil), missingFields: ["matching event"], sourceText: sourceText, parseRoute: parseRoute))
+                let start = query.day ?? now()
+                let fallbackDraft = applyDefaultCalendar(
+                    EventDraft(
+                        title: query.titleHint ?? "",
+                        startDate: start,
+                        endDate: start.addingTimeInterval(3600),
+                        calendarID: nil,
+                        calendarName: nil,
+                        location: nil,
+                        notes: nil
+                    ),
+                    calendars: calendars
+                )
+                return .needsCorrection(CorrectionContext(title: "No Matching Event", message: "Refine the event title or choose a manual fallback.", draft: fallbackDraft, missingFields: ["matching event"], sourceText: sourceText, parseRoute: parseRoute))
             }
             return .needsCandidateSelection(CandidateSelectionContext(operation: operation, candidates: candidates, patch: patch, sourceText: sourceText, parseRoute: parseRoute))
         } catch CalendarRepositoryError.accessDenied {

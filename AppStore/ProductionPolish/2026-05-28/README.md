@@ -59,13 +59,13 @@ Only App Store-listed products were used as references:
 ## Verification Plan
 
 - Run targeted unit tests for `V2UsabilityRegressionTests` on iOS Simulator.
-- Run each XCTest suite on iOS Simulator. The full suite currently covers 77 tests.
+- Run each XCTest suite on iOS Simulator. The full suite currently covers 78 tests.
 - Build the app for an iOS Simulator destination with code signing disabled.
 - Do not run any real-device install, launch, or debug command in this checkpoint.
 
 ## Verification Results
 
-- `V2UsabilityRegressionTests`: 27 passed, 0 failed.
+- `V2UsabilityRegressionTests`: 28 passed, 0 failed.
 - `PreferenceSummaryStoreTests`: 1 passed, 0 failed.
 - `NaturalLanguageCalendarParserTests`: 13 passed, 0 failed.
 - `CalendarMutationPolicyTests` + `LightDarkUIPresentationTests`: 9 passed, 0 failed.
@@ -80,7 +80,7 @@ Only App Store-listed products were used as references:
 - Targeted manual-form calendar target tests: passed for selected-calendar display state and default-writable fallback copy.
 - Targeted draft normalization tests: passed for trimming title/location/notes before save and rejecting whitespace-only titles before repository writes.
 - Targeted patch normalization tests: passed for trimming update patches before EventKit mutation, preserving clear-field intent, and rejecting no-op patches after normalization.
-- Full Simulator XCTest: 77 passed, 0 failed.
+- Full Simulator XCTest: 78 passed, 0 failed.
 - Simulator build: passed with `CODE_SIGNING_ALLOWED=NO`.
 - Release script syntax checks: passed for screenshot capture and local release gate scripts.
 - Demo screenshot capture: passed on iPhone 17 Simulator using the built app's `CFBundleIdentifier`; generated light and dark screenshots at 1206x2622.
@@ -245,3 +245,9 @@ Only App Store-listed products were used as references:
 - Manual-create, correction, and default-calendar readiness copy now include the calendar account/source when it is known.
 - Draft write targets render as `Calendar · Account`, reducing ambiguity when users have duplicate calendar names across iCloud, Google, or other accounts.
 - Regression coverage locks selected-calendar and policy-applied draft summaries so the pre-save review copy matches the actual writable target.
+
+## Follow-Up Pass - No-Match Fallback Target Consistency
+
+- Modify/delete commands that find no matching event now build their correction fallback draft with the same preferred writable calendar logic as create commands.
+- The `No Matching Event` correction sheet can show the actual `Calendar · Account` target before the user saves a fallback event manually.
+- Regression coverage locks the no-match correction path against losing preferred-calendar and account/source context.
