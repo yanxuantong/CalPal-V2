@@ -25,6 +25,7 @@ struct CorrectionView: View {
                 Section("Event") {
                     TextField("Title", text: $draft.title)
                     StartEndTimePicker(start: $draft.startDate, end: $draft.endDate)
+                    TargetCalendarRow(summary: draft.targetCalendarSummary)
                     TextField("Location", text: Binding(optional: $draft.location, replacingNilWith: ""))
                     TextField("Notes", text: Binding(optional: $draft.notes, replacingNilWith: ""), axis: .vertical)
                 }

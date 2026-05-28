@@ -58,7 +58,7 @@ Only App Store-listed products were used as references:
 ## Verification Plan
 
 - Run targeted unit tests for `V2UsabilityRegressionTests` on iOS Simulator.
-- Run each XCTest suite on iOS Simulator. The full suite currently covers 64 tests.
+- Run each XCTest suite on iOS Simulator. The full suite currently covers 66 tests.
 - Build the app for an iOS Simulator destination with code signing disabled.
 - Do not run any real-device install, launch, or debug command in this checkpoint.
 
@@ -76,7 +76,8 @@ Only App Store-listed products were used as references:
 - Targeted agenda-failure action suite: 2 passed, 0 failed.
 - Targeted permission-drift recovery tests: passed for access-denied search, confirmation mutation, unavailable action metadata, and pipeline recovery.
 - Targeted writable-calendar tests: passed for read-only preferred-calendar fallback and no-writable-calendar recovery.
-- Full Simulator XCTest: 64 passed, 0 failed.
+- Targeted manual-form calendar target tests: passed for selected-calendar display state and default-writable fallback copy.
+- Full Simulator XCTest: 66 passed, 0 failed.
 - Simulator build: passed with `CODE_SIGNING_ALLOWED=NO`.
 - Release script syntax checks: passed for screenshot capture and local release gate scripts.
 - Demo screenshot capture: passed on iPhone 17 Simulator using the built app's `CFBundleIdentifier`; generated light and dark screenshots at 1206x2622.
@@ -174,3 +175,9 @@ Only App Store-listed products were used as references:
 - Mock calendar writes now mirror the EventKit repository's writable-calendar selection: preferred writable calendar first, default writable fallback next, and failure when no writable calendar exists.
 - Save attempts with only read-only calendars now route to CalPal diagnostics instead of suggesting manual retry, because manual creation cannot succeed without a writable EventKit calendar.
 - Regression coverage locks both the read-only preferred-calendar fallback and the no-writable-calendar recovery path.
+
+## Follow-Up Pass - Manual Form Calendar Target
+
+- Manual and correction event forms now show the target calendar row before save, reducing uncertainty about where the event will be written.
+- Drafts without an explicit selected calendar show `Default writable calendar`, matching EventKit's write-target fallback behavior.
+- Regression coverage locks selected-calendar display state and the fallback target copy.

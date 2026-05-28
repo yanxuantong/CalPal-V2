@@ -39,6 +39,10 @@ struct EventDraft: Identifiable, Equatable, Codable, Hashable {
     var hasRequiredFields: Bool {
         !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && endDate > startDate
     }
+
+    var targetCalendarSummary: String {
+        calendarName ?? "Default writable calendar"
+    }
 }
 
 struct EventPatch: Equatable, Codable, Hashable {

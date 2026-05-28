@@ -53,4 +53,5 @@ xcodebuild -project CalPal.xcodeproj -scheme CalPal -configuration Debug -sdk ip
 - Release scripts now derive the demo screenshot bundle id from the built app and validate minimum screenshot dimensions.
 - Calendar permission drift during existing-event search or confirmation-time mutation now routes to iOS Settings, with mock repositories enforcing denied access across read and write methods.
 - Mock calendar writes now enforce writable-calendar selection like EventKit, and no-writable-calendar saves route to diagnostics instead of manual retry.
+- Manual and correction forms now show the target calendar before save, with fallback copy for EventKit's default writable calendar behavior.
 - Competitive reference notes and release gaps live in `AppStore/ProductionPolish/2026-05-28/README.md`.

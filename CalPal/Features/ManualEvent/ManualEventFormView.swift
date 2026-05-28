@@ -20,6 +20,7 @@ struct ManualEventFormView: View {
                 Section("Event") {
                     TextField("Title", text: $draft.title)
                     StartEndTimePicker(start: $draft.startDate, end: $draft.endDate)
+                    TargetCalendarRow(summary: draft.targetCalendarSummary)
                     TextField("Location", text: Binding(optional: $draft.location, replacingNilWith: ""))
                     TextField("Notes", text: Binding(optional: $draft.notes, replacingNilWith: ""), axis: .vertical)
                 }
@@ -42,6 +43,28 @@ struct ManualEventFormView: View {
         guard draft.hasRequiredFields, !isSaving else { return }
         isSaving = true
         onSave(draft)
+    }
+}
+
+struct TargetCalendarRow: View {
+    let summary: String
+
+    var body: some View {
+        Label {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Calendar")
+                    .foregroundStyle(CalPalTheme.Colors.textPrimary)
+                Text(summary)
+                    .font(.caption)
+                    .foregroundStyle(CalPalTheme.Colors.textSecondary)
+            }
+        } icon: {
+            Image(systemName: "calendar")
+                .foregroundStyle(CalPalTheme.Colors.brandPrimary)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Calendar, \(summary)")
+        .accessibilityIdentifier("targetCalendarRow")
     }
 }
 

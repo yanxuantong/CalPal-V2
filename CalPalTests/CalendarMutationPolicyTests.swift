@@ -995,6 +995,25 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertEqual(context.draft.calendarID, nil)
     }
 
+    func testManualCreateShowsSelectedCalendarTarget() throws {
+        let model = CommandHomeModel(dependencies: .mock(), selectedDay: PreviewFixtures.now)
+        model.selectedCalendar = CalendarInfo(id: "personal", title: "Personal", accountName: "Google", allowsContentModifications: true, colorHex: "#30D158")
+        var presented: AppSheet?
+        model.sheetPresenter = { presented = $0 }
+
+        model.openManualCreate()
+
+        guard case .manualEventForm(let context)? = presented else { return XCTFail("Expected manual event form") }
+        XCTAssertEqual(context.draft.calendarID, "personal")
+        XCTAssertEqual(context.draft.targetCalendarSummary, "Personal")
+    }
+
+    func testDraftTargetCalendarSummaryFallsBackToDefaultWritableCalendar() {
+        let draft = EventDraft(title: "Focus", startDate: PreviewFixtures.now, endDate: PreviewFixtures.now.addingTimeInterval(3600), calendarID: nil, calendarName: nil, location: nil, notes: nil)
+
+        XCTAssertEqual(draft.targetCalendarSummary, "Default writable calendar")
+    }
+
     func testStaleAgendaLoadCannotOverwriteNewerSelectedDay() async throws {
         let today = PreviewFixtures.now
         let tomorrow = try XCTUnwrap(Calendar.current.date(byAdding: .day, value: 1, to: today))
