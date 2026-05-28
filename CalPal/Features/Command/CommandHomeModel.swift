@@ -158,6 +158,11 @@ final class CommandHomeModel: ObservableObject {
     }
 
     func resolveConfirmation(_ context: ConfirmationContext, decision: ConfirmationDecision) async {
+        guard case .confirm = decision else {
+            latestError = nil
+            commandState = .idle
+            return
+        }
         let requestID = nextCommandGeneration()
         commandState = .applying
         let output = await dependencies.commandPipeline.confirm(context, decision: decision)

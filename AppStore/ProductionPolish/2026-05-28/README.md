@@ -58,20 +58,20 @@ Only App Store-listed products were used as references:
 ## Verification Plan
 
 - Run targeted unit tests for `V2UsabilityRegressionTests` on iOS Simulator.
-- Run each XCTest suite on iOS Simulator. The full suite currently covers 53 tests.
+- Run each XCTest suite on iOS Simulator. The full suite currently covers 54 tests.
 - Build the app for an iOS Simulator destination with code signing disabled.
 - Do not run any real-device install, launch, or debug command in this checkpoint.
 
 ## Verification Results
 
-- `V2UsabilityRegressionTests`: 17 passed, 0 failed.
+- `V2UsabilityRegressionTests`: 18 passed, 0 failed.
 - `PreferenceSummaryStoreTests`: 1 passed, 0 failed.
 - `NaturalLanguageCalendarParserTests`: 13 passed, 0 failed.
 - `CalendarMutationPolicyTests` + `LightDarkUIPresentationTests`: 9 passed, 0 failed.
 - `MVPBugFixRegressionTests`: 9 passed, 0 failed.
 - `VisualSnapshotRenderingTests`: 4 passed, 0 failed.
-- Targeted correction-route/usability/snapshot suites: 21 passed, 0 failed.
-- Full Simulator XCTest: 53 passed, 0 failed.
+- Targeted confirmation-cancel suite: 18 passed, 0 failed.
+- Full Simulator XCTest: 54 passed, 0 failed.
 - Simulator build: passed with `CODE_SIGNING_ALLOWED=NO`.
 
 ## Follow-Up Pass - Safety Settings
@@ -116,3 +116,8 @@ Only App Store-listed products were used as references:
 - Candidate-selection sheets now include the original source command, parser-route badge, and a short explanation that no calendar change has been applied yet.
 - Ambiguous modify/delete choices have operation-specific titles and an explicit Cancel toolbar action.
 - Candidate rows now include stable accessibility identifiers, calendar color accents, recurring-event signals, and combined accessibility labels.
+
+## Follow-Up Pass - Confirmation Cancel Behavior
+
+- Cancelling a confirmation is now treated as a normal no-op instead of a failed calendar command.
+- The home model no longer enters the command pipeline for `.cancel`, so cancel cannot mutate EventKit and does not show a `Change Cancelled` error card.

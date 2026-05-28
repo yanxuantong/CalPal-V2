@@ -614,6 +614,41 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertEqual(model.latestResult?.parseRoute, .foundationModelsFailedOver)
     }
 
+    func testCancellingConfirmationDoesNotEnterPipelineOrShowError() async {
+        let repo = MockCalendarRepository()
+        let event = CalendarEvent(
+            id: "cancel-confirmation-event",
+            title: "Cancelled confirmation",
+            calendarID: "work",
+            calendarName: "Work Calendar",
+            accountName: "iCloud",
+            startDate: PreviewFixtures.now,
+            endDate: PreviewFixtures.now.addingTimeInterval(3600),
+            isAllDay: false,
+            location: nil,
+            notes: nil,
+            isRecurring: false,
+            calendarColorHex: "#0A84FF"
+        )
+        let pipeline = CountingCommandPipeline(output: .result(CommandResultViewState(title: "Unexpected", message: "Should not apply", event: event, actionTitle: nil)))
+        let deps = DependencyContainer(
+            calendarRepository: repo,
+            commandPipeline: pipeline,
+            speechService: MockSpeechService(),
+            modelProvider: MockModelProvider(),
+            preferenceSummaryStore: InMemoryPreferenceSummaryStore(),
+            capabilityService: DefaultCapabilityService(calendarRepository: repo, speechService: MockSpeechService(), modelProvider: MockModelProvider())
+        )
+        let model = CommandHomeModel(dependencies: deps, selectedDay: PreviewFixtures.now)
+
+        await model.resolveConfirmation(PreviewFixtures.deleteConfirmationContext, decision: .cancel)
+
+        XCTAssertTrue(pipeline.confirmedDecisions.isEmpty)
+        XCTAssertEqual(model.commandState, .idle)
+        XCTAssertNil(model.latestError)
+        XCTAssertNil(model.latestResult)
+    }
+
     func testCandidateSelectionPreservesParserRouteIntoConfirmation() {
         let model = CommandHomeModel(dependencies: .mock(), selectedDay: PreviewFixtures.now)
         let context = CandidateSelectionContext(
@@ -843,6 +878,7 @@ private final class DelayedCommandPipeline: CalendarCommandPipelineProtocol {
 private final class CountingCommandPipeline: CalendarCommandPipelineProtocol {
     private let output: CalendarCommandPipelineOutput
     var processInputs: [String] = []
+    var confirmedDecisions: [ConfirmationDecision] = []
 
     init(output: CalendarCommandPipelineOutput) {
         self.output = output
@@ -858,6 +894,7 @@ private final class CountingCommandPipeline: CalendarCommandPipelineProtocol {
     }
 
     func confirm(_ context: ConfirmationContext, decision: ConfirmationDecision) async -> CalendarCommandPipelineOutput {
-        output
+        confirmedDecisions.append(decision)
+        return output
     }
 }

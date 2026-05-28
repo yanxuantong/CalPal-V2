@@ -44,4 +44,5 @@ xcodebuild -project CalPal.xcodeproj -scheme CalPal -configuration Debug -sdk ip
 - Settings section deep links now honor the requested section, diagnostics/readiness can be refreshed in place, and section identifiers are stable for UI automation.
 - Corrected-draft saves retain the original parser route on the final result card; manual event creation stays route-neutral.
 - Candidate selection now shows source command context, parser route, cancel affordance, recurring signals, and stable row identifiers before a target event can be selected.
+- Confirmation cancellation is handled as a normal no-op in `CommandHomeModel`, so cancel does not call the command pipeline or show a failure card.
 - Competitive reference notes and release gaps live in `AppStore/ProductionPolish/2026-05-28/README.md`.
