@@ -37,6 +37,7 @@ Only App Store-listed products were used as references:
 - Relaxed an over-specific visual luminance assertion so the snapshot test guards against blank/identical light and dark renders without encoding a brittle page-level contrast target.
 - Split Settings readiness into `Foundation Models route` and `Deterministic parser fallback` so real AI availability and fallback safety are visible as separate release signals.
 - Updated the processing card copy for transcription, model parsing, and EventKit saving states.
+- Replaced the non-functional `Automation Mode` picker with a read-only `Safety Mode` row. CalPal currently has one real safety behavior: Auto Review before modify/delete/recurring/ambiguous mutations.
 
 ## Apple Reference Notes
 
@@ -66,3 +67,8 @@ Only App Store-listed products were used as references:
 - `MVPBugFixRegressionTests`: 9 passed, 0 failed.
 - `VisualSnapshotRenderingTests`: 4 passed, 0 failed.
 - Simulator build: passed with `CODE_SIGNING_ALLOWED=NO`.
+
+## Follow-Up Pass - Safety Settings
+
+- Removed the unused `AutomationMode` model and the misleading `Full Access` mode from Settings.
+- Kept the Settings surface aligned with actual product behavior: EventKit mutations that are destructive, recurring, ambiguous, or modify/delete operations require confirmation.

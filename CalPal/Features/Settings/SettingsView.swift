@@ -2,7 +2,6 @@ import SwiftUI
 
 struct SettingsView: View {
     @EnvironmentObject private var appModel: AppModel
-    @State private var automationMode: AutomationMode = .autoReview
     @State private var confirmReset = false
     let startSection: SettingsSection?
 
@@ -52,11 +51,20 @@ struct SettingsView: View {
                     }
                 }
 
-                Section("Automation Mode") {
-                    Picker("Mode", selection: $automationMode) { ForEach(AutomationMode.allCases) { Text($0.rawValue).tag($0) } }
-                    Text("Auto Review confirms modify/delete/recurring/ambiguous changes before mutation.")
-                        .font(.caption)
-                        .foregroundStyle(CalPalTheme.Colors.textSecondary)
+                Section("Safety Mode") {
+                    Label {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Auto Review")
+                                .foregroundStyle(CalPalTheme.Colors.textPrimary)
+                            Text("Modify, delete, recurring, and ambiguous changes require confirmation before EventKit is mutated.")
+                                .font(.caption)
+                                .foregroundStyle(CalPalTheme.Colors.textSecondary)
+                        }
+                    } icon: {
+                        Image(systemName: "checkmark.shield.fill")
+                            .foregroundStyle(CalPalTheme.Colors.brandPrimary)
+                    }
+                    .accessibilityIdentifier("safetyModeAutoReview")
                 }
 
                 Section("v0.3 Readiness") {

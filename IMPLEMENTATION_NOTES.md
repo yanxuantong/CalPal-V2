@@ -36,4 +36,5 @@ xcodebuild -project CalPal.xcodeproj -scheme CalPal -configuration Debug -sdk ip
 - English "next Monday" now resolves to the next upcoming Monday; Chinese "下周一" keeps the following-week behavior covered by the readiness sample set.
 - Settings now separates the `Foundation Models route` readiness signal from the deterministic parser fallback, so a fallback-ready environment does not imply Apple Intelligence generation has been verified.
 - The processing card now describes the active work more specifically: transcription, Apple Intelligence/fallback parsing, or EventKit saving.
+- The previous Settings `Automation Mode` picker was removed because its `Full Access` option did not drive runtime behavior. Settings now shows a truthful read-only `Safety Mode` row for the current Auto Review policy.
 - Competitive reference notes and release gaps live in `AppStore/ProductionPolish/2026-05-28/README.md`.

@@ -19,13 +19,6 @@ struct CapabilitySummary: Equatable, Codable {
     static let optimistic = CapabilitySummary(calendar: .unknown, speech: .unknown, model: .allowed, preferredLocales: ["en-US", "zh-Hans"], runsOnDevice: true)
 }
 
-enum AutomationMode: String, CaseIterable, Identifiable, Codable {
-    case autoReview = "Auto Review"
-    case fullAccess = "Full Access"
-
-    var id: String { rawValue }
-}
-
 enum SettingsSection: String, Identifiable, CaseIterable {
     case privacy
     case diagnostics
