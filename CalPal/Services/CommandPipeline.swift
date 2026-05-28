@@ -38,7 +38,7 @@ final class CalendarCommandPipeline: CalendarCommandPipelineProtocol {
         let calendars = (try? await repository.fetchCalendars()) ?? []
         switch await policy.decide(parsed: parsed, calendars: calendars, repository: repository) {
         case .autoApply(let draft):
-            return await apply(draft: draft)
+            return await apply(draft: draft).annotatingResult(parseRoute: parsed.parseRoute)
         case .needsCorrection(let context): return .correction(context)
         case .needsConfirmation(let context): return .confirmation(context)
         case .needsCandidateSelection(let context): return .candidateSelection(context)
@@ -80,6 +80,14 @@ final class CalendarCommandPipeline: CalendarCommandPipelineProtocol {
         } catch {
             return .failure(ErrorPresentation(title: "Calendar Change Failed", message: error.localizedDescription, recovery: "Re-fetch the agenda and try again."))
         }
+    }
+}
+
+private extension CalendarCommandPipelineOutput {
+    func annotatingResult(parseRoute: CalendarParseRoute) -> CalendarCommandPipelineOutput {
+        guard case .result(var result) = self else { return self }
+        result.parseRoute = parseRoute
+        return .result(result)
     }
 }
 

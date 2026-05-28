@@ -39,4 +39,5 @@ xcodebuild -project CalPal.xcodeproj -scheme CalPal -configuration Debug -sdk ip
 - The previous Settings `Automation Mode` picker was removed because its `Full Access` option did not drive runtime behavior. Settings now shows a truthful read-only `Safety Mode` row for the current Auto Review policy.
 - Blank text/transcript submissions are rejected before the AI/parser pipeline, valid text submissions are trimmed, and the text-entry sheet prevents duplicate sends after the first submit.
 - The empty-agenda surface now includes a real `Create Manually` action that presents the manual event form.
+- Calendar command parses now retain a route label. Auto-applied result cards can show whether Apple Intelligence generated the parse, the deterministic parser handled it directly, or Foundation Models failed/unavailable and CalPal fell back locally.
 - Competitive reference notes and release gaps live in `AppStore/ProductionPolish/2026-05-28/README.md`.

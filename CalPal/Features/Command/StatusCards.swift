@@ -90,6 +90,13 @@ struct ResultCard: View {
             Text(result.message)
                 .font(.subheadline)
                 .foregroundStyle(CalPalTheme.Colors.textPrimary)
+            if let route = result.parseRoute {
+                Label(route.resultLabel, systemImage: route == .foundationModelsGenerated ? "sparkles" : "cpu")
+                    .font(.caption.weight(.semibold))
+                    .quietChip(route == .foundationModelsGenerated ? CalPalTheme.Colors.aiChip : CalPalTheme.Colors.warningChip)
+                    .accessibilityLabel(route.accessibilityLabel)
+                    .accessibilityIdentifier("resultParseRoute")
+            }
             if let actionTitle = result.actionTitle {
                 if let actionURL = result.actionURL, let onAction {
                     Button {

@@ -41,6 +41,7 @@ Only App Store-listed products were used as references:
 - Added a final empty-command guard before the AI/parser pipeline so blank text or empty transcripts cannot trigger accidental calendar work.
 - Prevented duplicate sends from the text-entry sheet after the first valid submit.
 - Connected the empty-agenda state to the manual event form with a visible `Create Manually` action instead of only mentioning the fallback in copy.
+- Added parse-route observability so successful result cards can distinguish Apple Intelligence generation from local parser fallback or fallback after a Foundation Models failure.
 
 ## Apple Reference Notes
 
@@ -57,18 +58,20 @@ Only App Store-listed products were used as references:
 ## Verification Plan
 
 - Run targeted unit tests for `V2UsabilityRegressionTests` on iOS Simulator.
-- Run each XCTest suite on iOS Simulator. The full suite currently covers 42 tests; run by suite if the MCP single full-suite call exceeds its 120 second tool timeout.
+- Run each XCTest suite on iOS Simulator. The full suite currently covers 49 tests.
 - Build the app for an iOS Simulator destination with code signing disabled.
 - Do not run any real-device install, launch, or debug command in this checkpoint.
 
 ## Verification Results
 
-- `V2UsabilityRegressionTests`: 10 passed, 0 failed.
+- `V2UsabilityRegressionTests`: 13 passed, 0 failed.
 - `PreferenceSummaryStoreTests`: 1 passed, 0 failed.
-- `NaturalLanguageCalendarParserTests`: 11 passed, 0 failed.
+- `NaturalLanguageCalendarParserTests`: 13 passed, 0 failed.
 - `CalendarMutationPolicyTests` + `LightDarkUIPresentationTests`: 9 passed, 0 failed.
 - `MVPBugFixRegressionTests`: 9 passed, 0 failed.
 - `VisualSnapshotRenderingTests`: 4 passed, 0 failed.
+- Targeted AI route/usability/snapshot suites: 30 passed, 0 failed.
+- Full Simulator XCTest: 49 passed, 0 failed.
 - Simulator build: passed with `CODE_SIGNING_ALLOWED=NO`.
 
 ## Follow-Up Pass - Safety Settings
@@ -82,3 +85,9 @@ Only App Store-listed products were used as references:
 - Valid text commands are trimmed before processing, preserving natural input while keeping parser prompts clean.
 - The text-entry sheet disables both send affordances immediately after submission to prevent fast double-taps from launching duplicate commands.
 - The empty-agenda screen now offers a real manual-create action, matching the existing fallback language and reducing dead-end friction when AI or permissions are unavailable.
+
+## Follow-Up Pass - AI Route Observability
+
+- Parsed commands now carry a structured route: `foundationModelsGenerated`, `foundationModelsUnavailable`, `foundationModelsFailedOver`, `foundationModelsLocaleUnsupported`, or `deterministicFallback`.
+- Auto-applied command results annotate the success card with the route used, so a fallback result is no longer visually indistinguishable from a successful Apple Intelligence generation.
+- Regression tests now prove the injected Foundation Models path is preferred over fallback output, unavailable models are labeled as unavailable fallback, failed model generations are labeled as failed-over fallback, and successful pipeline results retain their parser route.

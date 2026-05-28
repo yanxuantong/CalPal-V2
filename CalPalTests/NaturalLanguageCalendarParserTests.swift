@@ -69,6 +69,33 @@ final class NaturalLanguageCalendarParserTests: XCTestCase {
         XCTAssertEqual(Calendar.current.component(.hour, from: draft.startDate), 21)
         XCTAssertEqual(parsed.confidence, 0.93)
         XCTAssertTrue(parsed.missingFields.isEmpty)
+        XCTAssertEqual(parsed.parseRoute, .foundationModelsGenerated)
+    }
+
+    func testFoundationModelsParserMarksUnavailableFallbackRoute() async {
+        let parser = FoundationModelsCalendarParser(
+            fallback: NaturalLanguageCalendarParser(now: { self.now }),
+            modelProvider: FixedModelProvider(status: .unavailable),
+            now: { self.now }
+        )
+
+        let parsed = await parser.parseCommand("Meeting with Alex tomorrow at 3 PM")
+
+        XCTAssertEqual(parsed.parseRoute, .foundationModelsUnavailable)
+    }
+
+    func testFoundationModelsParserMarksFailedFallbackRoute() async {
+        enum TestGenerationError: Error { case failed }
+        let parser = FoundationModelsCalendarParser(
+            fallback: NaturalLanguageCalendarParser(now: { self.now }),
+            modelProvider: MockModelProvider(),
+            now: { self.now },
+            commandGenerator: { _, _, _, _ in throw TestGenerationError.failed }
+        )
+
+        let parsed = await parser.parseCommand("Meeting with Alex tomorrow at 3 PM")
+
+        XCTAssertEqual(parsed.parseRoute, .foundationModelsFailedOver)
     }
 
     func testCreateWithoutDateNeedsCorrection() {
@@ -136,6 +163,14 @@ final class NaturalLanguageCalendarParserTests: XCTestCase {
             XCTAssertEqual(draft.endDate.timeIntervalSince(draft.startDate), item.duration, item.text)
             XCTAssertTrue(parsed.missingFields.isEmpty, item.text)
         }
+    }
+}
+
+private struct FixedModelProvider: ModelProviderProtocol {
+    var status: PermissionStatus
+
+    func availability() -> PermissionStatus {
+        status
     }
 }
 

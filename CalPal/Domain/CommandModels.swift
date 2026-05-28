@@ -13,8 +13,47 @@ struct ParsedCalendarCommand: Equatable, Codable, Hashable {
     var confidence: Double
     var missingFields: [String]
     var warnings: [String]
+    var parseRoute: CalendarParseRoute = .deterministicFallback
 
     var isHighConfidence: Bool { confidence >= 0.85 && missingFields.isEmpty && warnings.isEmpty }
+}
+
+enum CalendarParseRoute: String, Equatable, Codable, Hashable {
+    case deterministicFallback
+    case foundationModelsGenerated
+    case foundationModelsUnavailable
+    case foundationModelsFailedOver
+    case foundationModelsLocaleUnsupported
+
+    var resultLabel: String {
+        switch self {
+        case .foundationModelsGenerated:
+            return "Apple Intelligence"
+        case .deterministicFallback:
+            return "Local parser"
+        case .foundationModelsUnavailable:
+            return "Local parser - AI unavailable"
+        case .foundationModelsFailedOver:
+            return "Local parser - AI fallback"
+        case .foundationModelsLocaleUnsupported:
+            return "Local parser - locale fallback"
+        }
+    }
+
+    var accessibilityLabel: String {
+        switch self {
+        case .foundationModelsGenerated:
+            return "Parsed by Apple Intelligence"
+        case .deterministicFallback:
+            return "Parsed by the local deterministic parser"
+        case .foundationModelsUnavailable:
+            return "Parsed locally because Apple Intelligence was unavailable"
+        case .foundationModelsFailedOver:
+            return "Parsed locally after Apple Intelligence failed"
+        case .foundationModelsLocaleUnsupported:
+            return "Parsed locally because this locale was unsupported by Apple Intelligence"
+        }
+    }
 }
 
 enum CommandDecision: Equatable {
@@ -36,6 +75,7 @@ struct CommandResultViewState: Identifiable, Equatable {
     var event: CalendarEvent?
     var actionTitle: String?
     var actionURL: URL? = nil
+    var parseRoute: CalendarParseRoute? = nil
 }
 
 struct ErrorPresentation: Identifiable, Equatable {

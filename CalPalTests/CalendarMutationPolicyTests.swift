@@ -522,6 +522,7 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertEqual(result.actionTitle, "Open in Calendar")
         XCTAssertEqual(url.scheme, "calshow")
         XCTAssertTrue(url.absoluteString.contains(String(result.event!.startDate.timeIntervalSinceReferenceDate)))
+        XCTAssertEqual(result.parseRoute, .deterministicFallback)
     }
 
     func testReadinessChecklistSeparatesAutomatedAndManualReleaseGates() {

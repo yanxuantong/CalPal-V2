@@ -68,17 +68,17 @@ final class FoundationModelsCalendarParser: CalendarCommandParsing {
 
     func parseCommand(_ text: String) async -> ParsedCalendarCommand {
         guard modelProvider.availability() == .allowed else {
-            return fallback.parse(text)
+            return fallbackParsed(text, route: .foundationModelsUnavailable)
         }
         if let commandGenerator {
             do {
                 guard let modelParsed = try await commandGenerator(text, localTimeZone, now(), containsChinese(text)) else {
-                    return fallback.parse(text)
+                    return fallbackParsed(text, route: .foundationModelsFailedOver)
                 }
-                return fillingMissingFields(from: fallback.parse(text), in: modelParsed)
+                return fillingMissingFields(from: fallback.parse(text), in: routed(modelParsed, as: .foundationModelsGenerated))
             } catch {
                 logger.error("Foundation Models injected calendar parse failed: \(String(reflecting: error), privacy: .public)")
-                return fallback.parse(text)
+                return fallbackParsed(text, route: .foundationModelsFailedOver)
             }
         }
         #if canImport(FoundationModels)
@@ -86,7 +86,7 @@ final class FoundationModelsCalendarParser: CalendarCommandParsing {
             let requestedLocale = containsChinese(text) ? Locale(identifier: "zh-Hans") : Locale(identifier: "en-US")
             guard SystemLanguageModel.default.supportsLocale(requestedLocale) else {
                 logger.error("Foundation Models locale unsupported: \(requestedLocale.identifier, privacy: .public)")
-                return fallback.parse(text)
+                return fallbackParsed(text, route: .foundationModelsLocaleUnsupported)
             }
             do {
                 let session = LanguageModelSession(instructions: Self.instructions)
@@ -95,15 +95,17 @@ final class FoundationModelsCalendarParser: CalendarCommandParsing {
                     generating: FoundationCalendarCommand.self,
                     options: GenerationOptions(temperature: 0.0)
                 )
-                guard let modelParsed = map(response.content, originalText: text) else { return fallback.parse(text) }
-                return fillingMissingFields(from: fallback.parse(text), in: modelParsed)
+                guard let modelParsed = map(response.content, originalText: text) else {
+                    return fallbackParsed(text, route: .foundationModelsFailedOver)
+                }
+                return fillingMissingFields(from: fallback.parse(text), in: routed(modelParsed, as: .foundationModelsGenerated))
             } catch {
                 logger.error("Foundation Models calendar parse failed: \(String(reflecting: error), privacy: .public)")
-                return fallback.parse(text)
+                return fallbackParsed(text, route: .foundationModelsFailedOver)
             }
         }
         #endif
-        return fallback.parse(text)
+        return fallbackParsed(text, route: .foundationModelsUnavailable)
     }
 
     #if canImport(FoundationModels)
@@ -185,16 +187,26 @@ final class FoundationModelsCalendarParser: CalendarCommandParsing {
                 modelDraft.title = localDraft.title
                 missingFields.removeAll { $0 == "title" }
             }
-            return ParsedCalendarCommand(originalText: modelParsed.originalText, localeIdentifier: modelParsed.localeIdentifier, intent: .create(modelDraft), confidence: modelParsed.confidence, missingFields: missingFields, warnings: modelParsed.warnings)
+            return ParsedCalendarCommand(originalText: modelParsed.originalText, localeIdentifier: modelParsed.localeIdentifier, intent: .create(modelDraft), confidence: modelParsed.confidence, missingFields: missingFields, warnings: modelParsed.warnings, parseRoute: modelParsed.parseRoute)
         case (.modify(_, let localPatch), .modify(let query, var modelPatch)):
             if modelParsed.missingFields.contains("new time") {
                 modelPatch.startDate = localPatch.startDate ?? modelPatch.startDate
                 modelPatch.endDate = localPatch.endDate ?? modelPatch.endDate
             }
-            return ParsedCalendarCommand(originalText: modelParsed.originalText, localeIdentifier: modelParsed.localeIdentifier, intent: .modify(query: query, patch: modelPatch), confidence: modelParsed.confidence, missingFields: modelParsed.missingFields, warnings: modelParsed.warnings)
+            return ParsedCalendarCommand(originalText: modelParsed.originalText, localeIdentifier: modelParsed.localeIdentifier, intent: .modify(query: query, patch: modelPatch), confidence: modelParsed.confidence, missingFields: modelParsed.missingFields, warnings: modelParsed.warnings, parseRoute: modelParsed.parseRoute)
         default:
             return modelParsed
         }
+    }
+
+    private func fallbackParsed(_ text: String, route: CalendarParseRoute) -> ParsedCalendarCommand {
+        routed(fallback.parse(text), as: route)
+    }
+
+    private func routed(_ parsed: ParsedCalendarCommand, as route: CalendarParseRoute) -> ParsedCalendarCommand {
+        var parsed = parsed
+        parsed.parseRoute = route
+        return parsed
     }
 
     private func containsChinese(_ text: String) -> Bool {
