@@ -21,6 +21,8 @@ Only App Store-listed products were used as references:
 - Prefer skeleton placeholders over bare spinners for agenda loading, because the user already knows the surface shape they are waiting for.
 - Treat cancellation as a product contract. If the user cancels a command, a late parser or calendar result must not update the visible state.
 - Add stable accessibility and UI test identifiers for high-value surfaces: week day chips, loading placeholder, agenda timeline, and event rows.
+- Give honest feedback for long-running work. Apple's loading guidance favors contextual progress feedback when work takes more than a moment; the command card now distinguishes transcription, model parsing, and EventKit mutation.
+- Keep Foundation Models status separate from fallback status. Apple's Foundation Models documentation describes a real on-device `LanguageModelSession` generation path; users and release reviewers should not read deterministic fallback readiness as proof that generation succeeded.
 - Keep the current narrow MVP focus. Competitors win breadth with tasks, widgets, sync, and scheduling links; CalPal's near-term differentiator should remain fast local AI calendar mutation with safe confirmation.
 
 ## Implemented In This Checkpoint
@@ -33,6 +35,13 @@ Only App Store-listed products were used as references:
 - Added a shared Xcode scheme and restored the `CalPalTests/*.swift` files to the test target so Simulator tests execute real XCTest cases instead of producing a zero-test success.
 - Fixed English weekday semantics so "next Monday" resolves to the next upcoming Monday while Chinese "下周一" continues to mean the following week.
 - Relaxed an over-specific visual luminance assertion so the snapshot test guards against blank/identical light and dark renders without encoding a brittle page-level contrast target.
+- Split Settings readiness into `Foundation Models route` and `Deterministic parser fallback` so real AI availability and fallback safety are visible as separate release signals.
+- Updated the processing card copy for transcription, model parsing, and EventKit saving states.
+
+## Apple Reference Notes
+
+- Apple Human Interface Guidelines: Loading and progress guidance informed the move from generic "Checking calendar..." feedback to state-specific progress copy. Reference: https://developer.apple.com/design/human-interface-guidelines/loading
+- Apple Foundation Models documentation: `LanguageModelSession` is the real on-device generation surface, so release docs and Settings should distinguish that route from deterministic fallback. Reference: https://developer.apple.com/documentation/FoundationModels/LanguageModelSession
 
 ## Remaining Production Gaps
 
@@ -50,10 +59,10 @@ Only App Store-listed products were used as references:
 
 ## Verification Results
 
-- `V2UsabilityRegressionTests`: 9 passed, 0 failed.
+- `V2UsabilityRegressionTests`: 10 passed, 0 failed.
 - `PreferenceSummaryStoreTests`: 1 passed, 0 failed.
 - `NaturalLanguageCalendarParserTests`: 11 passed, 0 failed.
 - `CalendarMutationPolicyTests` + `LightDarkUIPresentationTests`: 9 passed, 0 failed.
 - `MVPBugFixRegressionTests`: 9 passed, 0 failed.
-- `VisualSnapshotRenderingTests`: 3 passed, 0 failed.
+- `VisualSnapshotRenderingTests`: 4 passed, 0 failed.
 - Simulator build: passed with `CODE_SIGNING_ALLOWED=NO`.

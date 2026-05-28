@@ -152,9 +152,15 @@ enum AppStoreReadinessChecklist {
                 state: summary.speech == .allowed ? .ready : .manualGate
             ),
             ReadinessChecklistItem(
-                id: "local-ai",
-                title: "On-device parser",
-                detail: summary.model == .allowed ? "Apple Intelligence path can be attempted with deterministic fallback." : "Deterministic parser fallback remains available.",
+                id: "foundation-models",
+                title: "Foundation Models route",
+                detail: foundationModelsDetail(for: summary.model),
+                state: foundationModelsState(for: summary.model)
+            ),
+            ReadinessChecklistItem(
+                id: "deterministic-parser",
+                title: "Deterministic parser fallback",
+                detail: "English and Chinese parser coverage remains available when Apple Intelligence cannot generate.",
                 state: .ready
             ),
             ReadinessChecklistItem(
@@ -176,6 +182,32 @@ enum AppStoreReadinessChecklist {
                 state: .manualGate
             )
         ]
+    }
+
+    private static func foundationModelsState(for status: PermissionStatus) -> ReadinessChecklistItem.State {
+        switch status {
+        case .allowed:
+            return .ready
+        case .notDetermined, .unknown:
+            return .manualGate
+        case .unavailable, .denied, .restricted:
+            return .needsAttention
+        }
+    }
+
+    private static func foundationModelsDetail(for status: PermissionStatus) -> String {
+        switch status {
+        case .allowed:
+            return "Apple Intelligence can be attempted before deterministic fallback."
+        case .notDetermined:
+            return "Apple Intelligence is not ready or not enabled; verify on an eligible device."
+        case .unknown:
+            return "Foundation Models availability is unknown; keep real-device smoke as a release gate."
+        case .unavailable:
+            return "This environment cannot run Foundation Models generation."
+        case .denied, .restricted:
+            return "Foundation Models are restricted in this environment."
+        }
     }
 }
 

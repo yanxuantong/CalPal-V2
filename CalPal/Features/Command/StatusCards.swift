@@ -35,13 +35,14 @@ struct CapabilityBadge: View {
 }
 
 struct ProcessingCard: View {
+    let state: CommandInteractionState
     let onCancel: () -> Void
     var body: some View {
         HStack(spacing: CalPalTheme.Spacing.md) {
             ProgressView()
             VStack(alignment: .leading, spacing: 2) {
-                Text("Checking calendar…").font(.headline).foregroundStyle(CalPalTheme.Colors.textPrimary)
-                Text("Taking longer than usual").font(.caption).foregroundStyle(CalPalTheme.Colors.textSecondary)
+                Text(title).font(.headline).foregroundStyle(CalPalTheme.Colors.textPrimary)
+                Text(detail).font(.caption).foregroundStyle(CalPalTheme.Colors.textSecondary)
             }
             Spacer()
             Button("Cancel", action: onCancel).buttonStyle(.bordered)
@@ -49,6 +50,32 @@ struct ProcessingCard: View {
         .padding()
         .glassCard()
         .accessibilityLabel("Processing calendar command. Cancel processing available.")
+    }
+
+    private var title: String {
+        switch state {
+        case .transcribing:
+            return "Finishing transcript…"
+        case .parsing:
+            return "Understanding command…"
+        case .applying:
+            return "Updating calendar…"
+        default:
+            return "Checking calendar…"
+        }
+    }
+
+    private var detail: String {
+        switch state {
+        case .transcribing(let transcript):
+            return transcript == nil ? "Waiting for speech recognition" : "Preparing the recognized command"
+        case .parsing:
+            return "Using Apple Intelligence when available, with local fallback"
+        case .applying:
+            return "Saving through EventKit"
+        default:
+            return "Taking longer than usual"
+        }
     }
 }
 

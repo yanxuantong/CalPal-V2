@@ -185,6 +185,14 @@ final class VisualSnapshotRenderingTests: XCTestCase {
         XCTAssertGreaterThan(colorDistance(centerColor(recording), centerColor(idle)), 0.15)
     }
 
+    func testProcessingCardCommunicatesModelAndCalendarWork() throws {
+        let parsing = render(ProcessingCard(state: .parsing("Schedule coffee tomorrow"), onCancel: {}), colorScheme: .light, size: CGSize(width: 390, height: 140))
+        let applying = render(ProcessingCard(state: .applying, onCancel: {}), colorScheme: .dark, size: CGSize(width: 390, height: 140))
+
+        XCTAssertGreaterThan(try XCTUnwrap(parsing.pngData()).count, 4_000)
+        XCTAssertGreaterThan(try XCTUnwrap(applying.pngData()).count, 4_000)
+    }
+
     private func assertSnapshot(_ image: UIImage, size: CGSize, file: StaticString = #filePath, line: UInt = #line) {
         XCTAssertEqual(Int(image.size.width), Int(size.width), file: file, line: line)
         XCTAssertEqual(Int(image.size.height), Int(size.height), file: file, line: line)
@@ -527,6 +535,8 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertEqual(readyItems.first { $0.id == "calendar-access" }?.state, .ready)
         XCTAssertEqual(readyItems.first { $0.id == "writable-calendar" }?.state, .ready)
         XCTAssertEqual(readyItems.first { $0.id == "speech" }?.state, .ready)
+        XCTAssertEqual(readyItems.first { $0.id == "foundation-models" }?.state, .ready)
+        XCTAssertEqual(readyItems.first { $0.id == "deterministic-parser" }?.state, .ready)
         XCTAssertEqual(readyItems.first { $0.id == "privacy-manifest" }?.state, .ready)
         XCTAssertEqual(readyItems.first { $0.id == "calendar-open" }?.state, .manualGate)
         XCTAssertEqual(readyItems.first { $0.id == "store-assets" }?.state, .manualGate)
@@ -540,8 +550,20 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertEqual(blockedItems.first { $0.id == "calendar-access" }?.state, .needsAttention)
         XCTAssertEqual(blockedItems.first { $0.id == "writable-calendar" }?.state, .needsAttention)
         XCTAssertEqual(blockedItems.first { $0.id == "speech" }?.state, .manualGate)
-        XCTAssertEqual(blockedItems.first { $0.id == "local-ai" }?.state, .ready)
+        XCTAssertEqual(blockedItems.first { $0.id == "foundation-models" }?.state, .needsAttention)
+        XCTAssertEqual(blockedItems.first { $0.id == "deterministic-parser" }?.state, .ready)
         XCTAssertEqual(blockedItems.first { $0.id == "privacy-manifest" }?.state, .ready)
+    }
+
+    func testFoundationModelsNotReadyIsManualGateWhileFallbackStaysReady() {
+        let items = AppStoreReadinessChecklist.items(
+            summary: CapabilitySummary(calendar: .allowed, speech: .allowed, model: .notDetermined, preferredLocales: ["en-US"], runsOnDevice: false),
+            writableCalendarCount: 1,
+            selectedCalendar: CalendarInfo(id: "work", title: "Work Calendar", accountName: "iCloud", allowsContentModifications: true, colorHex: nil)
+        )
+
+        XCTAssertEqual(items.first { $0.id == "foundation-models" }?.state, .manualGate)
+        XCTAssertEqual(items.first { $0.id == "deterministic-parser" }?.state, .ready)
     }
 
     func testOpeningTextEntryHidesPersistentHint() {

@@ -28,7 +28,7 @@ struct CommandHomeView: View {
                         .onTapGesture { model.focusLatestResultDate() }
                 }
                 if let error = model.latestError { FailureCard(error: error) }
-                if model.commandState.isProcessing { ProcessingCard(onCancel: model.cancelProcessing) }
+                if model.commandState.isProcessing { ProcessingCard(state: model.commandState, onCancel: model.cancelProcessing) }
                 CommandOrb(state: model.commandState, reduceMotion: reduceMotion, showsIdleHint: model.showsCommandHint && model.events.isEmpty, onRecordingStart: model.beginRecording, onRecordingFinish: model.finishRecording, onDoubleTap: {
                     model.hideCommandHint()
                     appModel.openTextEntry()

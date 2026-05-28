@@ -34,4 +34,6 @@ xcodebuild -project CalPal.xcodeproj -scheme CalPal -configuration Debug -sdk ip
 - UI automation anchors were added for week day chips, agenda loading, the agenda timeline, and event rows.
 - The Xcode project now includes a shared `CalPal` scheme and explicitly includes the XCTest source files in `CalPalTests`, preventing false-positive zero-test runs.
 - English "next Monday" now resolves to the next upcoming Monday; Chinese "下周一" keeps the following-week behavior covered by the readiness sample set.
+- Settings now separates the `Foundation Models route` readiness signal from the deterministic parser fallback, so a fallback-ready environment does not imply Apple Intelligence generation has been verified.
+- The processing card now describes the active work more specifically: transcription, Apple Intelligence/fallback parsing, or EventKit saving.
 - Competitive reference notes and release gaps live in `AppStore/ProductionPolish/2026-05-28/README.md`.
