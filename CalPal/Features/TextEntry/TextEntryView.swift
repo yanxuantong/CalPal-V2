@@ -23,13 +23,14 @@ struct TextEntryView: View {
                         .focused($inputFocused)
                         .accessibilityLabel("Calendar command text")
                         .accessibilityIdentifier("calendarCommandTextField")
+                    TextCommandReadinessHint(state: sendReadiness)
                     Button(action: submit) {
                         Label("Send Command", systemImage: "paperplane.fill")
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.large)
-                    .disabled(trimmedText.isEmpty || isSubmitting)
+                    .disabled(!sendReadiness.canSend)
                     .accessibilityIdentifier("textCommandSend")
                     exampleChips
                 }
@@ -41,7 +42,7 @@ struct TextEntryView: View {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Send") { submit() }
-                        .disabled(trimmedText.isEmpty || isSubmitting)
+                        .disabled(!sendReadiness.canSend)
                         .accessibilityIdentifier("textCommandToolbarSend")
                 }
             }
@@ -62,10 +63,82 @@ struct TextEntryView: View {
     }
 
     private var trimmedText: String { text.trimmingCharacters(in: .whitespacesAndNewlines) }
+    private var sendReadiness: TextCommandReadiness {
+        TextCommandReadiness(text: text, isSubmitting: isSubmitting)
+    }
+
     private func submit() {
-        guard !trimmedText.isEmpty, !isSubmitting else { return }
+        guard sendReadiness.canSend else { return }
         isSubmitting = true
         onSubmit(trimmedText)
+    }
+}
+
+struct TextCommandReadiness: Equatable {
+    enum Status: Equatable {
+        case empty
+        case sending
+        case ready
+    }
+
+    var status: Status
+
+    init(text: String, isSubmitting: Bool = false) {
+        if isSubmitting {
+            status = .sending
+        } else if text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            status = .empty
+        } else {
+            status = .ready
+        }
+    }
+
+    var canSend: Bool {
+        status == .ready
+    }
+
+    var message: String {
+        switch status {
+        case .empty:
+            return "Type a command before sending."
+        case .sending:
+            return "Sending command..."
+        case .ready:
+            return "Ready to send."
+        }
+    }
+
+    var systemImage: String {
+        switch status {
+        case .empty:
+            return "keyboard"
+        case .sending:
+            return "paperplane"
+        case .ready:
+            return "checkmark.circle.fill"
+        }
+    }
+
+    var palette: CalPalTheme.ChipPalette {
+        switch status {
+        case .empty:
+            return CalPalTheme.Colors.warningChip
+        case .sending:
+            return CalPalTheme.Colors.aiChip
+        case .ready:
+            return CalPalTheme.Colors.successChip
+        }
+    }
+}
+
+private struct TextCommandReadinessHint: View {
+    let state: TextCommandReadiness
+
+    var body: some View {
+        Label(state.message, systemImage: state.systemImage)
+            .font(.caption.weight(.semibold))
+            .quietChip(state.palette)
+            .accessibilityIdentifier("textCommandReadinessHint")
     }
 }
 

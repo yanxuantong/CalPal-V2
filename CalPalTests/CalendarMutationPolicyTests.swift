@@ -1167,6 +1167,19 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertEqual(pipeline.processInputs, ["Coffee tomorrow at noon"])
     }
 
+    func testTextCommandReadinessExplainsSendState() {
+        let empty = TextCommandReadiness(text: "   ")
+        let sending = TextCommandReadiness(text: "Schedule coffee", isSubmitting: true)
+        let ready = TextCommandReadiness(text: "Schedule coffee")
+
+        XCTAssertFalse(empty.canSend)
+        XCTAssertEqual(empty.message, "Type a command before sending.")
+        XCTAssertFalse(sending.canSend)
+        XCTAssertEqual(sending.message, "Sending command...")
+        XCTAssertTrue(ready.canSend)
+        XCTAssertEqual(ready.message, "Ready to send.")
+    }
+
     func testManualCreateFromEmptyAgendaUsesFocusedReason() throws {
         let model = CommandHomeModel(dependencies: .mock(), selectedDay: PreviewFixtures.now)
         var presented: AppSheet?
