@@ -38,6 +38,9 @@ Only App Store-listed products were used as references:
 - Split Settings readiness into `Foundation Models route` and `Deterministic parser fallback` so real AI availability and fallback safety are visible as separate release signals.
 - Updated the processing card copy for transcription, model parsing, and EventKit saving states.
 - Replaced the non-functional `Automation Mode` picker with a read-only `Safety Mode` row. CalPal currently has one real safety behavior: Auto Review before modify/delete/recurring/ambiguous mutations.
+- Added a final empty-command guard before the AI/parser pipeline so blank text or empty transcripts cannot trigger accidental calendar work.
+- Prevented duplicate sends from the text-entry sheet after the first valid submit.
+- Connected the empty-agenda state to the manual event form with a visible `Create Manually` action instead of only mentioning the fallback in copy.
 
 ## Apple Reference Notes
 
@@ -72,3 +75,10 @@ Only App Store-listed products were used as references:
 
 - Removed the unused `AutomationMode` model and the misleading `Full Access` mode from Settings.
 - Kept the Settings surface aligned with actual product behavior: EventKit mutations that are destructive, recurring, ambiguous, or modify/delete operations require confirmation.
+
+## Follow-Up Pass - Input And Empty Agenda Guardrails
+
+- Blank or whitespace-only text commands now fail locally with `Command Needed` and do not enter the Apple Intelligence/fallback parser pipeline.
+- Valid text commands are trimmed before processing, preserving natural input while keeping parser prompts clean.
+- The text-entry sheet disables both send affordances immediately after submission to prevent fast double-taps from launching duplicate commands.
+- The empty-agenda screen now offers a real manual-create action, matching the existing fallback language and reducing dead-end friction when AI or permissions are unavailable.

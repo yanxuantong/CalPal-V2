@@ -37,4 +37,6 @@ xcodebuild -project CalPal.xcodeproj -scheme CalPal -configuration Debug -sdk ip
 - Settings now separates the `Foundation Models route` readiness signal from the deterministic parser fallback, so a fallback-ready environment does not imply Apple Intelligence generation has been verified.
 - The processing card now describes the active work more specifically: transcription, Apple Intelligence/fallback parsing, or EventKit saving.
 - The previous Settings `Automation Mode` picker was removed because its `Full Access` option did not drive runtime behavior. Settings now shows a truthful read-only `Safety Mode` row for the current Auto Review policy.
+- Blank text/transcript submissions are rejected before the AI/parser pipeline, valid text submissions are trimmed, and the text-entry sheet prevents duplicate sends after the first submit.
+- The empty-agenda surface now includes a real `Create Manually` action that presents the manual event form.
 - Competitive reference notes and release gaps live in `AppStore/ProductionPolish/2026-05-28/README.md`.

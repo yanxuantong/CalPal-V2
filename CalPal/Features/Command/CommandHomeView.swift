@@ -12,7 +12,9 @@ struct CommandHomeView: View {
 
             VStack(alignment: .leading, spacing: CalPalTheme.Spacing.md) {
                 header
-                DailyAgendaPager(selectedDay: model.selectedDay, events: model.events, state: model.agendaState, onSelectEvent: model.openEventDetail) { day in
+                DailyAgendaPager(selectedDay: model.selectedDay, events: model.events, state: model.agendaState, onSelectEvent: model.openEventDetail, onManualCreate: {
+                    model.openManualCreate(reason: "Create an event from an empty agenda.")
+                }) { day in
                     model.selectDay(day)
                 }
             }

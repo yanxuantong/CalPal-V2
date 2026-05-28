@@ -573,6 +573,59 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertFalse(app.commandHomeModel.showsCommandHint)
     }
 
+    func testBlankTextCommandDoesNotEnterPipeline() async {
+        let pipeline = CountingCommandPipeline(output: .failure(ErrorPresentation(title: "Unexpected", message: "Should not run", recovery: nil)))
+        let repo = MockCalendarRepository()
+        let speech = MockSpeechService()
+        let deps = DependencyContainer(
+            calendarRepository: repo,
+            commandPipeline: pipeline,
+            speechService: speech,
+            modelProvider: MockModelProvider(),
+            preferenceSummaryStore: InMemoryPreferenceSummaryStore(),
+            capabilityService: DefaultCapabilityService(calendarRepository: repo, speechService: speech, modelProvider: MockModelProvider())
+        )
+        let model = CommandHomeModel(dependencies: deps, selectedDay: PreviewFixtures.now)
+
+        await model.submit(text: "   \n\t  ")
+
+        XCTAssertTrue(pipeline.processInputs.isEmpty)
+        XCTAssertEqual(model.latestError?.title, "Command Needed")
+        guard case .failed(let error) = model.commandState else { return XCTFail("Expected empty command failure") }
+        XCTAssertEqual(error.title, "Command Needed")
+    }
+
+    func testTextCommandTrimsBeforePipelineProcessing() async {
+        let pipeline = CountingCommandPipeline(output: .failure(ErrorPresentation(title: "Stopped after trim check", message: "No mutation needed", recovery: nil)))
+        let repo = MockCalendarRepository()
+        let speech = MockSpeechService()
+        let deps = DependencyContainer(
+            calendarRepository: repo,
+            commandPipeline: pipeline,
+            speechService: speech,
+            modelProvider: MockModelProvider(),
+            preferenceSummaryStore: InMemoryPreferenceSummaryStore(),
+            capabilityService: DefaultCapabilityService(calendarRepository: repo, speechService: speech, modelProvider: MockModelProvider())
+        )
+        let model = CommandHomeModel(dependencies: deps, selectedDay: PreviewFixtures.now)
+
+        await model.submit(text: "  Coffee tomorrow at noon  ")
+
+        XCTAssertEqual(pipeline.processInputs, ["Coffee tomorrow at noon"])
+    }
+
+    func testManualCreateFromEmptyAgendaUsesFocusedReason() throws {
+        let model = CommandHomeModel(dependencies: .mock(), selectedDay: PreviewFixtures.now)
+        var presented: AppSheet?
+        model.sheetPresenter = { presented = $0 }
+
+        model.openManualCreate(reason: "Create an event from an empty agenda.")
+
+        guard case .manualEventForm(let context)? = presented else { return XCTFail("Expected manual event form") }
+        XCTAssertEqual(context.reason, "Create an event from an empty agenda.")
+        XCTAssertEqual(context.draft.calendarID, nil)
+    }
+
     func testStaleAgendaLoadCannotOverwriteNewerSelectedDay() async throws {
         let today = PreviewFixtures.now
         let tomorrow = try XCTUnwrap(Calendar.current.date(byAdding: .day, value: 1, to: today))
@@ -668,5 +721,27 @@ private final class DelayedCommandPipeline: CalendarCommandPipelineProtocol {
 
     private func delay() async {
         try? await Task.sleep(nanoseconds: delayNanoseconds)
+    }
+}
+
+private final class CountingCommandPipeline: CalendarCommandPipelineProtocol {
+    private let output: CalendarCommandPipelineOutput
+    var processInputs: [String] = []
+
+    init(output: CalendarCommandPipelineOutput) {
+        self.output = output
+    }
+
+    func process(text: String) async -> CalendarCommandPipelineOutput {
+        processInputs.append(text)
+        return output
+    }
+
+    func apply(draft: EventDraft) async -> CalendarCommandPipelineOutput {
+        output
+    }
+
+    func confirm(_ context: ConfirmationContext, decision: ConfirmationDecision) async -> CalendarCommandPipelineOutput {
+        output
     }
 }

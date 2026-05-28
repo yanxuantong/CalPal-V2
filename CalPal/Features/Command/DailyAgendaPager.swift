@@ -5,6 +5,7 @@ struct DailyAgendaPager: View {
     let events: [CalendarEvent]
     let state: AgendaLoadingState
     var onSelectEvent: (CalendarEvent) -> Void = { _ in }
+    var onManualCreate: () -> Void = {}
     let onSelectDay: (Date) -> Void
     private let calendar = Calendar.current
 
@@ -25,7 +26,7 @@ struct DailyAgendaPager: View {
         case .idle, .loading:
             AgendaLoadingPlaceholderView()
         case .loaded:
-            if events.isEmpty { EmptyAgendaView(onManualCreate: {}) } else { DayAgendaTimeline(day: selectedDay, events: events, onSelectEvent: onSelectEvent) }
+            if events.isEmpty { EmptyAgendaView(onManualCreate: onManualCreate) } else { DayAgendaTimeline(day: selectedDay, events: events, onSelectEvent: onSelectEvent) }
         case .denied(let error), .failed(let error):
             FailureCard(error: error).frame(maxWidth: .infinity, alignment: .top)
         }
@@ -223,7 +224,18 @@ struct AgendaLoadingPlaceholderView: View {
 struct EmptyAgendaView: View {
     let onManualCreate: () -> Void
     var body: some View {
-        ContentUnavailableView("No events today", systemImage: "calendar", description: Text("Tap the orb to speak, double-tap to type, or create manually when AI is unavailable."))
+        ContentUnavailableView {
+            Label("No events today", systemImage: "calendar")
+        } description: {
+            Text("Tap the orb to speak, double-tap to type, or create manually when AI is unavailable.")
+        } actions: {
+            Button(action: onManualCreate) {
+                Label("Create Manually", systemImage: "plus.circle.fill")
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.regular)
+            .accessibilityIdentifier("emptyAgendaManualCreate")
+        }
             .foregroundStyle(CalPalTheme.Colors.textSecondary)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

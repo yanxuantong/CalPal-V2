@@ -130,9 +130,21 @@ final class CommandHomeModel: ObservableObject {
     }
 
     func submit(text: String) async {
+        let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedText.isEmpty else {
+            let error = ErrorPresentation(
+                title: "Command Needed",
+                message: "Type or say what you want CalPal to schedule.",
+                recovery: "Try a short command like \"Coffee tomorrow at noon\" or create manually."
+            )
+            latestResult = nil
+            latestError = error
+            commandState = .failed(error)
+            return
+        }
         let requestID = nextCommandGeneration()
-        commandState = .parsing(text)
-        let output = await dependencies.commandPipeline.process(text: text)
+        commandState = .parsing(trimmedText)
+        let output = await dependencies.commandPipeline.process(text: trimmedText)
         guard isCurrentCommand(requestID) else { return }
         await handle(output)
     }

@@ -4,6 +4,7 @@ struct TextEntryView: View {
     @Environment(\.dismiss) private var dismiss
     @FocusState private var inputFocused: Bool
     @State private var text = ""
+    @State private var isSubmitting = false
     let onSubmit: (String) -> Void
 
     var body: some View {
@@ -21,13 +22,14 @@ struct TextEntryView: View {
                         .lineLimit(4...8)
                         .focused($inputFocused)
                         .accessibilityLabel("Calendar command text")
+                        .accessibilityIdentifier("calendarCommandTextField")
                     Button(action: submit) {
                         Label("Send Command", systemImage: "paperplane.fill")
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.large)
-                    .disabled(trimmedText.isEmpty)
+                    .disabled(trimmedText.isEmpty || isSubmitting)
                     .accessibilityIdentifier("textCommandSend")
                     exampleChips
                 }
@@ -39,7 +41,7 @@ struct TextEntryView: View {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Send") { submit() }
-                        .disabled(trimmedText.isEmpty)
+                        .disabled(trimmedText.isEmpty || isSubmitting)
                         .accessibilityIdentifier("textCommandToolbarSend")
                 }
             }
@@ -60,7 +62,11 @@ struct TextEntryView: View {
     }
 
     private var trimmedText: String { text.trimmingCharacters(in: .whitespacesAndNewlines) }
-    private func submit() { onSubmit(trimmedText) }
+    private func submit() {
+        guard !trimmedText.isEmpty, !isSubmitting else { return }
+        isSubmitting = true
+        onSubmit(trimmedText)
+    }
 }
 
 struct FlowLikeChips: View {
