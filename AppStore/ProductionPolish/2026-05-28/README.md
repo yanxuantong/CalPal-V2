@@ -56,6 +56,7 @@ Only App Store-listed products were used as references:
 - Guarded Speech startup completion so cancellation during async recognizer startup cannot leave transcription running behind an idle UI.
 - Added foreground resume refresh so capability readiness and agenda content recover after users return from iOS Settings permission changes.
 - Added scene lifecycle cancellation so active recording or command processing stops when CalPal becomes inactive or leaves the foreground.
+- Preserved completed result feedback across scene interruptions by cancelling the auto-dismiss timer when CalPal becomes inactive or leaves the foreground.
 
 ## Apple Reference Notes
 
@@ -73,7 +74,7 @@ Only App Store-listed products were used as references:
 ## Verification Plan
 
 - Run targeted unit tests for `V2UsabilityRegressionTests` on iOS Simulator.
-- Run each XCTest suite on iOS Simulator. The full suite currently covers 94 tests.
+- Run each XCTest suite on iOS Simulator. The full suite currently covers 95 tests.
 - Build the app for an iOS Simulator destination with code signing disabled.
 - Run `Scripts/verify_smoke_automation_contract.sh` to confirm documented smoke-test identifiers still exist in source/tests.
 - Do not run any real-device install, launch, or debug command in this checkpoint.
@@ -84,7 +85,7 @@ Only App Store-listed products were used as references:
 - `PreferenceSummaryStoreTests`: 1 passed, 0 failed.
 - `NaturalLanguageCalendarParserTests`: 13 passed, 0 failed.
 - `CalendarMutationPolicyTests` + `LightDarkUIPresentationTests`: 9 passed, 0 failed.
-- `MVPBugFixRegressionTests`: 12 passed, 0 failed.
+- `MVPBugFixRegressionTests`: 13 passed, 0 failed.
 - `VisualSnapshotRenderingTests`: 5 passed, 0 failed.
 - Targeted draft-form guardrail suite: 20 passed, 0 failed.
 - Targeted recovery-path suite: 27 passed, 0 failed.
@@ -95,7 +96,7 @@ Only App Store-listed products were used as references:
 - Targeted manual-form calendar target tests: passed for selected-calendar display state and default-writable fallback copy.
 - Targeted draft normalization tests: passed for trimming title/location/notes before save and rejecting whitespace-only titles before repository writes.
 - Targeted patch normalization tests: passed for trimming update patches before EventKit mutation, preserving clear-field intent, and rejecting no-op patches after normalization.
-- Full Simulator XCTest: 94 passed, 0 failed.
+- Full Simulator XCTest: 95 passed, 0 failed.
 - Simulator build: passed with `CODE_SIGNING_ALLOWED=NO`.
 - Smoke automation contract verification: passed.
 - Local v0.3 release gate: passed with `CAPTURE_SCREENSHOTS=0`.
@@ -383,3 +384,9 @@ Only App Store-listed products were used as references:
 - Recording cancellation stops Speech capture before the app is interrupted or no longer visible, matching the product's privacy-first voice behavior.
 - Processing cancellation reuses the command-generation guard so late parser/model/calendar results cannot update the UI after the app has been interrupted.
 - Regression coverage locks both active-recording cancellation and late command-result suppression from the scene-interruption path.
+
+## Follow-Up Pass - Interrupted Result Feedback
+
+- Scene interruptions now cancel the completed-result auto-dismiss timer while preserving the visible success card.
+- Users who save a calendar mutation and briefly leave CalPal should still see the confirmation feedback when they return instead of losing it during the interruption.
+- Regression coverage injects a short result-dismiss delay and proves interrupted completed feedback remains visible after the original timer would have expired.

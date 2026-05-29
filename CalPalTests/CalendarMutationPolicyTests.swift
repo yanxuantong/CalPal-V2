@@ -455,6 +455,54 @@ final class MVPBugFixRegressionTests: XCTestCase {
         XCTAssertEqual(speech.cancelTranscriptionCount, 1)
     }
 
+    func testSceneInterruptionPreservesCompletedResultFeedback() async throws {
+        let repo = MockCalendarRepository()
+        let event = CalendarEvent(
+            id: "interrupted-visible-result",
+            title: "Saved before interruption",
+            calendarID: "work",
+            calendarName: "Work Calendar",
+            accountName: "iCloud",
+            startDate: PreviewFixtures.now,
+            endDate: PreviewFixtures.now.addingTimeInterval(3600),
+            isAllDay: false,
+            location: nil,
+            notes: nil,
+            isRecurring: false,
+            calendarColorHex: "#0A84FF"
+        )
+        let pipeline = DelayedCommandPipeline(
+            output: .result(CommandResultViewState(title: "Added to Calendar", message: "Visible result", event: event, actionTitle: "Open in Calendar")),
+            delayNanoseconds: 0
+        )
+        let speech = MockSpeechService()
+        let dependencies = DependencyContainer(
+            calendarRepository: repo,
+            commandPipeline: pipeline,
+            speechService: speech,
+            modelProvider: MockModelProvider(),
+            preferenceSummaryStore: InMemoryPreferenceSummaryStore(),
+            capabilityService: DefaultCapabilityService(calendarRepository: repo, speechService: speech, modelProvider: MockModelProvider())
+        )
+        let model = CommandHomeModel(
+            dependencies: dependencies,
+            selectedDay: PreviewFixtures.now,
+            resultDismissDelayNanoseconds: 60_000_000
+        )
+
+        await model.submit(text: "Save a visible result")
+        XCTAssertEqual(model.latestResult?.message, "Visible result")
+
+        model.cancelActiveWorkForSceneInterruption()
+        try await Task.sleep(nanoseconds: 120_000_000)
+
+        XCTAssertEqual(model.latestResult?.message, "Visible result")
+        guard case .completed(let result) = model.commandState else {
+            return XCTFail("Expected completed command state after scene interruption.")
+        }
+        XCTAssertEqual(result.message, "Visible result")
+    }
+
     func testDefaultCalendarPreferenceDrivesAutoReviewWriteTarget() async throws {
         let repo = MockCalendarRepository()
         let prefs = InMemoryPreferenceSummaryStore()

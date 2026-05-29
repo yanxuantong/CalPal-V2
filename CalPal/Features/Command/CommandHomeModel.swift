@@ -22,11 +22,18 @@ final class CommandHomeModel: ObservableObject {
     private var activeRecordingID: UUID?
     private var agendaLoadGeneration = 0
     private var commandGeneration = 0
+    private let resultDismissDelayNanoseconds: UInt64
 
-    init(dependencies: DependencyContainer, selectedDay: Date = Date(), now: @escaping () -> Date = Date.init) {
+    init(
+        dependencies: DependencyContainer,
+        selectedDay: Date = Date(),
+        now: @escaping () -> Date = Date.init,
+        resultDismissDelayNanoseconds: UInt64 = 4_000_000_000
+    ) {
         self.dependencies = dependencies
         self.selectedDay = selectedDay
         self.now = now
+        self.resultDismissDelayNanoseconds = resultDismissDelayNanoseconds
     }
 
     func loadAgenda() async {
@@ -239,6 +246,8 @@ final class CommandHomeModel: ObservableObject {
     }
 
     func cancelActiveWorkForSceneInterruption() {
+        resultDismissTask?.cancel()
+        resultDismissTask = nil
         if case .recording = commandState {
             cancelRecording()
         } else if commandState.isProcessing {
@@ -296,9 +305,10 @@ final class CommandHomeModel: ObservableObject {
     private func scheduleResultDismissal() {
         resultDismissTask?.cancel()
         resultDismissTask = Task { [weak self] in
-            try? await Task.sleep(nanoseconds: 4_000_000_000)
+            guard let self else { return }
+            try? await Task.sleep(nanoseconds: self.resultDismissDelayNanoseconds)
             guard !Task.isCancelled else { return }
-            await MainActor.run { self?.latestResult = nil }
+            await MainActor.run { self.latestResult = nil }
         }
     }
 
