@@ -224,6 +224,8 @@ final class CommandHomeModel: ObservableObject {
     }
 
     func openManualCreate(reason: String = "Create the event manually.") {
+        hideCommandHint()
+        clearTerminalCommandFeedback()
         let start = defaultManualEventStart()
         sheetPresenter?(.manualEventForm(ManualEventContext(reason: reason, draft: EventDraft(title: "", startDate: start, endDate: start.addingTimeInterval(3600), calendarID: selectedCalendar?.id, calendarName: selectedCalendar?.title, calendarAccountName: selectedCalendar?.accountName, location: nil, notes: nil))))
     }
@@ -231,11 +233,18 @@ final class CommandHomeModel: ObservableObject {
     func handleUnavailableAction(_ action: UnavailableAction) {
         switch action {
         case .openManualCreate: openManualCreate(reason: "Fallback manual create")
-        case .openTextEntry: sheetPresenter?(.textEntry(TextEntryContext()))
+        case .openTextEntry:
+            prepareForNewCommandEntry()
+            sheetPresenter?(.textEntry(TextEntryContext()))
         case .openSettings: sheetPresenter?(.settings(.diagnostics))
         case .openSystemSettings: break
         case .dismiss: break
         }
+    }
+
+    func prepareForNewCommandEntry() {
+        hideCommandHint()
+        clearTerminalCommandFeedback()
     }
 
     func cancelProcessing() {

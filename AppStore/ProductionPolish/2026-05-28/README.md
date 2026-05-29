@@ -59,6 +59,7 @@ Only App Store-listed products were used as references:
 - Preserved completed result feedback across scene interruptions by pausing the auto-dismiss timer while CalPal is inactive, resuming it after foreground activation, and returning the command state to idle when the result clears.
 - Cleared terminal command feedback on actual date navigation so stale success or error cards do not follow users into another agenda day, while reselecting the current day remains a no-op.
 - Aligned manual creation from a selected agenda day so empty-day fallback drafts open on that day instead of defaulting back to today.
+- Cleared terminal command feedback when opening a fresh text-entry or manual-create flow so stale success/error cards do not sit behind new input sheets.
 
 ## Apple Reference Notes
 
@@ -72,18 +73,19 @@ Only App Store-listed products were used as references:
 - App Store Connect metadata, screenshots, privacy URL, signed archive upload, and TestFlight distribution remain manual release gates.
 - The current MVP does not yet compete on task management, widgets, calendar-set filtering, availability links, travel/weather context, or automatic replanning. These are roadmap items, not blockers for a narrow MVP.
 - Localization is only partial. The parser handles English and Chinese examples, but the visible UI is mostly English.
+- Future owner context: next work should focus on an owner-run Foundation Models real-device smoke pass, App Store Connect evidence capture, and a narrow UI smoke script that exercises text entry, manual create, Settings readiness, and Back to Today on Simulator.
 
 ## Verification Plan
 
 - Run targeted unit tests for `V2UsabilityRegressionTests` on iOS Simulator.
-- Run each XCTest suite on iOS Simulator. The full suite currently covers 100 tests.
+- Run each XCTest suite on iOS Simulator. The full suite currently covers 102 tests.
 - Build the app for an iOS Simulator destination with code signing disabled.
 - Run `Scripts/verify_smoke_automation_contract.sh` to confirm documented smoke-test identifiers still exist in source/tests.
 - Do not run any real-device install, launch, or debug command in this checkpoint.
 
 ## Verification Results
 
-- `V2UsabilityRegressionTests`: 44 passed, 0 failed.
+- `V2UsabilityRegressionTests`: 56 passed, 0 failed.
 - `PreferenceSummaryStoreTests`: 1 passed, 0 failed.
 - `NaturalLanguageCalendarParserTests`: 13 passed, 0 failed.
 - `CalendarMutationPolicyTests` + `LightDarkUIPresentationTests`: 9 passed, 0 failed.
@@ -98,7 +100,8 @@ Only App Store-listed products were used as references:
 - Targeted manual-form calendar target tests: passed for selected-calendar display state and default-writable fallback copy.
 - Targeted draft normalization tests: passed for trimming title/location/notes before save and rejecting whitespace-only titles before repository writes.
 - Targeted patch normalization tests: passed for trimming update patches before EventKit mutation, preserving clear-field intent, and rejecting no-op patches after normalization.
-- Full Simulator XCTest: 100 passed, 0 failed.
+- Targeted new-entry feedback cleanup tests: 2 passed, 0 failed.
+- Full Simulator XCTest: 102 passed, 0 failed.
 - Simulator build: passed with `CODE_SIGNING_ALLOWED=NO`.
 - Smoke automation contract verification: passed.
 - Local v0.3 release gate: passed with `CAPTURE_SCREENSHOTS=0`.
@@ -406,3 +409,17 @@ Only App Store-listed products were used as references:
 - Manual create now derives its default draft start date from the currently selected agenda day.
 - Today's agenda still starts a manual draft one hour from now, while future or non-today agendas open on the selected date at a 9:00-17:00 whole-hour slot.
 - Regression coverage locks the empty-agenda manual-create path so fallback event creation cannot silently jump back to today or default to a late-night time.
+
+## Follow-Up Pass - New Entry Feedback Cleanup
+
+- Opening text entry now clears terminal command feedback and hides the persistent hint before presenting the input sheet.
+- Opening manual create now clears terminal command feedback and hides the persistent hint before presenting the event form.
+- Unavailable-state `Type Instead` and `Create Manually` actions inherit the same cleanup behavior, while Settings/diagnostics still preserve the prior failure context.
+- Regression coverage locks text-entry and manual-create launch behavior so old success/error cards cannot sit behind a new input flow.
+
+## Future Context To Carry Forward
+
+- Keep automated verification Simulator-only unless the owner explicitly authorizes physical-device work in a future turn.
+- Treat Foundation Models generation as unverified until an owner-run real-device smoke pass captures successful `LanguageModelSession` generation evidence; Simulator fallback/routing evidence is not enough for the App Store gate.
+- Before App Store submission, collect App Store Connect metadata, privacy URL, screenshots, signed archive upload evidence, TestFlight distribution evidence, and owner-run real-device smoke notes in `AppStore/APP_STORE_PUBLIC_RELEASE_EVIDENCE.md`.
+- The next highest-value automation pass is a narrow Simulator UI smoke script using the documented accessibility identifiers for text entry, manual create, Settings readiness, Back to Today, and cancelable processing.

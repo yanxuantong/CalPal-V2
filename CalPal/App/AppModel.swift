@@ -86,7 +86,7 @@ final class AppModel: ObservableObject {
         activeSheet = .settings(section)
     }
     func openTextEntry() {
-        commandHomeModel.hideCommandHint()
+        commandHomeModel.prepareForNewCommandEntry()
         activeSheet = .textEntry(TextEntryContext())
     }
     func dismissSheet() { activeSheet = nil }

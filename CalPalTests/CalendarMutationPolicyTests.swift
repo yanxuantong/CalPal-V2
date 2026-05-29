@@ -1458,6 +1458,22 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertFalse(app.commandHomeModel.showsCommandHint)
     }
 
+    func testOpeningTextEntryClearsTerminalCommandFeedback() {
+        let app = AppModel(dependencies: .mock())
+        let result = CommandResultViewState(title: "Added to Calendar", message: "Old result", event: PreviewFixtures.workEvent, actionTitle: "Open in Calendar")
+        app.commandHomeModel.latestResult = result
+        app.commandHomeModel.latestError = ErrorPresentation(title: "Old Error", message: "Old feedback", recovery: nil)
+        app.commandHomeModel.commandState = .completed(result)
+
+        app.openTextEntry()
+
+        guard case .textEntry = app.activeSheet else { return XCTFail("Expected text entry sheet") }
+        XCTAssertNil(app.commandHomeModel.latestResult)
+        XCTAssertNil(app.commandHomeModel.latestError)
+        XCTAssertEqual(app.commandHomeModel.commandState, .idle)
+        XCTAssertFalse(app.commandHomeModel.showsCommandHint)
+    }
+
     @MainActor
     func testAgendaFailureActionsRouteByFailureType() {
         var systemSettingsCount = 0
@@ -1561,6 +1577,24 @@ final class V2UsabilityRegressionTests: XCTestCase {
         guard case .manualEventForm(let context)? = presented else { return XCTFail("Expected manual event form") }
         XCTAssertEqual(context.reason, "Create an event from an empty agenda.")
         XCTAssertEqual(context.draft.calendarID, nil)
+    }
+
+    func testOpeningManualCreateClearsTerminalCommandFeedback() throws {
+        let model = CommandHomeModel(dependencies: .mock(), selectedDay: PreviewFixtures.now)
+        let result = CommandResultViewState(title: "Added to Calendar", message: "Old result", event: PreviewFixtures.workEvent, actionTitle: "Open in Calendar")
+        model.latestResult = result
+        model.latestError = ErrorPresentation(title: "Old Error", message: "Old feedback", recovery: nil)
+        model.commandState = .completed(result)
+        var presented: AppSheet?
+        model.sheetPresenter = { presented = $0 }
+
+        model.openManualCreate(reason: "Create an event from an empty agenda.")
+
+        guard case .manualEventForm = presented else { return XCTFail("Expected manual event form") }
+        XCTAssertNil(model.latestResult)
+        XCTAssertNil(model.latestError)
+        XCTAssertEqual(model.commandState, .idle)
+        XCTAssertFalse(model.showsCommandHint)
     }
 
     func testManualCreateFromFutureAgendaUsesSelectedDay() throws {
