@@ -547,6 +547,7 @@ final class MVPBugFixRegressionTests: XCTestCase {
         try await Task.sleep(nanoseconds: 120_000_000)
 
         XCTAssertNil(model.latestResult)
+        XCTAssertEqual(model.commandState, .idle)
     }
 
     func testDefaultCalendarPreferenceDrivesAutoReviewWriteTarget() async throws {

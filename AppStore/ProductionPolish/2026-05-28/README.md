@@ -56,7 +56,7 @@ Only App Store-listed products were used as references:
 - Guarded Speech startup completion so cancellation during async recognizer startup cannot leave transcription running behind an idle UI.
 - Added foreground resume refresh so capability readiness and agenda content recover after users return from iOS Settings permission changes.
 - Added scene lifecycle cancellation so active recording or command processing stops when CalPal becomes inactive or leaves the foreground.
-- Preserved completed result feedback across scene interruptions by pausing the auto-dismiss timer while CalPal is inactive and resuming it after foreground activation.
+- Preserved completed result feedback across scene interruptions by pausing the auto-dismiss timer while CalPal is inactive, resuming it after foreground activation, and returning the command state to idle when the result clears.
 
 ## Apple Reference Notes
 
@@ -389,4 +389,5 @@ Only App Store-listed products were used as references:
 
 - Scene interruptions now pause the completed-result auto-dismiss timer while preserving the visible success card.
 - Foreground activation resumes the auto-dismiss timer, so users who briefly leave CalPal still see the confirmation feedback when they return, and stale confirmations clear after the app is visible again.
-- Regression coverage injects a short result-dismiss delay and proves interrupted completed feedback remains visible while interrupted, then clears after scene activation resumes the timer.
+- Result dismissal now also returns the command state to idle, preventing an invisible `.completed` state from lingering after the success card is gone.
+- Regression coverage injects a short result-dismiss delay and proves interrupted completed feedback remains visible while interrupted, then clears and returns to idle after scene activation resumes the timer.

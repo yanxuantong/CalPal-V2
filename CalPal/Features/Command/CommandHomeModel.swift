@@ -292,16 +292,16 @@ final class CommandHomeModel: ObservableObject {
 
     func dismissLatestResult() {
         resultDismissTask?.cancel()
-        latestResult = nil
+        clearCompletedResult()
     }
 
     func focusLatestResultDate() {
         resultDismissTask?.cancel()
         guard let event = latestResult?.event else {
-            latestResult = nil
+            clearCompletedResult()
             return
         }
-        latestResult = nil
+        clearCompletedResult()
         guard !calendar.isDate(selectedDay, inSameDayAs: event.startDate) else { return }
         selectedDay = event.startDate
         Task { await loadAgenda() }
@@ -309,11 +309,20 @@ final class CommandHomeModel: ObservableObject {
 
     private func scheduleResultDismissal() {
         resultDismissTask?.cancel()
+        guard let resultID = latestResult?.id else { return }
         resultDismissTask = Task { [weak self] in
             guard let self else { return }
             try? await Task.sleep(nanoseconds: self.resultDismissDelayNanoseconds)
             guard !Task.isCancelled else { return }
-            await MainActor.run { self.latestResult = nil }
+            await MainActor.run { self.clearCompletedResult(matching: resultID) }
+        }
+    }
+
+    private func clearCompletedResult(matching resultID: UUID? = nil) {
+        if let resultID, latestResult?.id != resultID { return }
+        latestResult = nil
+        if case .completed(let result) = commandState, resultID == nil || result.id == resultID {
+            commandState = .idle
         }
     }
 
