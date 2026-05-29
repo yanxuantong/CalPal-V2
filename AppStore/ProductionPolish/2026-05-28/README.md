@@ -54,6 +54,7 @@ Only App Store-listed products were used as references:
 - Added a machine-checked smoke automation contract for critical accessibility identifiers and wired it into the local release gate.
 - Guarded Speech authorization completion so late denied/restricted results are ignored after recording cancellation.
 - Guarded Speech startup completion so cancellation during async recognizer startup cannot leave transcription running behind an idle UI.
+- Added foreground resume refresh so capability readiness and agenda content recover after users return from iOS Settings permission changes.
 
 ## Apple Reference Notes
 
@@ -71,7 +72,7 @@ Only App Store-listed products were used as references:
 ## Verification Plan
 
 - Run targeted unit tests for `V2UsabilityRegressionTests` on iOS Simulator.
-- Run each XCTest suite on iOS Simulator. The full suite currently covers 91 tests.
+- Run each XCTest suite on iOS Simulator. The full suite currently covers 92 tests.
 - Build the app for an iOS Simulator destination with code signing disabled.
 - Run `Scripts/verify_smoke_automation_contract.sh` to confirm documented smoke-test identifiers still exist in source/tests.
 - Do not run any real-device install, launch, or debug command in this checkpoint.
@@ -82,7 +83,7 @@ Only App Store-listed products were used as references:
 - `PreferenceSummaryStoreTests`: 1 passed, 0 failed.
 - `NaturalLanguageCalendarParserTests`: 13 passed, 0 failed.
 - `CalendarMutationPolicyTests` + `LightDarkUIPresentationTests`: 9 passed, 0 failed.
-- `MVPBugFixRegressionTests`: 9 passed, 0 failed.
+- `MVPBugFixRegressionTests`: 10 passed, 0 failed.
 - `VisualSnapshotRenderingTests`: 5 passed, 0 failed.
 - Targeted draft-form guardrail suite: 20 passed, 0 failed.
 - Targeted recovery-path suite: 27 passed, 0 failed.
@@ -93,7 +94,7 @@ Only App Store-listed products were used as references:
 - Targeted manual-form calendar target tests: passed for selected-calendar display state and default-writable fallback copy.
 - Targeted draft normalization tests: passed for trimming title/location/notes before save and rejecting whitespace-only titles before repository writes.
 - Targeted patch normalization tests: passed for trimming update patches before EventKit mutation, preserving clear-field intent, and rejecting no-op patches after normalization.
-- Full Simulator XCTest: 91 passed, 0 failed.
+- Full Simulator XCTest: 92 passed, 0 failed.
 - Simulator build: passed with `CODE_SIGNING_ALLOWED=NO`.
 - Smoke automation contract verification: passed.
 - Local v0.3 release gate: passed with `CAPTURE_SCREENSHOTS=0`.
@@ -368,3 +369,9 @@ Only App Store-listed products were used as references:
 - Speech startup completion now re-checks the active recording identity after `startTranscription` returns.
 - If the user cancels while recognizer startup is still in flight, CalPal calls the speech cancellation hook again so a late-started audio session cannot remain active behind an idle command surface.
 - Regression coverage simulates delayed recognizer startup and proves no parser work, result, error, or sheet appears after cancellation.
+
+## Follow-Up Pass - Foreground Permission Recovery
+
+- App foreground activation now refreshes capability readiness and reloads the agenda when Calendar access has become available.
+- The foreground path does not request Calendar or Speech permissions; it only reconciles state after the user returns from iOS Settings or another app.
+- Regression coverage locks the Settings-return recovery path by flipping mock Calendar authorization from denied to allowed and proving agenda reload without permission prompts.

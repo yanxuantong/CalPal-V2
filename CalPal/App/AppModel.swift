@@ -65,6 +65,13 @@ final class AppModel: ObservableObject {
         Task { await initializeRequiredPermissionsIfNeeded() }
     }
 
+    func refreshAfterReturningToForeground() async {
+        refreshCapabilities()
+        guard runtime.skipsOnboarding || activeSheet != .onboarding else { return }
+        guard dependencies.calendarRepository.authorizationStatus() == .allowed else { return }
+        await commandHomeModel.loadAgenda()
+    }
+
     func openSettings(_ section: SettingsSection? = nil) {
         refreshCapabilities()
         activeSheet = .settings(section)

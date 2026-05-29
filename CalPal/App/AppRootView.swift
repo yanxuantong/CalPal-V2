@@ -2,6 +2,7 @@ import SwiftUI
 
 struct AppRootView: View {
     @EnvironmentObject private var appModel: AppModel
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         NavigationStack {
@@ -15,6 +16,10 @@ struct AppRootView: View {
         }
         .onAppear { appModel.presentOnboardingIfNeeded() }
         .task { await appModel.initializeRequiredPermissionsIfNeeded() }
+        .onChange(of: scenePhase) { _, phase in
+            guard phase == .active else { return }
+            Task { await appModel.refreshAfterReturningToForeground() }
+        }
     }
 }
 

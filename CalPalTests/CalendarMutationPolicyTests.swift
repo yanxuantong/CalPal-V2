@@ -52,7 +52,7 @@ final class CalendarMutationPolicyTests: XCTestCase {
     }
 
     func testHighConfidenceCreateAutoApplies() async {
-        let repo = MockCalendarRepository()
+        let repo = MockCalendarRepository(now: Date())
         let calendars: [CalendarInfo]
         do {
             calendars = try await repo.fetchCalendars()
@@ -68,7 +68,7 @@ final class CalendarMutationPolicyTests: XCTestCase {
     }
 
     func testLowConfidenceCreateNeedsCorrection() async {
-        let repo = MockCalendarRepository()
+        let repo = MockCalendarRepository(now: Date())
         let calendars: [CalendarInfo]
         do {
             calendars = try await repo.fetchCalendars()
@@ -360,6 +360,36 @@ final class MVPBugFixRegressionTests: XCTestCase {
         XCTAssertEqual(speech.requestAuthorizationCount, 0)
         XCTAssertEqual(repo.requestFullAccessCount, 1)
         XCTAssertEqual(app.capabilitySummary.calendar, .allowed)
+    }
+
+    func testForegroundRefreshReloadsAgendaAfterCalendarPermissionChangeWithoutPrompting() async throws {
+        let repo = MockCalendarRepository(now: Date())
+        repo.authorization = .denied
+        let speech = MockSpeechService()
+        let dependencies = DependencyContainer(
+            calendarRepository: repo,
+            commandPipeline: CalendarCommandPipeline(parser: NaturalLanguageCalendarParser(now: { PreviewFixtures.now }), policy: CalendarMutationPolicy(now: { PreviewFixtures.now }), repository: repo),
+            speechService: speech,
+            modelProvider: MockModelProvider(),
+            preferenceSummaryStore: InMemoryPreferenceSummaryStore(),
+            capabilityService: DefaultCapabilityService(calendarRepository: repo, speechService: speech, modelProvider: MockModelProvider())
+        )
+        let app = AppModel(
+            runtime: .test(dependencies: dependencies, skipsOnboarding: true, skipsPermissionRequests: true, preloadsAgenda: false),
+            defaults: UserDefaults(suiteName: UUID().uuidString)!
+        )
+
+        app.refreshCapabilities()
+        XCTAssertEqual(app.capabilitySummary.calendar, .denied)
+
+        repo.authorization = .allowed
+        await app.refreshAfterReturningToForeground()
+
+        XCTAssertEqual(app.capabilitySummary.calendar, .allowed)
+        XCTAssertEqual(app.commandHomeModel.agendaState, .loaded)
+        XCTAssertFalse(app.commandHomeModel.events.isEmpty)
+        XCTAssertEqual(repo.requestFullAccessCount, 0)
+        XCTAssertEqual(speech.requestAuthorizationCount, 0)
     }
 
     func testDefaultCalendarPreferenceDrivesAutoReviewWriteTarget() async throws {
