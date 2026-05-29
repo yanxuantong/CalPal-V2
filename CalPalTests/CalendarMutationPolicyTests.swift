@@ -1207,8 +1207,11 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertEqual(SettingsSection.diagnostics.title, "v0.3 Readiness")
         XCTAssertEqual(SettingsSection.diagnostics.accessibilityIdentifier, "settingsSection-diagnostics")
         XCTAssertEqual(SettingsSection.automation.title, "Safety Mode")
+        XCTAssertEqual(SettingsSection.automation.accessibilityIdentifier, "settingsSection-automation")
         XCTAssertEqual(SettingsSection.language.title, "Default Calendar")
+        XCTAssertEqual(SettingsSection.language.accessibilityIdentifier, "settingsSection-language")
         XCTAssertEqual(SettingsSection.privacy.title, "Local Preferences")
+        XCTAssertEqual(SettingsSection.privacy.accessibilityIdentifier, "settingsSection-privacy")
     }
 
     func testCommandHomePrimaryActionsExposeStableAutomationIdentifiers() {

@@ -18,6 +18,7 @@ fi
 bash -n Scripts/capture_demo_screenshots.sh
 bash -n Scripts/verify_app_store_metadata.sh
 bash -n Scripts/verify_archive_build.sh
+bash -n Scripts/verify_smoke_automation_contract.sh
 
 if [[ ! -s "$PRIVACY_POLICY_PATH" ]]; then
   echo "Missing AppStore/PRIVACY_POLICY.md." >&2
@@ -44,6 +45,7 @@ xcodebuild \
 
 bash Scripts/verify_app_store_metadata.sh
 bash Scripts/verify_archive_build.sh
+bash Scripts/verify_smoke_automation_contract.sh
 
 screenshots_missing=0
 for screenshot in calpal-demo-home.png calpal-demo-home-dark.png; do

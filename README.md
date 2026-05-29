@@ -83,6 +83,12 @@ To verify the generic iOS archive build without signing:
 bash Scripts/verify_archive_build.sh
 ```
 
+To verify the documented UI smoke-test automation anchors still exist in source/tests:
+
+```sh
+bash Scripts/verify_smoke_automation_contract.sh
+```
+
 To verify the final public-release evidence after signed upload, TestFlight device smoke, screenshot review, and App Store Connect privacy metadata are complete:
 
 ```sh
@@ -99,6 +105,7 @@ bash Scripts/verify_public_release_readiness.sh
 - Settings includes a v0.3 readiness checklist for calendar access, writable calendars, speech, the bundled privacy manifest, Calendar opening, and store-material gates.
 - The app target bundles `PrivacyInfo.xcprivacy`, declaring local `UserDefaults` preference storage under Apple's `CA92.1` required reason and no tracking domains.
 - `Scripts/run_v03_release_gate.sh` runs syntax checks, privacy policy checks, simulator tests, App Store metadata verification, unsigned archive verification, and screenshot artifact validation; it can auto-create missing demo screenshots.
+- `Scripts/verify_smoke_automation_contract.sh` checks the documented smoke-test accessibility identifiers against the app source and regression tests.
 - The built app bundle is checked for v0.3 version metadata, Calendar/Microphone/Speech permission descriptions, and privacy manifest contents by `Scripts/verify_app_store_metadata.sh`.
 - `AppStore/APP_STORE_PUBLIC_RELEASE_EVIDENCE.md` is the final public-submission evidence record; `Scripts/verify_public_release_readiness.sh` intentionally fails until signed upload, TestFlight real-device smoke, public privacy URL, screenshot review, and App Store Connect metadata/privacy answers are recorded.
 - `AppStore/APP_STORE_CONNECT_SUBMISSION.md` contains the v0.3 product page draft, review notes, privacy-answer rationale, and screenshot artifact list.
