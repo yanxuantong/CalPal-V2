@@ -1195,6 +1195,19 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertEqual(SettingsSection.privacy.title, "Local Preferences")
     }
 
+    func testReadinessItemsExposeStableAutomationIdentifiers() {
+        let items = AppStoreReadinessChecklist.items(
+            summary: CapabilitySummary(calendar: .allowed, speech: .allowed, model: .allowed, preferredLocales: ["en-US"], runsOnDevice: true),
+            writableCalendarCount: 1,
+            selectedCalendar: CalendarInfo(id: "work", title: "Work Calendar", accountName: "iCloud", allowsContentModifications: true, colorHex: nil)
+        )
+
+        XCTAssertEqual(items.first { $0.id == "calendar-access" }?.accessibilityIdentifier, "readinessItem-calendar-access")
+        XCTAssertEqual(items.first { $0.id == "foundation-models" }?.accessibilityIdentifier, "readinessItem-foundation-models")
+        XCTAssertEqual(items.first { $0.id == "calendar-open" }?.accessibilityIdentifier, "readinessItem-calendar-open")
+        XCTAssertEqual(items.first { $0.id == "store-assets" }?.accessibilityIdentifier, "readinessItem-store-assets")
+    }
+
     func testOpeningTextEntryHidesPersistentHint() {
         let app = AppModel(dependencies: .mock())
         XCTAssertTrue(app.commandHomeModel.showsCommandHint)

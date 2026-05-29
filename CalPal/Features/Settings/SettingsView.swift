@@ -227,6 +227,10 @@ struct ReadinessChecklistItem: Identifiable, Equatable {
         case .manualGate: return CalPalTheme.Colors.aiChip
         }
     }
+
+    var accessibilityIdentifier: String {
+        "readinessItem-\(id)"
+    }
 }
 
 enum AppStoreReadinessChecklist {
@@ -366,6 +370,7 @@ private struct ReadinessChecklistRow: View {
             }
         }
         .accessibilityElement(children: .combine)
+        .accessibilityIdentifier(item.accessibilityIdentifier)
         .accessibilityLabel("\(item.title), \(item.state.rawValue), \(item.detail)")
     }
 }

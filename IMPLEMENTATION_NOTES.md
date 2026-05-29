@@ -73,4 +73,5 @@ xcodebuild -project CalPal.xcodeproj -scheme CalPal -configuration Debug -sdk ip
 - Settings readiness now includes an aggregate summary that separates automated-ready checks from remaining manual release gates.
 - Speech-unavailable recovery avoids offering manual create when Calendar access is denied and routes the secondary action to iOS Settings instead.
 - Unavailable-state recovery actions now expose stable accessibility identifiers for UI automation and smoke-test targeting.
+- Settings readiness checklist rows now expose stable accessibility identifiers for release-gate smoke tests.
 - Competitive reference notes and release gaps live in `AppStore/ProductionPolish/2026-05-28/README.md`.
