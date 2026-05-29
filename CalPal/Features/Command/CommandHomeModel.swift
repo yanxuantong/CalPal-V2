@@ -97,6 +97,10 @@ final class CommandHomeModel: ObservableObject {
                 let locale = Locale.preferredLanguages.first ?? "en-US"
                 let supportedLocale = dependencies.speechService.supports(localeIdentifier: locale) ? locale : "en-US"
                 try await dependencies.speechService.startTranscription(localeIdentifier: supportedLocale)
+                guard activeRecordingID == recordingID, case .recording = commandState else {
+                    dependencies.speechService.cancelTranscription()
+                    return
+                }
             } catch {
                 guard activeRecordingID == recordingID else { return }
                 commandState = .failed(ErrorPresentation(title: "Speech Unavailable", message: error.localizedDescription, recovery: "Double-tap the orb to type instead."))

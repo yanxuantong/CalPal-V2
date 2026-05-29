@@ -147,6 +147,7 @@ final class MockSpeechService: SpeechServiceProtocol {
     var startError: Error?
     var finishError: Error?
     var authorizationDelayNanoseconds: UInt64
+    var startDelayNanoseconds: UInt64
     var finishDelayNanoseconds: UInt64
     var ignoresFinishCancellation: Bool
     private(set) var requestAuthorizationCount = 0
@@ -160,6 +161,7 @@ final class MockSpeechService: SpeechServiceProtocol {
         startError: Error? = nil,
         finishError: Error? = nil,
         authorizationDelayNanoseconds: UInt64 = 0,
+        startDelayNanoseconds: UInt64 = 0,
         finishDelayNanoseconds: UInt64 = 0,
         ignoresFinishCancellation: Bool = false
     ) {
@@ -168,6 +170,7 @@ final class MockSpeechService: SpeechServiceProtocol {
         self.startError = startError
         self.finishError = finishError
         self.authorizationDelayNanoseconds = authorizationDelayNanoseconds
+        self.startDelayNanoseconds = startDelayNanoseconds
         self.finishDelayNanoseconds = finishDelayNanoseconds
         self.ignoresFinishCancellation = ignoresFinishCancellation
     }
@@ -183,6 +186,9 @@ final class MockSpeechService: SpeechServiceProtocol {
     func supports(localeIdentifier: String) -> Bool { true }
     func startTranscription(localeIdentifier: String) async throws {
         startTranscriptionCount += 1
+        if startDelayNanoseconds > 0 {
+            try await Task.sleep(nanoseconds: startDelayNanoseconds)
+        }
         if let startError { throw startError }
     }
     func finishTranscription() async throws -> String {

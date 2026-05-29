@@ -81,4 +81,5 @@ xcodebuild -project CalPal.xcodeproj -scheme CalPal -configuration Debug -sdk ip
 - The home Settings and Back to Today actions now expose stable accessibility identifiers for release smoke navigation.
 - The local release gate now verifies the documented smoke automation contract so critical accessibility identifiers cannot silently drift.
 - Cancelling recording now suppresses late Speech authorization denial results so a canceled voice attempt cannot reopen an unavailable sheet.
+- Cancelling recording during Speech startup now re-cancels transcription if the async start completes after the user has already canceled.
 - Competitive reference notes and release gaps live in `AppStore/ProductionPolish/2026-05-28/README.md`.

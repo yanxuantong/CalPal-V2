@@ -1559,6 +1559,37 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertEqual(speech.cancelTranscriptionCount, 1)
     }
 
+    func testCancelRecordingStopsLateSpeechStartCompletion() async throws {
+        let repo = MockCalendarRepository()
+        let speech = MockSpeechService(startDelayNanoseconds: 160_000_000)
+        let pipeline = CountingCommandPipeline(output: .failure(ErrorPresentation(title: "Unexpected", message: "Should not parse", recovery: nil)))
+        let deps = DependencyContainer(
+            calendarRepository: repo,
+            commandPipeline: pipeline,
+            speechService: speech,
+            modelProvider: MockModelProvider(),
+            preferenceSummaryStore: InMemoryPreferenceSummaryStore(),
+            capabilityService: DefaultCapabilityService(calendarRepository: repo, speechService: speech, modelProvider: MockModelProvider())
+        )
+        let model = CommandHomeModel(dependencies: deps, selectedDay: PreviewFixtures.now)
+        var presented: AppSheet?
+        model.sheetPresenter = { presented = $0 }
+
+        model.beginRecording()
+        try await Task.sleep(nanoseconds: 30_000_000)
+        model.cancelRecording()
+        try await Task.sleep(nanoseconds: 220_000_000)
+
+        XCTAssertEqual(model.commandState, .idle)
+        XCTAssertNil(presented)
+        XCTAssertTrue(pipeline.processInputs.isEmpty)
+        XCTAssertNil(model.latestResult)
+        XCTAssertNil(model.latestError)
+        XCTAssertEqual(speech.requestAuthorizationCount, 1)
+        XCTAssertEqual(speech.startTranscriptionCount, 1)
+        XCTAssertEqual(speech.cancelTranscriptionCount, 2)
+    }
+
     private func render<V: View>(_ view: V, colorScheme: ColorScheme, size: CGSize) -> UIImage {
         let controller = UIHostingController(rootView: view.environment(\.colorScheme, colorScheme))
         controller.view.bounds = CGRect(origin: .zero, size: size)
