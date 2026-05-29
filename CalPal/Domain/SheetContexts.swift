@@ -97,3 +97,14 @@ enum ConfirmationDecision: Equatable {
     case confirm(recurrenceScope: RecurrenceChangeScope?)
     case cancel
 }
+
+enum SheetDismissAutomation {
+    static let textEntryCancel = "textEntryCancel"
+    static let manualEventCancel = "manualEventCancel"
+    static let correctionCancel = "correctionCancel"
+    static let confirmationToolbarCancel = "confirmationToolbarCancel"
+    static let confirmationSecondaryCancel = "confirmationSecondaryCancel"
+    static let candidateSelectionCancel = "candidateSelectionCancel"
+    static let eventDetailDone = "eventDetailDone"
+    static let calendarChooserCancel = "calendarChooserCancel"
+}

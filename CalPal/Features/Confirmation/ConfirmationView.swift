@@ -29,7 +29,12 @@ struct ConfirmationView: View {
             }
             .background(CalPalTheme.Colors.backgroundPrimary)
             .navigationTitle(context.title)
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                        .accessibilityIdentifier(SheetDismissAutomation.confirmationToolbarCancel)
+                }
+            }
         }
     }
 
@@ -78,6 +83,7 @@ struct ConfirmationView: View {
             }
                 .buttonStyle(.bordered)
                 .controlSize(.large)
+                .accessibilityIdentifier(SheetDismissAutomation.confirmationSecondaryCancel)
         }
         .frame(maxWidth: .infinity)
     }

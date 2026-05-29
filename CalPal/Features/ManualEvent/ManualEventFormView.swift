@@ -30,7 +30,10 @@ struct ManualEventFormView: View {
             .background(CalPalTheme.Colors.backgroundPrimary)
             .navigationTitle("Manual create")
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                        .accessibilityIdentifier(SheetDismissAutomation.manualEventCancel)
+                }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save Event", action: submit)
                         .disabled(!saveReadiness.canSave)

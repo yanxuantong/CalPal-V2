@@ -49,6 +49,7 @@ Only App Store-listed products were used as references:
 - Hardened processing cancellation so late speech transcripts cannot re-enter the command pipeline after the user cancels.
 - Cleared stale command feedback when a new command stage begins so old result/error cards do not remain visible during new work.
 - Added stable UI automation identifiers for the processing card and its Cancel action.
+- Added stable UI automation identifiers for common sheet dismiss actions across text entry, manual create, correction, confirmation, candidate selection, event detail, and calendar chooser flows.
 
 ## Apple Reference Notes
 
@@ -66,13 +67,13 @@ Only App Store-listed products were used as references:
 ## Verification Plan
 
 - Run targeted unit tests for `V2UsabilityRegressionTests` on iOS Simulator.
-- Run each XCTest suite on iOS Simulator. The full suite currently covers 87 tests.
+- Run each XCTest suite on iOS Simulator. The full suite currently covers 88 tests.
 - Build the app for an iOS Simulator destination with code signing disabled.
 - Do not run any real-device install, launch, or debug command in this checkpoint.
 
 ## Verification Results
 
-- `V2UsabilityRegressionTests`: 36 passed, 0 failed.
+- `V2UsabilityRegressionTests`: 37 passed, 0 failed.
 - `PreferenceSummaryStoreTests`: 1 passed, 0 failed.
 - `NaturalLanguageCalendarParserTests`: 13 passed, 0 failed.
 - `CalendarMutationPolicyTests` + `LightDarkUIPresentationTests`: 9 passed, 0 failed.
@@ -87,7 +88,7 @@ Only App Store-listed products were used as references:
 - Targeted manual-form calendar target tests: passed for selected-calendar display state and default-writable fallback copy.
 - Targeted draft normalization tests: passed for trimming title/location/notes before save and rejecting whitespace-only titles before repository writes.
 - Targeted patch normalization tests: passed for trimming update patches before EventKit mutation, preserving clear-field intent, and rejecting no-op patches after normalization.
-- Full Simulator XCTest: 87 passed, 0 failed.
+- Full Simulator XCTest: 88 passed, 0 failed.
 - Simulator build: passed with `CODE_SIGNING_ALLOWED=NO`.
 - Release script syntax checks: passed for screenshot capture and local release gate scripts.
 - Demo screenshot capture: passed on iPhone 17 Simulator using the built app's `CFBundleIdentifier`; generated light and dark screenshots at 1206x2622.
@@ -330,3 +331,9 @@ Only App Store-listed products were used as references:
 - The processing card now exposes a stable accessibility identifier.
 - The processing Cancel action now exposes a stable accessibility identifier, making Simulator UI smoke tests able to cancel parsing/applying work without relying on visible copy.
 - Regression coverage locks the processing-card identifier contract.
+
+## Follow-Up Pass - Sheet Dismissal Automation Anchors
+
+- Common modal dismiss actions now expose stable accessibility identifiers across text entry, manual create, correction, confirmation, candidate selection, event detail, and calendar chooser sheets.
+- Confirmation keeps separate identifiers for the toolbar cancel and the in-content secondary cancel action, preserving their different UX meanings for UI smoke tests.
+- Regression coverage locks the sheet-dismiss identifier contract.

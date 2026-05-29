@@ -913,6 +913,17 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertEqual(UnavailableAction.dismiss.accessibilityIdentifier, "unavailableAction-dismiss")
     }
 
+    func testSheetDismissActionsExposeStableAutomationIdentifiers() {
+        XCTAssertEqual(SheetDismissAutomation.textEntryCancel, "textEntryCancel")
+        XCTAssertEqual(SheetDismissAutomation.manualEventCancel, "manualEventCancel")
+        XCTAssertEqual(SheetDismissAutomation.correctionCancel, "correctionCancel")
+        XCTAssertEqual(SheetDismissAutomation.confirmationToolbarCancel, "confirmationToolbarCancel")
+        XCTAssertEqual(SheetDismissAutomation.confirmationSecondaryCancel, "confirmationSecondaryCancel")
+        XCTAssertEqual(SheetDismissAutomation.candidateSelectionCancel, "candidateSelectionCancel")
+        XCTAssertEqual(SheetDismissAutomation.eventDetailDone, "eventDetailDone")
+        XCTAssertEqual(SheetDismissAutomation.calendarChooserCancel, "calendarChooserCancel")
+    }
+
     @MainActor
     func testDeniedSpeechPermissionOffersTextEntryAndSystemSettings() async throws {
         let speech = MockSpeechService(authorization: .denied)

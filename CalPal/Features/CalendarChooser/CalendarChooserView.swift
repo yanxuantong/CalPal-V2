@@ -29,7 +29,7 @@ struct CalendarChooserView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
-                        .accessibilityIdentifier("calendarChooserCancel")
+                        .accessibilityIdentifier(SheetDismissAutomation.calendarChooserCancel)
                 }
             }
         }

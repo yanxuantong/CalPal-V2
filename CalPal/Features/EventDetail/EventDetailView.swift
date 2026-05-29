@@ -30,7 +30,12 @@ struct EventDetailView: View {
             .background(CalPalTheme.Colors.backgroundPrimary)
             .navigationTitle("Event Details")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } } }
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Done") { dismiss() }
+                        .accessibilityIdentifier(SheetDismissAutomation.eventDetailDone)
+                }
+            }
         }
     }
 

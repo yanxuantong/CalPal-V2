@@ -35,7 +35,10 @@ struct CorrectionView: View {
             .background(CalPalTheme.Colors.backgroundPrimary)
             .navigationTitle(context.title)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                        .accessibilityIdentifier(SheetDismissAutomation.correctionCancel)
+                }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save Event", action: submit)
                         .disabled(!saveReadiness.canSave)

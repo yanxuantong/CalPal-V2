@@ -23,7 +23,10 @@ struct CandidateSelectionView: View {
             .background(CalPalTheme.Colors.backgroundPrimary)
             .navigationTitle(navigationTitle)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                        .accessibilityIdentifier(SheetDismissAutomation.candidateSelectionCancel)
+                }
             }
         }
     }

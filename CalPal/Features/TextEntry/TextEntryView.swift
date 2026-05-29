@@ -39,7 +39,10 @@ struct TextEntryView: View {
             .background(CalPalTheme.Colors.backgroundPrimary)
             .navigationTitle("Text Command")
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                        .accessibilityIdentifier(SheetDismissAutomation.textEntryCancel)
+                }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Send") { submit() }
                         .disabled(!sendReadiness.canSend)
