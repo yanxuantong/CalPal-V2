@@ -240,6 +240,11 @@ final class VisualSnapshotRenderingTests: XCTestCase {
         XCTAssertGreaterThan(try XCTUnwrap(applying.pngData()).count, 4_000)
     }
 
+    func testProcessingCardExposesStableAutomationIdentifiers() {
+        XCTAssertEqual(ProcessingCardAutomation.cardIdentifier, "processingCard")
+        XCTAssertEqual(ProcessingCardAutomation.cancelButtonIdentifier, "processingCancel")
+    }
+
     private func assertSnapshot(_ image: UIImage, size: CGSize, file: StaticString = #filePath, line: UInt = #line) {
         XCTAssertEqual(Int(image.size.width), Int(size.width), file: file, line: line)
         XCTAssertEqual(Int(image.size.height), Int(size.height), file: file, line: line)

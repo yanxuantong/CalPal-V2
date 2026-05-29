@@ -45,10 +45,13 @@ struct ProcessingCard: View {
                 Text(detail).font(.caption).foregroundStyle(CalPalTheme.Colors.textSecondary)
             }
             Spacer()
-            Button("Cancel", action: onCancel).buttonStyle(.bordered)
+            Button("Cancel", action: onCancel)
+                .buttonStyle(.bordered)
+                .accessibilityIdentifier(ProcessingCardAutomation.cancelButtonIdentifier)
         }
         .padding()
         .glassCard()
+        .accessibilityIdentifier(ProcessingCardAutomation.cardIdentifier)
         .accessibilityLabel("Processing calendar command. Cancel processing available.")
     }
 
@@ -77,6 +80,11 @@ struct ProcessingCard: View {
             return "Taking longer than usual"
         }
     }
+}
+
+enum ProcessingCardAutomation {
+    static let cardIdentifier = "processingCard"
+    static let cancelButtonIdentifier = "processingCancel"
 }
 
 struct ResultCard: View {

@@ -76,4 +76,5 @@ xcodebuild -project CalPal.xcodeproj -scheme CalPal -configuration Debug -sdk ip
 - Settings readiness checklist rows now expose stable accessibility identifiers for release-gate smoke tests.
 - Processing cancellation now suppresses late speech transcripts before they can re-enter the command pipeline.
 - Starting a new command stage now clears stale result/error feedback and cancels pending result auto-dismiss work.
+- The processing card and its Cancel action now expose stable accessibility identifiers for UI smoke tests.
 - Competitive reference notes and release gaps live in `AppStore/ProductionPolish/2026-05-28/README.md`.

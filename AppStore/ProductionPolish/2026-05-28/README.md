@@ -48,6 +48,7 @@ Only App Store-listed products were used as references:
 - Added stable UI automation identifiers for each Settings readiness checklist item.
 - Hardened processing cancellation so late speech transcripts cannot re-enter the command pipeline after the user cancels.
 - Cleared stale command feedback when a new command stage begins so old result/error cards do not remain visible during new work.
+- Added stable UI automation identifiers for the processing card and its Cancel action.
 
 ## Apple Reference Notes
 
@@ -65,7 +66,7 @@ Only App Store-listed products were used as references:
 ## Verification Plan
 
 - Run targeted unit tests for `V2UsabilityRegressionTests` on iOS Simulator.
-- Run each XCTest suite on iOS Simulator. The full suite currently covers 86 tests.
+- Run each XCTest suite on iOS Simulator. The full suite currently covers 87 tests.
 - Build the app for an iOS Simulator destination with code signing disabled.
 - Do not run any real-device install, launch, or debug command in this checkpoint.
 
@@ -76,7 +77,7 @@ Only App Store-listed products were used as references:
 - `NaturalLanguageCalendarParserTests`: 13 passed, 0 failed.
 - `CalendarMutationPolicyTests` + `LightDarkUIPresentationTests`: 9 passed, 0 failed.
 - `MVPBugFixRegressionTests`: 9 passed, 0 failed.
-- `VisualSnapshotRenderingTests`: 4 passed, 0 failed.
+- `VisualSnapshotRenderingTests`: 5 passed, 0 failed.
 - Targeted draft-form guardrail suite: 20 passed, 0 failed.
 - Targeted recovery-path suite: 27 passed, 0 failed.
 - Targeted just-in-time permission suite: 3 passed, 0 failed.
@@ -86,7 +87,7 @@ Only App Store-listed products were used as references:
 - Targeted manual-form calendar target tests: passed for selected-calendar display state and default-writable fallback copy.
 - Targeted draft normalization tests: passed for trimming title/location/notes before save and rejecting whitespace-only titles before repository writes.
 - Targeted patch normalization tests: passed for trimming update patches before EventKit mutation, preserving clear-field intent, and rejecting no-op patches after normalization.
-- Full Simulator XCTest: 86 passed, 0 failed.
+- Full Simulator XCTest: 87 passed, 0 failed.
 - Simulator build: passed with `CODE_SIGNING_ALLOWED=NO`.
 - Release script syntax checks: passed for screenshot capture and local release gate scripts.
 - Demo screenshot capture: passed on iPhone 17 Simulator using the built app's `CFBundleIdentifier`; generated light and dark screenshots at 1206x2622.
@@ -323,3 +324,9 @@ Only App Store-listed products were used as references:
 - Starting a new recording, transcription, parser, or apply stage now clears prior result and error feedback before showing processing state.
 - Any pending result auto-dismiss task is cancelled when a new command stage begins, keeping old feedback timers from affecting the next command lifecycle.
 - Regression coverage locks that stale result/error cards disappear while a new command is parsing.
+
+## Follow-Up Pass - Processing Automation Anchors
+
+- The processing card now exposes a stable accessibility identifier.
+- The processing Cancel action now exposes a stable accessibility identifier, making Simulator UI smoke tests able to cancel parsing/applying work without relying on visible copy.
+- Regression coverage locks the processing-card identifier contract.
