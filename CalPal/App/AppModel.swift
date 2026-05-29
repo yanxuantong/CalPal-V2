@@ -66,6 +66,7 @@ final class AppModel: ObservableObject {
     }
 
     func refreshAfterReturningToForeground() async {
+        commandHomeModel.resumeResultDismissalAfterSceneActivation()
         refreshCapabilities()
         guard runtime.skipsOnboarding || activeSheet != .onboarding else { return }
         guard dependencies.calendarRepository.authorizationStatus() == .allowed else { return }

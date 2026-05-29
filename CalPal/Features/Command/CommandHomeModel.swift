@@ -255,6 +255,11 @@ final class CommandHomeModel: ObservableObject {
         }
     }
 
+    func resumeResultDismissalAfterSceneActivation() {
+        guard latestResult != nil, resultDismissTask == nil else { return }
+        scheduleResultDismissal()
+    }
+
     private func handle(_ output: CalendarCommandPipelineOutput) async {
         switch output {
         case .result(let result):
