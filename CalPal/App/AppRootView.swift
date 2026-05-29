@@ -17,8 +17,16 @@ struct AppRootView: View {
         .onAppear { appModel.presentOnboardingIfNeeded() }
         .task { await appModel.initializeRequiredPermissionsIfNeeded() }
         .onChange(of: scenePhase) { _, phase in
-            guard phase == .active else { return }
-            Task { await appModel.refreshAfterReturningToForeground() }
+            switch phase {
+            case .active:
+                Task { await appModel.refreshAfterReturningToForeground() }
+            case .background:
+                appModel.prepareForBackground()
+            case .inactive:
+                break
+            @unknown default:
+                break
+            }
         }
     }
 }

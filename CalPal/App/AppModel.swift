@@ -72,6 +72,10 @@ final class AppModel: ObservableObject {
         await commandHomeModel.loadAgenda()
     }
 
+    func prepareForBackground() {
+        commandHomeModel.cancelActiveWorkForBackground()
+    }
+
     func openSettings(_ section: SettingsSection? = nil) {
         refreshCapabilities()
         activeSheet = .settings(section)

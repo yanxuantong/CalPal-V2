@@ -238,6 +238,14 @@ final class CommandHomeModel: ObservableObject {
         commandState = .idle
     }
 
+    func cancelActiveWorkForBackground() {
+        if case .recording = commandState {
+            cancelRecording()
+        } else if commandState.isProcessing {
+            cancelProcessing()
+        }
+    }
+
     private func handle(_ output: CalendarCommandPipelineOutput) async {
         switch output {
         case .result(let result):

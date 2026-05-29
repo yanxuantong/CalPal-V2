@@ -392,6 +392,69 @@ final class MVPBugFixRegressionTests: XCTestCase {
         XCTAssertEqual(speech.requestAuthorizationCount, 0)
     }
 
+    func testBackgroundPreparationCancelsActiveRecording() async throws {
+        let repo = MockCalendarRepository()
+        let speech = MockSpeechService()
+        let dependencies = DependencyContainer(
+            calendarRepository: repo,
+            commandPipeline: CalendarCommandPipeline(parser: NaturalLanguageCalendarParser(now: { PreviewFixtures.now }), policy: CalendarMutationPolicy(now: { PreviewFixtures.now }), repository: repo),
+            speechService: speech,
+            modelProvider: MockModelProvider(),
+            preferenceSummaryStore: InMemoryPreferenceSummaryStore(),
+            capabilityService: DefaultCapabilityService(calendarRepository: repo, speechService: speech, modelProvider: MockModelProvider())
+        )
+        let app = AppModel(runtime: .test(dependencies: dependencies), defaults: UserDefaults(suiteName: UUID().uuidString)!)
+
+        app.commandHomeModel.beginRecording()
+        try await Task.sleep(nanoseconds: 30_000_000)
+        app.prepareForBackground()
+
+        XCTAssertEqual(app.commandHomeModel.commandState, .idle)
+        XCTAssertEqual(speech.cancelTranscriptionCount, 1)
+    }
+
+    func testBackgroundPreparationSuppressesLateCommandResult() async throws {
+        let repo = MockCalendarRepository()
+        let event = CalendarEvent(
+            id: "background-late-command",
+            title: "Background command",
+            calendarID: "work",
+            calendarName: "Work Calendar",
+            accountName: "iCloud",
+            startDate: PreviewFixtures.now,
+            endDate: PreviewFixtures.now.addingTimeInterval(3600),
+            isAllDay: false,
+            location: nil,
+            notes: nil,
+            isRecurring: false,
+            calendarColorHex: "#0A84FF"
+        )
+        let pipeline = DelayedCommandPipeline(
+            output: .result(CommandResultViewState(title: "Added to Calendar", message: "Late command", event: event, actionTitle: "Open in Calendar")),
+            delayNanoseconds: 160_000_000
+        )
+        let speech = MockSpeechService()
+        let dependencies = DependencyContainer(
+            calendarRepository: repo,
+            commandPipeline: pipeline,
+            speechService: speech,
+            modelProvider: MockModelProvider(),
+            preferenceSummaryStore: InMemoryPreferenceSummaryStore(),
+            capabilityService: DefaultCapabilityService(calendarRepository: repo, speechService: speech, modelProvider: MockModelProvider())
+        )
+        let app = AppModel(runtime: .test(dependencies: dependencies), defaults: UserDefaults(suiteName: UUID().uuidString)!)
+
+        let command = Task { await app.commandHomeModel.submit(text: "Schedule a late command") }
+        try await Task.sleep(nanoseconds: 30_000_000)
+        app.prepareForBackground()
+        await command.value
+
+        XCTAssertEqual(app.commandHomeModel.commandState, .idle)
+        XCTAssertNil(app.commandHomeModel.latestResult)
+        XCTAssertNil(app.commandHomeModel.latestError)
+        XCTAssertEqual(speech.cancelTranscriptionCount, 1)
+    }
+
     func testDefaultCalendarPreferenceDrivesAutoReviewWriteTarget() async throws {
         let repo = MockCalendarRepository()
         let prefs = InMemoryPreferenceSummaryStore()
