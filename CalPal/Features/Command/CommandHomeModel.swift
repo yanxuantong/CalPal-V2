@@ -108,14 +108,17 @@ final class CommandHomeModel: ObservableObject {
     func finishRecording() {
         guard case .recording = commandState else { return }
         activeRecordingID = nil
+        let finishRequestID = nextCommandGeneration()
         commandState = .transcribing(nil)
         recordingFinishTask?.cancel()
         recordingFinishTask = Task {
             do {
                 let transcript = try await dependencies.speechService.finishTranscription()
+                guard !Task.isCancelled, isCurrentCommand(finishRequestID) else { return }
                 commandState = .transcribing(transcript)
                 await submit(text: transcript)
             } catch {
+                guard !Task.isCancelled, isCurrentCommand(finishRequestID) else { return }
                 commandState = .failed(ErrorPresentation(title: "Speech Unavailable", message: error.localizedDescription, recovery: "Double-tap the orb to type, or create manually."))
                 sheetPresenter?(.speechUnavailable(UnavailableContext(title: "Speech Unavailable", message: error.localizedDescription, primaryAction: .openTextEntry, secondaryAction: speechRuntimeFallbackAction)))
             }
@@ -228,6 +231,10 @@ final class CommandHomeModel: ObservableObject {
 
     func cancelProcessing() {
         commandGeneration += 1
+        activeRecordingID = nil
+        recordingFinishTask?.cancel()
+        recordingFinishTask = nil
+        dependencies.speechService.cancelTranscription()
         commandState = .idle
     }
 

@@ -46,6 +46,7 @@ Only App Store-listed products were used as references:
 - Tightened speech-unavailable recovery so `Create Manually` is not offered when Calendar access is denied and the manual save path would fail.
 - Added stable UI automation identifiers for unavailable-state recovery actions.
 - Added stable UI automation identifiers for each Settings readiness checklist item.
+- Hardened processing cancellation so late speech transcripts cannot re-enter the command pipeline after the user cancels.
 
 ## Apple Reference Notes
 
@@ -63,13 +64,13 @@ Only App Store-listed products were used as references:
 ## Verification Plan
 
 - Run targeted unit tests for `V2UsabilityRegressionTests` on iOS Simulator.
-- Run each XCTest suite on iOS Simulator. The full suite currently covers 84 tests.
+- Run each XCTest suite on iOS Simulator. The full suite currently covers 85 tests.
 - Build the app for an iOS Simulator destination with code signing disabled.
 - Do not run any real-device install, launch, or debug command in this checkpoint.
 
 ## Verification Results
 
-- `V2UsabilityRegressionTests`: 34 passed, 0 failed.
+- `V2UsabilityRegressionTests`: 35 passed, 0 failed.
 - `PreferenceSummaryStoreTests`: 1 passed, 0 failed.
 - `NaturalLanguageCalendarParserTests`: 13 passed, 0 failed.
 - `CalendarMutationPolicyTests` + `LightDarkUIPresentationTests`: 9 passed, 0 failed.
@@ -84,7 +85,7 @@ Only App Store-listed products were used as references:
 - Targeted manual-form calendar target tests: passed for selected-calendar display state and default-writable fallback copy.
 - Targeted draft normalization tests: passed for trimming title/location/notes before save and rejecting whitespace-only titles before repository writes.
 - Targeted patch normalization tests: passed for trimming update patches before EventKit mutation, preserving clear-field intent, and rejecting no-op patches after normalization.
-- Full Simulator XCTest: 84 passed, 0 failed.
+- Full Simulator XCTest: 85 passed, 0 failed.
 - Simulator build: passed with `CODE_SIGNING_ALLOWED=NO`.
 - Release script syntax checks: passed for screenshot capture and local release gate scripts.
 - Demo screenshot capture: passed on iPhone 17 Simulator using the built app's `CFBundleIdentifier`; generated light and dark screenshots at 1206x2622.
@@ -309,3 +310,9 @@ Only App Store-listed products were used as references:
 - Each Settings readiness checklist item now exposes a stable accessibility identifier derived from its readiness id.
 - Release smoke tests can target specific gates such as Calendar access, Foundation Models route, Open in Calendar, or Store materials without relying on visible copy.
 - Regression coverage locks the readiness-item identifier contract.
+
+## Follow-Up Pass - Speech Cancellation Guard
+
+- Cancelling processing now cancels the active speech-finish task, clears the recording identity, and calls the speech service cancellation hook.
+- Speech transcript completion is guarded by the same command generation contract as parser/model work, so a late transcript cannot re-enter the command pipeline after cancellation.
+- Regression coverage simulates a speech service that ignores task cancellation and still proves the late transcript is suppressed.

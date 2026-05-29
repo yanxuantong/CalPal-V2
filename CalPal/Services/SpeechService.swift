@@ -146,6 +146,8 @@ final class MockSpeechService: SpeechServiceProtocol {
     var authorization: PermissionStatus
     var startError: Error?
     var finishError: Error?
+    var finishDelayNanoseconds: UInt64
+    var ignoresFinishCancellation: Bool
     private(set) var requestAuthorizationCount = 0
     private(set) var startTranscriptionCount = 0
     private(set) var finishTranscriptionCount = 0
@@ -155,12 +157,16 @@ final class MockSpeechService: SpeechServiceProtocol {
         transcript: String = "Meeting with Alex tomorrow at 3 PM",
         authorization: PermissionStatus = .allowed,
         startError: Error? = nil,
-        finishError: Error? = nil
+        finishError: Error? = nil,
+        finishDelayNanoseconds: UInt64 = 0,
+        ignoresFinishCancellation: Bool = false
     ) {
         self.transcript = transcript
         self.authorization = authorization
         self.startError = startError
         self.finishError = finishError
+        self.finishDelayNanoseconds = finishDelayNanoseconds
+        self.ignoresFinishCancellation = ignoresFinishCancellation
     }
 
     func authorizationStatus() -> PermissionStatus { authorization }
@@ -175,6 +181,13 @@ final class MockSpeechService: SpeechServiceProtocol {
     }
     func finishTranscription() async throws -> String {
         finishTranscriptionCount += 1
+        if finishDelayNanoseconds > 0 {
+            if ignoresFinishCancellation {
+                try? await Task.sleep(nanoseconds: finishDelayNanoseconds)
+            } else {
+                try await Task.sleep(nanoseconds: finishDelayNanoseconds)
+            }
+        }
         if let finishError { throw finishError }
         return transcript
     }

@@ -1441,6 +1441,38 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertNil(model.latestError)
     }
 
+    func testCancelProcessingSuppressesLateSpeechTranscript() async throws {
+        let repo = MockCalendarRepository()
+        let speech = MockSpeechService(
+            transcript: "Meeting with Alex tomorrow at 9 am",
+            finishDelayNanoseconds: 160_000_000,
+            ignoresFinishCancellation: true
+        )
+        let pipeline = CountingCommandPipeline(output: .failure(ErrorPresentation(title: "Unexpected", message: "Should not parse", recovery: nil)))
+        let deps = DependencyContainer(
+            calendarRepository: repo,
+            commandPipeline: pipeline,
+            speechService: speech,
+            modelProvider: MockModelProvider(),
+            preferenceSummaryStore: InMemoryPreferenceSummaryStore(),
+            capabilityService: DefaultCapabilityService(calendarRepository: repo, speechService: speech, modelProvider: MockModelProvider())
+        )
+        let model = CommandHomeModel(dependencies: deps, selectedDay: PreviewFixtures.now)
+
+        model.beginRecording()
+        try await Task.sleep(nanoseconds: 30_000_000)
+        model.finishRecording()
+        try await Task.sleep(nanoseconds: 30_000_000)
+        model.cancelProcessing()
+        try await Task.sleep(nanoseconds: 220_000_000)
+
+        XCTAssertEqual(model.commandState, .idle)
+        XCTAssertTrue(pipeline.processInputs.isEmpty)
+        XCTAssertNil(model.latestResult)
+        XCTAssertNil(model.latestError)
+        XCTAssertEqual(speech.cancelTranscriptionCount, 1)
+    }
+
     private func render<V: View>(_ view: V, colorScheme: ColorScheme, size: CGSize) -> UIImage {
         let controller = UIHostingController(rootView: view.environment(\.colorScheme, colorScheme))
         controller.view.bounds = CGRect(origin: .zero, size: size)
