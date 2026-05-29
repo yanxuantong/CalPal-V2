@@ -87,6 +87,10 @@ enum UnavailableAction: String, Equatable, Codable, Identifiable {
         case .dismiss: return "xmark"
         }
     }
+
+    var accessibilityIdentifier: String {
+        "unavailableAction-\(rawValue)"
+    }
 }
 
 enum ConfirmationDecision: Equatable {

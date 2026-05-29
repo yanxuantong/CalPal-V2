@@ -28,12 +28,14 @@ struct UnavailableView: View {
                 .buttonStyle(.borderedProminent)
                 .tint(CalPalTheme.Colors.brandPrimary)
                 .controlSize(.large)
+                .accessibilityIdentifier(context.primaryAction.accessibilityIdentifier)
             if let secondary = context.secondaryAction {
                 Button { onAction(secondary) } label: {
                     Label(secondary.title, systemImage: secondary.systemImage)
                 }
                     .buttonStyle(.bordered)
                     .controlSize(.large)
+                    .accessibilityIdentifier(secondary.accessibilityIdentifier)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

@@ -900,6 +900,14 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertFalse(AppSettingsLink.url.absoluteString.isEmpty)
     }
 
+    func testUnavailableActionsExposeStableAutomationIdentifiers() {
+        XCTAssertEqual(UnavailableAction.openTextEntry.accessibilityIdentifier, "unavailableAction-openTextEntry")
+        XCTAssertEqual(UnavailableAction.openManualCreate.accessibilityIdentifier, "unavailableAction-openManualCreate")
+        XCTAssertEqual(UnavailableAction.openSettings.accessibilityIdentifier, "unavailableAction-openSettings")
+        XCTAssertEqual(UnavailableAction.openSystemSettings.accessibilityIdentifier, "unavailableAction-openSystemSettings")
+        XCTAssertEqual(UnavailableAction.dismiss.accessibilityIdentifier, "unavailableAction-dismiss")
+    }
+
     @MainActor
     func testDeniedSpeechPermissionOffersTextEntryAndSystemSettings() async throws {
         let speech = MockSpeechService(authorization: .denied)
