@@ -805,6 +805,21 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertTrue(Calendar.current.isDate(model.selectedDay, inSameDayAs: targetDay))
     }
 
+    func testSelectingCurrentDayPreservesTerminalFeedback() {
+        let model = CommandHomeModel(dependencies: .mock(), selectedDay: PreviewFixtures.now)
+        let sameDayLater = PreviewFixtures.now.addingTimeInterval(3600)
+        let result = CommandResultViewState(title: "Added to Calendar", message: "Still relevant", event: PreviewFixtures.workEvent, actionTitle: "Open in Calendar")
+        model.latestResult = result
+        model.latestError = ErrorPresentation(title: "Still Relevant", message: "Same selected day", recovery: nil)
+        model.commandState = .completed(result)
+
+        model.selectDay(sameDayLater)
+
+        XCTAssertEqual(model.latestResult, result)
+        XCTAssertEqual(model.latestError?.title, "Still Relevant")
+        XCTAssertEqual(model.commandState, .completed(result))
+    }
+
     func testDefaultCalendarSelectionPersistsAndReloadKeepsCheckmark() async throws {
         let repo = MockCalendarRepository()
         let prefs = InMemoryPreferenceSummaryStore()

@@ -65,6 +65,7 @@ final class CommandHomeModel: ObservableObject {
     }
 
     func selectDay(_ day: Date) {
+        guard !calendar.isDate(selectedDay, inSameDayAs: day) else { return }
         clearTerminalCommandFeedback()
         selectedDay = day
         Task { await loadAgenda() }

@@ -57,7 +57,7 @@ Only App Store-listed products were used as references:
 - Added foreground resume refresh so capability readiness and agenda content recover after users return from iOS Settings permission changes.
 - Added scene lifecycle cancellation so active recording or command processing stops when CalPal becomes inactive or leaves the foreground.
 - Preserved completed result feedback across scene interruptions by pausing the auto-dismiss timer while CalPal is inactive, resuming it after foreground activation, and returning the command state to idle when the result clears.
-- Cleared terminal command feedback on date navigation so stale success or error cards do not follow users into another agenda day.
+- Cleared terminal command feedback on actual date navigation so stale success or error cards do not follow users into another agenda day, while reselecting the current day remains a no-op.
 - Aligned manual creation from a selected agenda day so empty-day fallback drafts open on that day instead of defaulting back to today.
 
 ## Apple Reference Notes
@@ -76,14 +76,14 @@ Only App Store-listed products were used as references:
 ## Verification Plan
 
 - Run targeted unit tests for `V2UsabilityRegressionTests` on iOS Simulator.
-- Run each XCTest suite on iOS Simulator. The full suite currently covers 98 tests.
+- Run each XCTest suite on iOS Simulator. The full suite currently covers 99 tests.
 - Build the app for an iOS Simulator destination with code signing disabled.
 - Run `Scripts/verify_smoke_automation_contract.sh` to confirm documented smoke-test identifiers still exist in source/tests.
 - Do not run any real-device install, launch, or debug command in this checkpoint.
 
 ## Verification Results
 
-- `V2UsabilityRegressionTests`: 42 passed, 0 failed.
+- `V2UsabilityRegressionTests`: 43 passed, 0 failed.
 - `PreferenceSummaryStoreTests`: 1 passed, 0 failed.
 - `NaturalLanguageCalendarParserTests`: 13 passed, 0 failed.
 - `CalendarMutationPolicyTests` + `LightDarkUIPresentationTests`: 9 passed, 0 failed.
@@ -98,7 +98,7 @@ Only App Store-listed products were used as references:
 - Targeted manual-form calendar target tests: passed for selected-calendar display state and default-writable fallback copy.
 - Targeted draft normalization tests: passed for trimming title/location/notes before save and rejecting whitespace-only titles before repository writes.
 - Targeted patch normalization tests: passed for trimming update patches before EventKit mutation, preserving clear-field intent, and rejecting no-op patches after normalization.
-- Full Simulator XCTest: 98 passed, 0 failed.
+- Full Simulator XCTest: 99 passed, 0 failed.
 - Simulator build: passed with `CODE_SIGNING_ALLOWED=NO`.
 - Smoke automation contract verification: passed.
 - Local v0.3 release gate: passed with `CAPTURE_SCREENSHOTS=0`.
@@ -397,8 +397,9 @@ Only App Store-listed products were used as references:
 ## Follow-Up Pass - Date Navigation Feedback Context
 
 - Selecting a different agenda day now clears terminal result/error feedback before loading the new day.
+- Reselecting the already-selected day is a no-op, avoiding unnecessary reloads and preserving feedback that still belongs to the visible day.
 - Completed or failed command states return to idle during date navigation, keeping the command surface aligned with the selected agenda context.
-- Regression coverage locks this behavior so old success/error cards cannot visually follow the user into another day.
+- Regression coverage locks both sides of the behavior: old success/error cards cannot visually follow the user into another day, and same-day reselection does not erase still-relevant feedback.
 
 ## Follow-Up Pass - Selected-Day Manual Create Defaults
 
