@@ -81,7 +81,7 @@ final class CommandHomeModel: ObservableObject {
         if case .recording = commandState { return }
         hideCommandHint()
         recordingFinishTask?.cancel()
-        latestError = nil
+        clearCommandFeedback()
         let recordingID = UUID()
         activeRecordingID = recordingID
         commandState = .recording(startedAt: Date())
@@ -108,8 +108,7 @@ final class CommandHomeModel: ObservableObject {
     func finishRecording() {
         guard case .recording = commandState else { return }
         activeRecordingID = nil
-        let finishRequestID = nextCommandGeneration()
-        commandState = .transcribing(nil)
+        let finishRequestID = beginCommandStage(.transcribing(nil))
         recordingFinishTask?.cancel()
         recordingFinishTask = Task {
             do {
@@ -145,16 +144,14 @@ final class CommandHomeModel: ObservableObject {
             commandState = .failed(error)
             return
         }
-        let requestID = nextCommandGeneration()
-        commandState = .parsing(trimmedText)
+        let requestID = beginCommandStage(.parsing(trimmedText))
         let output = await dependencies.commandPipeline.process(text: trimmedText)
         guard isCurrentCommand(requestID) else { return }
         await handle(output)
     }
 
     func applyCorrectedDraft(_ draft: EventDraft, parseRoute: CalendarParseRoute? = nil) async {
-        let requestID = nextCommandGeneration()
-        commandState = .applying
+        let requestID = beginCommandStage(.applying)
         let output = await dependencies.commandPipeline.apply(draft: draft).annotatingResult(parseRoute: parseRoute)
         guard isCurrentCommand(requestID) else { return }
         await handle(output)
@@ -166,8 +163,7 @@ final class CommandHomeModel: ObservableObject {
             commandState = .idle
             return
         }
-        let requestID = nextCommandGeneration()
-        commandState = .applying
+        let requestID = beginCommandStage(.applying)
         let output = await dependencies.commandPipeline.confirm(context, decision: decision)
         guard isCurrentCommand(requestID) else { return }
         await handle(output)
@@ -310,6 +306,20 @@ final class CommandHomeModel: ObservableObject {
 
     private func isCurrentCommand(_ generation: Int) -> Bool {
         generation == commandGeneration
+    }
+
+    private func beginCommandStage(_ state: CommandInteractionState) -> Int {
+        let generation = nextCommandGeneration()
+        clearCommandFeedback()
+        commandState = state
+        return generation
+    }
+
+    private func clearCommandFeedback() {
+        resultDismissTask?.cancel()
+        resultDismissTask = nil
+        latestResult = nil
+        latestError = nil
     }
 
     private var speechRuntimeFallbackAction: UnavailableAction {

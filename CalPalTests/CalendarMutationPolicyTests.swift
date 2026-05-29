@@ -1441,6 +1441,35 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertNil(model.latestError)
     }
 
+    func testStartingNewCommandClearsStaleFeedback() async throws {
+        let repo = MockCalendarRepository()
+        let pipeline = DelayedCommandPipeline(
+            output: .failure(ErrorPresentation(title: "Stopped", message: "No mutation needed", recovery: nil)),
+            delayNanoseconds: 160_000_000
+        )
+        let deps = DependencyContainer(
+            calendarRepository: repo,
+            commandPipeline: pipeline,
+            speechService: MockSpeechService(),
+            modelProvider: MockModelProvider(),
+            preferenceSummaryStore: InMemoryPreferenceSummaryStore(),
+            capabilityService: DefaultCapabilityService(calendarRepository: repo, speechService: MockSpeechService(), modelProvider: MockModelProvider())
+        )
+        let model = CommandHomeModel(dependencies: deps, selectedDay: PreviewFixtures.now)
+        model.latestResult = CommandResultViewState(title: "Added to Calendar", message: "Old result", event: PreviewFixtures.workEvent, actionTitle: "Open in Calendar")
+        model.latestError = ErrorPresentation(title: "Old Error", message: "Old feedback", recovery: nil)
+
+        let command = Task { await model.submit(text: "Schedule coffee tomorrow") }
+        try await Task.sleep(nanoseconds: 30_000_000)
+
+        XCTAssertNil(model.latestResult)
+        XCTAssertNil(model.latestError)
+        XCTAssertEqual(model.commandState, .parsing("Schedule coffee tomorrow"))
+
+        model.cancelProcessing()
+        await command.value
+    }
+
     func testCancelProcessingSuppressesLateSpeechTranscript() async throws {
         let repo = MockCalendarRepository()
         let speech = MockSpeechService(
