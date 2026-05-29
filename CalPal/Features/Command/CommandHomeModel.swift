@@ -375,12 +375,16 @@ final class CommandHomeModel: ObservableObject {
             return calendar.date(byAdding: .hour, value: 1, to: current) ?? current.addingTimeInterval(3600)
         }
         let selectedComponents = calendar.dateComponents([.year, .month, .day], from: selectedDay)
-        let currentHour = max(9, calendar.component(.hour, from: current))
+        let currentComponents = calendar.dateComponents([.hour, .minute, .second], from: current)
+        let currentHour = currentComponents.hour ?? 9
+        let rollsToNextHour = (currentComponents.minute ?? 0) > 0 || (currentComponents.second ?? 0) > 0
+        let proposedHour = currentHour + (rollsToNextHour ? 1 : 0)
+        let defaultHour = (9...17).contains(proposedHour) ? proposedHour : 9
         var components = DateComponents()
         components.year = selectedComponents.year
         components.month = selectedComponents.month
         components.day = selectedComponents.day
-        components.hour = currentHour
+        components.hour = defaultHour
         components.minute = 0
         components.second = 0
         return calendar.date(from: components) ?? selectedDay

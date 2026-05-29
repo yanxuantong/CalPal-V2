@@ -1579,6 +1579,26 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertEqual(context.draft.endDate.timeIntervalSince(context.draft.startDate), 3600)
     }
 
+    func testManualCreateFromFutureAgendaUsesDaytimeDefaultAfterHours() throws {
+        let calendar = Calendar.current
+        var lateComponents = calendar.dateComponents([.year, .month, .day], from: PreviewFixtures.now)
+        lateComponents.hour = 23
+        lateComponents.minute = 30
+        lateComponents.second = 0
+        let lateNow = try XCTUnwrap(calendar.date(from: lateComponents))
+        let futureDay = try XCTUnwrap(calendar.date(byAdding: .day, value: 1, to: lateNow))
+        let model = CommandHomeModel(dependencies: .mock(), selectedDay: futureDay, now: { lateNow })
+        var presented: AppSheet?
+        model.sheetPresenter = { presented = $0 }
+
+        model.openManualCreate(reason: "Create an event from an empty agenda.")
+
+        guard case .manualEventForm(let context)? = presented else { return XCTFail("Expected manual event form") }
+        XCTAssertTrue(calendar.isDate(context.draft.startDate, inSameDayAs: futureDay))
+        XCTAssertEqual(calendar.component(.hour, from: context.draft.startDate), 9)
+        XCTAssertEqual(calendar.component(.minute, from: context.draft.startDate), 0)
+    }
+
     func testManualCreateShowsSelectedCalendarTarget() throws {
         let model = CommandHomeModel(dependencies: .mock(), selectedDay: PreviewFixtures.now)
         model.selectedCalendar = CalendarInfo(id: "personal", title: "Personal", accountName: "Google", allowsContentModifications: true, colorHex: "#30D158")
