@@ -789,6 +789,22 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertFalse(model.events.isEmpty)
     }
 
+    func testDateNavigationClearsTerminalCommandFeedback() throws {
+        let model = CommandHomeModel(dependencies: .mock(), selectedDay: PreviewFixtures.now)
+        let targetDay = try XCTUnwrap(Calendar.current.date(byAdding: .day, value: 1, to: PreviewFixtures.now))
+        let result = CommandResultViewState(title: "Added to Calendar", message: "Old day feedback", event: PreviewFixtures.workEvent, actionTitle: "Open in Calendar")
+        model.latestResult = result
+        model.latestError = ErrorPresentation(title: "Old Error", message: "Old day error", recovery: nil)
+        model.commandState = .completed(result)
+
+        model.selectDay(targetDay)
+
+        XCTAssertNil(model.latestResult)
+        XCTAssertNil(model.latestError)
+        XCTAssertEqual(model.commandState, .idle)
+        XCTAssertTrue(Calendar.current.isDate(model.selectedDay, inSameDayAs: targetDay))
+    }
+
     func testDefaultCalendarSelectionPersistsAndReloadKeepsCheckmark() async throws {
         let repo = MockCalendarRepository()
         let prefs = InMemoryPreferenceSummaryStore()

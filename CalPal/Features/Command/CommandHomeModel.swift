@@ -65,6 +65,7 @@ final class CommandHomeModel: ObservableObject {
     }
 
     func selectDay(_ day: Date) {
+        clearTerminalCommandFeedback()
         selectedDay = day
         Task { await loadAgenda() }
     }
@@ -356,6 +357,15 @@ final class CommandHomeModel: ObservableObject {
         resultDismissTask = nil
         latestResult = nil
         latestError = nil
+    }
+
+    private func clearTerminalCommandFeedback() {
+        clearCommandFeedback()
+        if case .completed = commandState {
+            commandState = .idle
+        } else if case .failed = commandState {
+            commandState = .idle
+        }
     }
 
     private var speechRuntimeFallbackAction: UnavailableAction {

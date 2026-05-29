@@ -57,6 +57,7 @@ Only App Store-listed products were used as references:
 - Added foreground resume refresh so capability readiness and agenda content recover after users return from iOS Settings permission changes.
 - Added scene lifecycle cancellation so active recording or command processing stops when CalPal becomes inactive or leaves the foreground.
 - Preserved completed result feedback across scene interruptions by pausing the auto-dismiss timer while CalPal is inactive, resuming it after foreground activation, and returning the command state to idle when the result clears.
+- Cleared terminal command feedback on date navigation so stale success or error cards do not follow users into another agenda day.
 
 ## Apple Reference Notes
 
@@ -74,14 +75,14 @@ Only App Store-listed products were used as references:
 ## Verification Plan
 
 - Run targeted unit tests for `V2UsabilityRegressionTests` on iOS Simulator.
-- Run each XCTest suite on iOS Simulator. The full suite currently covers 96 tests.
+- Run each XCTest suite on iOS Simulator. The full suite currently covers 97 tests.
 - Build the app for an iOS Simulator destination with code signing disabled.
 - Run `Scripts/verify_smoke_automation_contract.sh` to confirm documented smoke-test identifiers still exist in source/tests.
 - Do not run any real-device install, launch, or debug command in this checkpoint.
 
 ## Verification Results
 
-- `V2UsabilityRegressionTests`: 40 passed, 0 failed.
+- `V2UsabilityRegressionTests`: 41 passed, 0 failed.
 - `PreferenceSummaryStoreTests`: 1 passed, 0 failed.
 - `NaturalLanguageCalendarParserTests`: 13 passed, 0 failed.
 - `CalendarMutationPolicyTests` + `LightDarkUIPresentationTests`: 9 passed, 0 failed.
@@ -96,7 +97,7 @@ Only App Store-listed products were used as references:
 - Targeted manual-form calendar target tests: passed for selected-calendar display state and default-writable fallback copy.
 - Targeted draft normalization tests: passed for trimming title/location/notes before save and rejecting whitespace-only titles before repository writes.
 - Targeted patch normalization tests: passed for trimming update patches before EventKit mutation, preserving clear-field intent, and rejecting no-op patches after normalization.
-- Full Simulator XCTest: 96 passed, 0 failed.
+- Full Simulator XCTest: 97 passed, 0 failed.
 - Simulator build: passed with `CODE_SIGNING_ALLOWED=NO`.
 - Smoke automation contract verification: passed.
 - Local v0.3 release gate: passed with `CAPTURE_SCREENSHOTS=0`.
@@ -391,3 +392,9 @@ Only App Store-listed products were used as references:
 - Foreground activation resumes the auto-dismiss timer, so users who briefly leave CalPal still see the confirmation feedback when they return, and stale confirmations clear after the app is visible again.
 - Result dismissal now also returns the command state to idle, preventing an invisible `.completed` state from lingering after the success card is gone.
 - Regression coverage injects a short result-dismiss delay and proves interrupted completed feedback remains visible while interrupted, then clears and returns to idle after scene activation resumes the timer.
+
+## Follow-Up Pass - Date Navigation Feedback Context
+
+- Selecting a different agenda day now clears terminal result/error feedback before loading the new day.
+- Completed or failed command states return to idle during date navigation, keeping the command surface aligned with the selected agenda context.
+- Regression coverage locks this behavior so old success/error cards cannot visually follow the user into another day.
