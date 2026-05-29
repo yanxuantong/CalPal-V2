@@ -1548,6 +1548,22 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertEqual(context.draft.calendarID, nil)
     }
 
+    func testManualCreateFromFutureAgendaUsesSelectedDay() throws {
+        let calendar = Calendar.current
+        let now = PreviewFixtures.now
+        let futureDay = try XCTUnwrap(calendar.date(byAdding: .day, value: 2, to: now))
+        let model = CommandHomeModel(dependencies: .mock(), selectedDay: futureDay, now: { now })
+        var presented: AppSheet?
+        model.sheetPresenter = { presented = $0 }
+
+        model.openManualCreate(reason: "Create an event from an empty agenda.")
+
+        guard case .manualEventForm(let context)? = presented else { return XCTFail("Expected manual event form") }
+        XCTAssertTrue(calendar.isDate(context.draft.startDate, inSameDayAs: futureDay))
+        XCTAssertEqual(calendar.component(.minute, from: context.draft.startDate), 0)
+        XCTAssertEqual(context.draft.endDate.timeIntervalSince(context.draft.startDate), 3600)
+    }
+
     func testManualCreateShowsSelectedCalendarTarget() throws {
         let model = CommandHomeModel(dependencies: .mock(), selectedDay: PreviewFixtures.now)
         model.selectedCalendar = CalendarInfo(id: "personal", title: "Personal", accountName: "Google", allowsContentModifications: true, colorHex: "#30D158")

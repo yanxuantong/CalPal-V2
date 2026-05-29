@@ -54,6 +54,7 @@ xcodebuild -project CalPal.xcodeproj -scheme CalPal -configuration Debug -sdk ip
 - Calendar permission drift during existing-event search or confirmation-time mutation now routes to iOS Settings, with mock repositories enforcing denied access across read and write methods.
 - Mock calendar writes now enforce writable-calendar selection like EventKit, and no-writable-calendar saves route to diagnostics instead of manual retry.
 - Manual and correction forms now show the target calendar before save, with fallback copy for EventKit's default writable calendar behavior.
+- Manual creation from a non-today agenda defaults the draft start date to the selected agenda day instead of silently using today.
 - Draft saves now normalize title, location, and notes in the command pipeline before EventKit writes, and whitespace-only titles are rejected before repository mutation.
 - Modify patches now normalize title, location, and notes before EventKit writes; blank location/notes are preserved as explicit clear operations, while patches that become empty after normalization fail as `No Changes`.
 - Confirmation review now shows location and notes changes, including explicit clear intents, before update mutations are applied.

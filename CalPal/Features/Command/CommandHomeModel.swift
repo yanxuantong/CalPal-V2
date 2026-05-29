@@ -223,7 +223,7 @@ final class CommandHomeModel: ObservableObject {
     }
 
     func openManualCreate(reason: String = "Create the event manually.") {
-        let start = calendar.date(byAdding: .hour, value: 1, to: now()) ?? now().addingTimeInterval(3600)
+        let start = defaultManualEventStart()
         sheetPresenter?(.manualEventForm(ManualEventContext(reason: reason, draft: EventDraft(title: "", startDate: start, endDate: start.addingTimeInterval(3600), calendarID: selectedCalendar?.id, calendarName: selectedCalendar?.title, calendarAccountName: selectedCalendar?.accountName, location: nil, notes: nil))))
     }
 
@@ -366,6 +366,23 @@ final class CommandHomeModel: ObservableObject {
         } else if case .failed = commandState {
             commandState = .idle
         }
+    }
+
+    private func defaultManualEventStart() -> Date {
+        let current = now()
+        if calendar.isDate(selectedDay, inSameDayAs: current) {
+            return calendar.date(byAdding: .hour, value: 1, to: current) ?? current.addingTimeInterval(3600)
+        }
+        let selectedComponents = calendar.dateComponents([.year, .month, .day], from: selectedDay)
+        let currentHour = max(9, calendar.component(.hour, from: current))
+        var components = DateComponents()
+        components.year = selectedComponents.year
+        components.month = selectedComponents.month
+        components.day = selectedComponents.day
+        components.hour = currentHour
+        components.minute = 0
+        components.second = 0
+        return calendar.date(from: components) ?? selectedDay
     }
 
     private var speechRuntimeFallbackAction: UnavailableAction {
