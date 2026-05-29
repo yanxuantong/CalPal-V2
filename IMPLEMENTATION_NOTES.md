@@ -78,4 +78,5 @@ xcodebuild -project CalPal.xcodeproj -scheme CalPal -configuration Debug -sdk ip
 - Starting a new command stage now clears stale result/error feedback and cancels pending result auto-dismiss work.
 - The processing card and its Cancel action now expose stable accessibility identifiers for UI smoke tests.
 - Common sheet dismissal actions now expose stable accessibility identifiers across modal command, correction, confirmation, chooser, and detail flows.
+- The home Settings and Back to Today actions now expose stable accessibility identifiers for release smoke navigation.
 - Competitive reference notes and release gaps live in `AppStore/ProductionPolish/2026-05-28/README.md`.

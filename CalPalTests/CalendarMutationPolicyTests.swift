@@ -1211,6 +1211,11 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertEqual(SettingsSection.privacy.title, "Local Preferences")
     }
 
+    func testCommandHomePrimaryActionsExposeStableAutomationIdentifiers() {
+        XCTAssertEqual(CommandHomeAutomation.todayButtonIdentifier, "commandHomeToday")
+        XCTAssertEqual(CommandHomeAutomation.settingsButtonIdentifier, "commandHomeSettings")
+    }
+
     func testReadinessItemsExposeStableAutomationIdentifiers() {
         let items = AppStoreReadinessChecklist.items(
             summary: CapabilitySummary(calendar: .allowed, speech: .allowed, model: .allowed, preferredLocales: ["en-US"], runsOnDevice: true),

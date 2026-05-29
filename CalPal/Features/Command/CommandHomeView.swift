@@ -75,6 +75,7 @@ struct CommandHomeView: View {
                 .controlSize(.small)
                 .tint(CalPalTheme.Colors.brandPrimary)
                 .accessibilityLabel(todayButtonAccessibilityLabel)
+                .accessibilityIdentifier(CommandHomeAutomation.todayButtonIdentifier)
             }
 
             Button { appModel.openSettings() } label: {
@@ -85,6 +86,7 @@ struct CommandHomeView: View {
             .buttonStyle(.bordered)
             .controlSize(.small)
             .accessibilityLabel("Settings")
+            .accessibilityIdentifier(CommandHomeAutomation.settingsButtonIdentifier)
         }
         .padding(.vertical, CalPalTheme.Spacing.xs)
     }
@@ -96,6 +98,11 @@ struct CommandHomeView: View {
     private var todayButtonAccessibilityLabel: String {
         Locale.current.language.languageCode?.identifier == "zh" ? "回到今天" : "Return to today"
     }
+}
+
+enum CommandHomeAutomation {
+    static let todayButtonIdentifier = "commandHomeToday"
+    static let settingsButtonIdentifier = "commandHomeSettings"
 }
 
 #Preview("Command Home Light") {
