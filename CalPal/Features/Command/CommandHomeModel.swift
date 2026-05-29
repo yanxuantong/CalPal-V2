@@ -100,7 +100,7 @@ final class CommandHomeModel: ObservableObject {
             } catch {
                 guard activeRecordingID == recordingID else { return }
                 commandState = .failed(ErrorPresentation(title: "Speech Unavailable", message: error.localizedDescription, recovery: "Double-tap the orb to type instead."))
-                sheetPresenter?(.speechUnavailable(UnavailableContext(title: "Speech Unavailable", message: error.localizedDescription, primaryAction: .openTextEntry, secondaryAction: .openManualCreate)))
+                sheetPresenter?(.speechUnavailable(UnavailableContext(title: "Speech Unavailable", message: error.localizedDescription, primaryAction: .openTextEntry, secondaryAction: speechRuntimeFallbackAction)))
             }
         }
     }
@@ -117,7 +117,7 @@ final class CommandHomeModel: ObservableObject {
                 await submit(text: transcript)
             } catch {
                 commandState = .failed(ErrorPresentation(title: "Speech Unavailable", message: error.localizedDescription, recovery: "Double-tap the orb to type, or create manually."))
-                sheetPresenter?(.speechUnavailable(UnavailableContext(title: "Speech Unavailable", message: error.localizedDescription, primaryAction: .openTextEntry, secondaryAction: .openManualCreate)))
+                sheetPresenter?(.speechUnavailable(UnavailableContext(title: "Speech Unavailable", message: error.localizedDescription, primaryAction: .openTextEntry, secondaryAction: speechRuntimeFallbackAction)))
             }
         }
     }
@@ -303,6 +303,10 @@ final class CommandHomeModel: ObservableObject {
 
     private func isCurrentCommand(_ generation: Int) -> Bool {
         generation == commandGeneration
+    }
+
+    private var speechRuntimeFallbackAction: UnavailableAction {
+        dependencies.calendarRepository.authorizationStatus() == .allowed ? .openManualCreate : .openSystemSettings
     }
 
     private func reconcileSelectedCalendar(from calendars: [CalendarInfo]) -> CalendarInfo? {

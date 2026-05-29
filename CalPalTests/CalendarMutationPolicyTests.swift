@@ -923,6 +923,31 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertEqual(context.secondaryAction, .openSystemSettings)
     }
 
+    @MainActor
+    func testSpeechRuntimeFailureAvoidsManualCreateWhenCalendarAccessIsDenied() async throws {
+        let repo = MockCalendarRepository()
+        repo.authorization = .denied
+        let speech = MockSpeechService(authorization: .allowed, startError: SpeechServiceError.recognizerUnavailable)
+        let deps = DependencyContainer(
+            calendarRepository: repo,
+            commandPipeline: CountingCommandPipeline(output: .failure(ErrorPresentation(title: "Unexpected", message: "Should not parse", recovery: nil))),
+            speechService: speech,
+            modelProvider: MockModelProvider(),
+            preferenceSummaryStore: InMemoryPreferenceSummaryStore(),
+            capabilityService: DefaultCapabilityService(calendarRepository: repo, speechService: speech, modelProvider: MockModelProvider())
+        )
+        let model = CommandHomeModel(dependencies: deps, selectedDay: PreviewFixtures.now)
+        var presented: AppSheet?
+        model.sheetPresenter = { presented = $0 }
+
+        model.beginRecording()
+        try await Task.sleep(nanoseconds: 60_000_000)
+
+        guard case .speechUnavailable(let context)? = presented else { return XCTFail("Expected speech unavailable sheet") }
+        XCTAssertEqual(context.primaryAction, .openTextEntry)
+        XCTAssertEqual(context.secondaryAction, .openSystemSettings)
+    }
+
     func testConfirmationResultPreservesParserRoute() async throws {
         let repo = MockCalendarRepository()
         let pipeline = CalendarCommandPipeline(

@@ -43,6 +43,7 @@ Only App Store-listed products were used as references:
 - Prevented duplicate sends from the text-entry sheet after the first valid submit.
 - Connected the empty-agenda state to the manual event form with a visible `Create Manually` action instead of only mentioning the fallback in copy.
 - Added parse-route observability so successful result cards can distinguish Apple Intelligence generation from local parser fallback or fallback after a Foundation Models failure.
+- Tightened speech-unavailable recovery so `Create Manually` is not offered when Calendar access is denied and the manual save path would fail.
 
 ## Apple Reference Notes
 
@@ -60,13 +61,13 @@ Only App Store-listed products were used as references:
 ## Verification Plan
 
 - Run targeted unit tests for `V2UsabilityRegressionTests` on iOS Simulator.
-- Run each XCTest suite on iOS Simulator. The full suite currently covers 81 tests.
+- Run each XCTest suite on iOS Simulator. The full suite currently covers 82 tests.
 - Build the app for an iOS Simulator destination with code signing disabled.
 - Do not run any real-device install, launch, or debug command in this checkpoint.
 
 ## Verification Results
 
-- `V2UsabilityRegressionTests`: 31 passed, 0 failed.
+- `V2UsabilityRegressionTests`: 32 passed, 0 failed.
 - `PreferenceSummaryStoreTests`: 1 passed, 0 failed.
 - `NaturalLanguageCalendarParserTests`: 13 passed, 0 failed.
 - `CalendarMutationPolicyTests` + `LightDarkUIPresentationTests`: 9 passed, 0 failed.
@@ -81,7 +82,7 @@ Only App Store-listed products were used as references:
 - Targeted manual-form calendar target tests: passed for selected-calendar display state and default-writable fallback copy.
 - Targeted draft normalization tests: passed for trimming title/location/notes before save and rejecting whitespace-only titles before repository writes.
 - Targeted patch normalization tests: passed for trimming update patches before EventKit mutation, preserving clear-field intent, and rejecting no-op patches after normalization.
-- Full Simulator XCTest: 81 passed, 0 failed.
+- Full Simulator XCTest: 82 passed, 0 failed.
 - Simulator build: passed with `CODE_SIGNING_ALLOWED=NO`.
 - Release script syntax checks: passed for screenshot capture and local release gate scripts.
 - Demo screenshot capture: passed on iPhone 17 Simulator using the built app's `CFBundleIdentifier`; generated light and dark screenshots at 1206x2622.
@@ -288,3 +289,9 @@ Only App Store-listed products were used as references:
 - Settings now shows an aggregate readiness summary before the itemized checklist.
 - The summary distinguishes ready automated checks from remaining manual release gates, including TestFlight and owner-run real-device review items.
 - Regression coverage locks the summary counts and copy so green automated checks do not imply App Store submission readiness.
+
+## Follow-Up Pass - Speech Recovery Gate
+
+- Speech runtime failures now keep `Type Instead` as the primary fallback but only offer `Create Manually` when Calendar access is available.
+- If Calendar access is denied, the secondary recovery action opens iOS Settings instead of routing to a manual form that cannot save.
+- Regression coverage locks the denied-calendar recovery path for speech runtime failures.

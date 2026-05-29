@@ -144,14 +144,23 @@ final class SystemSpeechService: SpeechServiceProtocol {
 final class MockSpeechService: SpeechServiceProtocol {
     var transcript: String
     var authorization: PermissionStatus
+    var startError: Error?
+    var finishError: Error?
     private(set) var requestAuthorizationCount = 0
     private(set) var startTranscriptionCount = 0
     private(set) var finishTranscriptionCount = 0
     private(set) var cancelTranscriptionCount = 0
 
-    init(transcript: String = "Meeting with Alex tomorrow at 3 PM", authorization: PermissionStatus = .allowed) {
+    init(
+        transcript: String = "Meeting with Alex tomorrow at 3 PM",
+        authorization: PermissionStatus = .allowed,
+        startError: Error? = nil,
+        finishError: Error? = nil
+    ) {
         self.transcript = transcript
         self.authorization = authorization
+        self.startError = startError
+        self.finishError = finishError
     }
 
     func authorizationStatus() -> PermissionStatus { authorization }
@@ -160,9 +169,13 @@ final class MockSpeechService: SpeechServiceProtocol {
         return authorization
     }
     func supports(localeIdentifier: String) -> Bool { true }
-    func startTranscription(localeIdentifier: String) async throws { startTranscriptionCount += 1 }
+    func startTranscription(localeIdentifier: String) async throws {
+        startTranscriptionCount += 1
+        if let startError { throw startError }
+    }
     func finishTranscription() async throws -> String {
         finishTranscriptionCount += 1
+        if let finishError { throw finishError }
         return transcript
     }
     func cancelTranscription() { cancelTranscriptionCount += 1 }
