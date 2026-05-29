@@ -52,6 +52,7 @@ Only App Store-listed products were used as references:
 - Added stable UI automation identifiers for common sheet dismiss actions across text entry, manual create, correction, confirmation, candidate selection, event detail, and calendar chooser flows.
 - Added stable UI automation identifiers for the home Settings and Back to Today actions.
 - Added a machine-checked smoke automation contract for critical accessibility identifiers and wired it into the local release gate.
+- Guarded Speech authorization completion so late denied/restricted results are ignored after recording cancellation.
 
 ## Apple Reference Notes
 
@@ -69,14 +70,14 @@ Only App Store-listed products were used as references:
 ## Verification Plan
 
 - Run targeted unit tests for `V2UsabilityRegressionTests` on iOS Simulator.
-- Run each XCTest suite on iOS Simulator. The full suite currently covers 89 tests.
+- Run each XCTest suite on iOS Simulator. The full suite currently covers 90 tests.
 - Build the app for an iOS Simulator destination with code signing disabled.
 - Run `Scripts/verify_smoke_automation_contract.sh` to confirm documented smoke-test identifiers still exist in source/tests.
 - Do not run any real-device install, launch, or debug command in this checkpoint.
 
 ## Verification Results
 
-- `V2UsabilityRegressionTests`: 38 passed, 0 failed.
+- `V2UsabilityRegressionTests`: 39 passed, 0 failed.
 - `PreferenceSummaryStoreTests`: 1 passed, 0 failed.
 - `NaturalLanguageCalendarParserTests`: 13 passed, 0 failed.
 - `CalendarMutationPolicyTests` + `LightDarkUIPresentationTests`: 9 passed, 0 failed.
@@ -91,7 +92,7 @@ Only App Store-listed products were used as references:
 - Targeted manual-form calendar target tests: passed for selected-calendar display state and default-writable fallback copy.
 - Targeted draft normalization tests: passed for trimming title/location/notes before save and rejecting whitespace-only titles before repository writes.
 - Targeted patch normalization tests: passed for trimming update patches before EventKit mutation, preserving clear-field intent, and rejecting no-op patches after normalization.
-- Full Simulator XCTest: 89 passed, 0 failed.
+- Full Simulator XCTest: 90 passed, 0 failed.
 - Simulator build: passed with `CODE_SIGNING_ALLOWED=NO`.
 - Smoke automation contract verification: passed.
 - Local v0.3 release gate: passed with `CAPTURE_SCREENSHOTS=0`.
@@ -354,3 +355,9 @@ Only App Store-listed products were used as references:
 - `SMOKE_AUTOMATION_CONTRACT.md` now lists the critical accessibility identifiers that Simulator release smoke tests may rely on.
 - `Scripts/verify_smoke_automation_contract.sh` checks the contract against `CalPal/` and `CalPalTests/`, failing when documented identifiers drift out of source/tests.
 - `Scripts/run_v03_release_gate.sh` runs the smoke contract check as part of the local release gate.
+
+## Follow-Up Pass - Speech Authorization Cancellation Guard
+
+- Speech authorization completion now checks the active recording identity before updating UI state.
+- Cancelling a recording before the system permission callback returns leaves the command surface idle and does not present a stale unavailable sheet.
+- Regression coverage simulates delayed denied authorization and proves the canceled voice attempt does not enter parser work or show late feedback.

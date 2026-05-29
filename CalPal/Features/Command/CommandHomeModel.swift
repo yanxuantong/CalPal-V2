@@ -87,13 +87,13 @@ final class CommandHomeModel: ObservableObject {
         commandState = .recording(startedAt: Date())
         Task {
             let status = await dependencies.speechService.requestAuthorization()
+            guard activeRecordingID == recordingID, case .recording = commandState else { return }
             guard status == .allowed else {
                 commandState = .failed(ErrorPresentation(title: "Speech Permission Needed", message: "Allow speech recognition to use voice commands.", recovery: "Double-tap the orb to type instead."))
                 sheetPresenter?(.speechUnavailable(UnavailableContext(title: "Speech Permission Needed", message: "Speech recognition was not authorized. Text input remains available.", primaryAction: .openTextEntry, secondaryAction: .openSystemSettings)))
                 return
             }
             do {
-                guard activeRecordingID == recordingID, case .recording = commandState else { return }
                 let locale = Locale.preferredLanguages.first ?? "en-US"
                 let supportedLocale = dependencies.speechService.supports(localeIdentifier: locale) ? locale : "en-US"
                 try await dependencies.speechService.startTranscription(localeIdentifier: supportedLocale)
