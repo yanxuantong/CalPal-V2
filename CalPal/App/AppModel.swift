@@ -72,8 +72,12 @@ final class AppModel: ObservableObject {
         await commandHomeModel.loadAgenda()
     }
 
+    func prepareForSceneInterruption() {
+        commandHomeModel.cancelActiveWorkForSceneInterruption()
+    }
+
     func prepareForBackground() {
-        commandHomeModel.cancelActiveWorkForBackground()
+        prepareForSceneInterruption()
     }
 
     func openSettings(_ section: SettingsSection? = nil) {

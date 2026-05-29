@@ -20,10 +20,10 @@ struct AppRootView: View {
             switch phase {
             case .active:
                 Task { await appModel.refreshAfterReturningToForeground() }
-            case .background:
-                appModel.prepareForBackground()
             case .inactive:
-                break
+                appModel.prepareForSceneInterruption()
+            case .background:
+                appModel.prepareForSceneInterruption()
             @unknown default:
                 break
             }

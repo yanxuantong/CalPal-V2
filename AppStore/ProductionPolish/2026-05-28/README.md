@@ -55,7 +55,7 @@ Only App Store-listed products were used as references:
 - Guarded Speech authorization completion so late denied/restricted results are ignored after recording cancellation.
 - Guarded Speech startup completion so cancellation during async recognizer startup cannot leave transcription running behind an idle UI.
 - Added foreground resume refresh so capability readiness and agenda content recover after users return from iOS Settings permission changes.
-- Added background lifecycle cancellation so active recording or command processing stops when CalPal leaves the foreground.
+- Added scene lifecycle cancellation so active recording or command processing stops when CalPal becomes inactive or leaves the foreground.
 
 ## Apple Reference Notes
 
@@ -377,9 +377,9 @@ Only App Store-listed products were used as references:
 - The foreground path does not request Calendar or Speech permissions; it only reconciles state after the user returns from iOS Settings or another app.
 - Regression coverage locks the Settings-return recovery path by flipping mock Calendar authorization from denied to allowed and proving agenda reload without permission prompts.
 
-## Follow-Up Pass - Background Active Work Cancellation
+## Follow-Up Pass - Scene Interruption Active Work Cancellation
 
-- App background activation now cancels active recording or command processing through the home model's lifecycle contract.
-- Recording cancellation stops Speech capture before the app is no longer visible, matching the product's privacy-first voice behavior.
-- Processing cancellation reuses the command-generation guard so late parser/model/calendar results cannot update the UI after the app has gone to the background.
-- Regression coverage locks both active-recording cancellation and late command-result suppression from the app lifecycle path.
+- App inactive and background transitions now cancel active recording or command processing through the home model's lifecycle contract.
+- Recording cancellation stops Speech capture before the app is interrupted or no longer visible, matching the product's privacy-first voice behavior.
+- Processing cancellation reuses the command-generation guard so late parser/model/calendar results cannot update the UI after the app has been interrupted.
+- Regression coverage locks both active-recording cancellation and late command-result suppression from the scene-interruption path.

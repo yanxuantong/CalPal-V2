@@ -238,7 +238,7 @@ final class CommandHomeModel: ObservableObject {
         commandState = .idle
     }
 
-    func cancelActiveWorkForBackground() {
+    func cancelActiveWorkForSceneInterruption() {
         if case .recording = commandState {
             cancelRecording()
         } else if commandState.isProcessing {

@@ -83,5 +83,5 @@ xcodebuild -project CalPal.xcodeproj -scheme CalPal -configuration Debug -sdk ip
 - Cancelling recording now suppresses late Speech authorization denial results so a canceled voice attempt cannot reopen an unavailable sheet.
 - Cancelling recording during Speech startup now re-cancels transcription if the async start completes after the user has already canceled.
 - Returning to the foreground now refreshes capability readiness and reloads the agenda after Calendar permission changes without triggering new permission prompts.
-- Moving to the background now cancels active recording or command processing so speech capture and late parser/calendar results cannot continue behind the app.
+- Scene interruptions now cancel active recording or command processing when the app becomes inactive or moves to the background, so speech capture and late parser/calendar results cannot continue behind a hidden or interrupted UI.
 - Competitive reference notes and release gaps live in `AppStore/ProductionPolish/2026-05-28/README.md`.

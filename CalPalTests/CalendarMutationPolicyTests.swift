@@ -392,7 +392,7 @@ final class MVPBugFixRegressionTests: XCTestCase {
         XCTAssertEqual(speech.requestAuthorizationCount, 0)
     }
 
-    func testBackgroundPreparationCancelsActiveRecording() async throws {
+    func testSceneInterruptionPreparationCancelsActiveRecording() async throws {
         let repo = MockCalendarRepository()
         let speech = MockSpeechService()
         let dependencies = DependencyContainer(
@@ -407,17 +407,17 @@ final class MVPBugFixRegressionTests: XCTestCase {
 
         app.commandHomeModel.beginRecording()
         try await Task.sleep(nanoseconds: 30_000_000)
-        app.prepareForBackground()
+        app.prepareForSceneInterruption()
 
         XCTAssertEqual(app.commandHomeModel.commandState, .idle)
         XCTAssertEqual(speech.cancelTranscriptionCount, 1)
     }
 
-    func testBackgroundPreparationSuppressesLateCommandResult() async throws {
+    func testSceneInterruptionPreparationSuppressesLateCommandResult() async throws {
         let repo = MockCalendarRepository()
         let event = CalendarEvent(
-            id: "background-late-command",
-            title: "Background command",
+            id: "scene-interruption-late-command",
+            title: "Interrupted command",
             calendarID: "work",
             calendarName: "Work Calendar",
             accountName: "iCloud",
@@ -446,7 +446,7 @@ final class MVPBugFixRegressionTests: XCTestCase {
 
         let command = Task { await app.commandHomeModel.submit(text: "Schedule a late command") }
         try await Task.sleep(nanoseconds: 30_000_000)
-        app.prepareForBackground()
+        app.prepareForSceneInterruption()
         await command.value
 
         XCTAssertEqual(app.commandHomeModel.commandState, .idle)
