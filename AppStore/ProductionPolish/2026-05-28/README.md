@@ -423,3 +423,10 @@ Only App Store-listed products were used as references:
 - Treat Foundation Models generation as unverified until an owner-run real-device smoke pass captures successful `LanguageModelSession` generation evidence; Simulator fallback/routing evidence is not enough for the App Store gate.
 - Before App Store submission, collect App Store Connect metadata, privacy URL, screenshots, signed archive upload evidence, TestFlight distribution evidence, and owner-run real-device smoke notes in `AppStore/APP_STORE_PUBLIC_RELEASE_EVIDENCE.md`.
 - The next highest-value automation pass is a narrow Simulator UI smoke script using the documented accessibility identifiers for text entry, manual create, Settings readiness, Back to Today, and cancelable processing.
+
+## Follow-Up Pass - 1.0 Launch Baseline
+
+- CalPal now treats the active release baseline as 1.0 instead of the earlier v0.3 TestFlight-readiness checkpoint.
+- App metadata, Settings readiness copy, local release gate naming, public-release evidence, App Store draft copy, and privacy-policy draft now use the 1.0 framing.
+- Simulator UI smoke uncovered that Settings section identifiers were overriding readiness-row identifiers in the live hierarchy; section identifiers now live on headers so `readinessItem-*` anchors remain targetable.
+- Settings now has an explicit `settingsDone` dismiss action, making the sheet more predictable for users and automation.

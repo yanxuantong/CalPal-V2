@@ -1,4 +1,4 @@
-# CalPal v0.3 Public Release Evidence
+# CalPal 1.0 Public Release Evidence
 
 This file is the human-verifiable release record for the final public App Store submission gate.
 
@@ -6,13 +6,13 @@ Do not replace `TODO` or unchecked checklist items until the evidence exists. `S
 
 ## Release Candidate
 
-Version: 0.3
+Version: 1.0
 Build: 3
 
 ## Required Evidence
 
 Local release gate result: TODO
-Local release gate command: bash Scripts/run_v03_release_gate.sh
+Local release gate command: bash Scripts/run_v10_release_gate.sh
 Local release gate date: TODO
 
 Signed archive upload result: TODO
@@ -68,4 +68,3 @@ Use these exact values when each item is genuinely complete:
 - `App Store Connect metadata result: PASS`
 - `App Store Connect privacy answers result: PASS`
 - `Open release blockers: NONE`
-

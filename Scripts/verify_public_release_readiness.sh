@@ -24,7 +24,7 @@ if grep -Eq 'TODO|TBD|\[ \]' "$EVIDENCE_FILE"; then
   fail "Public release evidence is incomplete: remove TODO/TBD values and complete every checklist item only after evidence exists."
 fi
 
-require_line "Version: 0.3"
+require_line "Version: 1.0"
 require_line "Build: 3"
 require_line "Local release gate result: PASS"
 require_line "Signed archive upload result: PASS"
@@ -53,4 +53,4 @@ for required_field in \
   fi
 done
 
-echo "CalPal v0.3 public release readiness evidence verified."
+echo "CalPal 1.0 public release readiness evidence verified."

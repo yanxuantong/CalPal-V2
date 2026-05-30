@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @EnvironmentObject private var appModel: AppModel
+    @Environment(\.dismiss) private var dismiss
     @State private var confirmReset = false
     @State private var didScrollToStartSection = false
     let startSection: SettingsSection?
@@ -12,16 +13,12 @@ struct SettingsView: View {
                 Form {
                     defaultCalendarSection
                         .id(SettingsSection.language)
-                        .accessibilityIdentifier(SettingsSection.language.accessibilityIdentifier)
                     safetySection
                         .id(SettingsSection.automation)
-                        .accessibilityIdentifier(SettingsSection.automation.accessibilityIdentifier)
                     readinessSection
                         .id(SettingsSection.diagnostics)
-                        .accessibilityIdentifier(SettingsSection.diagnostics.accessibilityIdentifier)
                     localPreferencesSection
                         .id(SettingsSection.privacy)
-                        .accessibilityIdentifier(SettingsSection.privacy.accessibilityIdentifier)
                 }
                 .task {
                     appModel.refreshCapabilities()
@@ -32,6 +29,12 @@ struct SettingsView: View {
                 .scrollContentBackground(.hidden)
                 .background(CalPalTheme.Colors.backgroundPrimary)
                 .navigationTitle("Settings")
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("Done") { dismiss() }
+                            .accessibilityIdentifier(SheetDismissAutomation.settingsDone)
+                    }
+                }
                 .confirmationDialog("Reset local preferences?", isPresented: $confirmReset, titleVisibility: .visible) {
                     Button("Reset Preferences", role: .destructive) {
                         appModel.dependencies.preferenceSummaryStore.reset(accountID: nil)
@@ -46,7 +49,7 @@ struct SettingsView: View {
     }
 
     private var defaultCalendarSection: some View {
-        Section(SettingsSection.language.title) {
+        Section {
             if writableCalendars.isEmpty {
                 Label("No writable calendar available", systemImage: "exclamationmark.triangle")
                     .foregroundStyle(CalPalTheme.Colors.warning)
@@ -87,11 +90,13 @@ struct SettingsView: View {
                 }
                 .foregroundStyle(CalPalTheme.Colors.textSecondary)
             }
+        } header: {
+            settingsHeader(.language)
         }
     }
 
     private var safetySection: some View {
-        Section(SettingsSection.automation.title) {
+        Section {
             Label {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Auto Review")
@@ -105,11 +110,13 @@ struct SettingsView: View {
                     .foregroundStyle(CalPalTheme.Colors.brandPrimary)
             }
             .accessibilityIdentifier("safetyModeAutoReview")
+        } header: {
+            settingsHeader(.automation)
         }
     }
 
     private var readinessSection: some View {
-        Section(SettingsSection.diagnostics.title) {
+        Section {
             ReadinessSummaryCard(summary: readinessSummary)
             ForEach(readinessItems) { item in
                 ReadinessChecklistRow(item: item)
@@ -121,16 +128,25 @@ struct SettingsView: View {
                 Label("Refresh Readiness", systemImage: "arrow.clockwise")
             }
             .accessibilityIdentifier("refreshReadiness")
-            Text("Manual checks are completed during TestFlight or real-device review. CalPal stays in TestFlight-readiness until those are verified.")
+            Text("Manual checks are completed during owner or TestFlight review. CalPal stays launch-gated until those are verified.")
                 .font(.caption)
                 .foregroundStyle(CalPalTheme.Colors.textSecondary)
+        } header: {
+            settingsHeader(.diagnostics)
         }
     }
 
     private var localPreferencesSection: some View {
-        Section(SettingsSection.privacy.title) {
+        Section {
             Button("Reset Local Preferences", role: .destructive) { confirmReset = true }
+        } header: {
+            settingsHeader(.privacy)
         }
+    }
+
+    private func settingsHeader(_ section: SettingsSection) -> some View {
+        Text(section.title)
+            .accessibilityIdentifier(section.accessibilityIdentifier)
     }
 
     private var writableCalendars: [CalendarInfo] {
@@ -182,7 +198,7 @@ struct ReadinessChecklistSummary: Equatable {
             return "Resolve \(needsAttentionCount) item(s) and complete \(manualGateCount) manual gate(s) before App Store submission."
         }
         if manualGateCount > 0 {
-            return "\(readyCount) automated item(s) are ready. Complete \(manualGateCount) manual gate(s) during TestFlight or real-device owner review before submission."
+            return "\(readyCount) automated item(s) are ready. Complete \(manualGateCount) manual gate(s) during owner or TestFlight review before submission."
         }
         return "All listed readiness items are ready for this environment."
     }

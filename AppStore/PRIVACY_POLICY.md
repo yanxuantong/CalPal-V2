@@ -2,11 +2,11 @@
 
 Effective date: May 22, 2026
 
-CalPal is a private calendar assistant for Apple Calendar users. This policy describes the current v0.3 implementation.
+CalPal is a private calendar assistant for Apple Calendar users. This policy describes the current 1.0 implementation.
 
 ## Data Collection
 
-CalPal does not collect data from this app in v0.3.
+CalPal does not collect data from this app in 1.0.
 
 CalPal does not operate a developer-hosted backend, account system, advertising SDK, or third-party analytics SDK. Calendar content, voice input, speech transcripts, command text, and local preferences are not uploaded to a CalPal server.
 
@@ -34,7 +34,7 @@ The app bundle includes `PrivacyInfo.xcprivacy` declaring UserDefaults required-
 
 ## Tracking
 
-CalPal does not track users in v0.3.
+CalPal does not track users in 1.0.
 
 CalPal does not sell data, does not use advertising identifiers, and does not share app data with data brokers or advertising networks.
 

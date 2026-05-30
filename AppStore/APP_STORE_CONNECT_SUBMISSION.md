@@ -1,6 +1,6 @@
-# CalPal v0.3 App Store Connect Draft
+# CalPal 1.0 App Store Connect Draft
 
-This draft is for App Store Connect and TestFlight preparation. It reflects the current v0.3 implementation: local EventKit calendars, speech input, deterministic parser fallback, Apple on-device intelligence when available, local preferences, no developer server, no tracking, and no third-party analytics SDK.
+This draft is for App Store Connect and TestFlight preparation. It reflects the current 1.0 implementation: local EventKit calendars, speech input, deterministic parser fallback, Apple on-device intelligence when available, local preferences, no developer server, no tracking, and no third-party analytics SDK.
 
 Re-check every answer if analytics, crash reporting, accounts, sync, cloud AI, subscriptions, push notifications, or third-party SDKs are added.
 
@@ -49,7 +49,7 @@ No user-generated public content, web browsing, gambling, commerce, medical advi
 
 Version:
 
-0.3
+1.0
 
 Build:
 
@@ -103,11 +103,11 @@ None collected by the developer.
 
 Privacy policy summary:
 
-CalPal uses Calendar access to show and modify events when requested by the user. Microphone and Speech Recognition are used only for optional voice commands. Local preferences are stored on device. CalPal does not track users, does not sell data, and does not upload calendar content to a developer server in v0.3.
+CalPal uses Calendar access to show and modify events when requested by the user. Microphone and Speech Recognition are used only for optional voice commands. Local preferences are stored on device. CalPal does not track users, does not sell data, and does not upload calendar content to a developer server in 1.0.
 
 Privacy policy draft:
 
-Use `AppStore/PRIVACY_POLICY.md` as the v0.3 publication draft. A public URL is still required before final App Store submission.
+Use `AppStore/PRIVACY_POLICY.md` as the 1.0 publication draft. A public URL is still required before final App Store submission.
 
 ## Permission Purpose Strings
 
@@ -147,7 +147,7 @@ Before public submission, generate the final App Store screenshot set across the
 Run:
 
 ```sh
-bash Scripts/run_v03_release_gate.sh
+bash Scripts/run_v10_release_gate.sh
 ```
 
 This verifies script syntax, simulator tests, App Store metadata in the built app bundle, and screenshot artifacts. Missing screenshots are generated automatically unless `CAPTURE_SCREENSHOTS=0` is set.

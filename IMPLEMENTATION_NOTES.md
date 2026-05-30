@@ -27,6 +27,9 @@ xcodebuild -project CalPal.xcodeproj -scheme CalPal -configuration Debug -sdk ip
 - Public App Store release still needs a signed archive upload, TestFlight device sweep, final screenshot review, public privacy-policy URL, and App Store Connect submission. Record those external gates in `AppStore/APP_STORE_PUBLIC_RELEASE_EVIDENCE.md`; `Scripts/verify_public_release_readiness.sh` is expected to fail until the evidence is complete.
 
 ## Production polish checkpoint - 2026-05-28
+- 1.0 launch-readiness work starts from this checkpoint rather than the earlier v0.3 TestFlight-readiness framing.
+- The app marketing version is now `1.0` with build `10`, and Settings labels the diagnostics surface as `1.0 Launch Readiness`.
+- Settings now exposes an explicit Done action and keeps section identifiers on headers so readiness rows preserve their own `readinessItem-*` UI automation identifiers in the live Simulator hierarchy.
 - Verification boundary: this checkpoint is Simulator-only. Do not install, launch, or debug on a physical iPhone while running automated checks for this pass.
 - Agenda loading now uses a generation guard. If a slower `fetchEvents` call returns after the user has selected another day or triggered a newer refresh, the stale response is ignored.
 - Command processing now uses a generation guard. If a parser/model/pipeline result arrives after `cancelProcessing()` or after a newer command starts, the late result is ignored.

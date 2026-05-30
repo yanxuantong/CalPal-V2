@@ -2,8 +2,8 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-DERIVED_DATA_PATH="${DERIVED_DATA_PATH:-/tmp/CalPalV03ArchiveDerivedData}"
-ARCHIVE_PATH="${ARCHIVE_PATH:-/tmp/CalPalV03Unsigned.xcarchive}"
+DERIVED_DATA_PATH="${DERIVED_DATA_PATH:-/tmp/CalPalV10ArchiveDerivedData}"
+ARCHIVE_PATH="${ARCHIVE_PATH:-/tmp/CalPalV10Unsigned.xcarchive}"
 
 cd "$ROOT_DIR"
 

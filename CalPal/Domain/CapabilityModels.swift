@@ -34,7 +34,7 @@ enum SettingsSection: String, Identifiable, CaseIterable {
         case .automation:
             return "Safety Mode"
         case .diagnostics:
-            return "v0.3 Readiness"
+            return "1.0 Launch Readiness"
         case .privacy:
             return "Local Preferences"
         }

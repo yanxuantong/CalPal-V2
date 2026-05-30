@@ -107,4 +107,5 @@ enum SheetDismissAutomation {
     static let candidateSelectionCancel = "candidateSelectionCancel"
     static let eventDetailDone = "eventDetailDone"
     static let calendarChooserCancel = "calendarChooserCancel"
+    static let settingsDone = "settingsDone"
 }

@@ -54,8 +54,8 @@ require_nonempty() {
   fi
 }
 
-require_value CFBundleShortVersionString "0.3"
-require_value CFBundleVersion "3"
+require_value CFBundleShortVersionString "1.0"
+require_value CFBundleVersion "10"
 require_nonempty NSCalendarsFullAccessUsageDescription
 require_nonempty NSCalendarsUsageDescription
 require_nonempty NSMicrophoneUsageDescription

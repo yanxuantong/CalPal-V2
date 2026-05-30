@@ -135,3 +135,5 @@ This contract lists the stable accessibility identifiers that release smoke test
   purpose: Dismiss event detail.
 - id: `calendarChooserCancel`
   purpose: Dismiss calendar chooser.
+- id: `settingsDone`
+  purpose: Dismiss Settings.

@@ -1141,6 +1141,7 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertEqual(SheetDismissAutomation.candidateSelectionCancel, "candidateSelectionCancel")
         XCTAssertEqual(SheetDismissAutomation.eventDetailDone, "eventDetailDone")
         XCTAssertEqual(SheetDismissAutomation.calendarChooserCancel, "calendarChooserCancel")
+        XCTAssertEqual(SheetDismissAutomation.settingsDone, "settingsDone")
     }
 
     @MainActor
@@ -1423,7 +1424,7 @@ final class V2UsabilityRegressionTests: XCTestCase {
     }
 
     func testSettingsSectionDeepLinksMatchRecoveryTargets() {
-        XCTAssertEqual(SettingsSection.diagnostics.title, "v0.3 Readiness")
+        XCTAssertEqual(SettingsSection.diagnostics.title, "1.0 Launch Readiness")
         XCTAssertEqual(SettingsSection.diagnostics.accessibilityIdentifier, "settingsSection-diagnostics")
         XCTAssertEqual(SettingsSection.automation.title, "Safety Mode")
         XCTAssertEqual(SettingsSection.automation.accessibilityIdentifier, "settingsSection-automation")
