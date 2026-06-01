@@ -38,6 +38,10 @@ missing_testflight_checklist_pointer_evidence="$(mktemp)"
 missing_testflight_checklist_evidence="$(mktemp)"
 missing_public_checklist_evidence="$(mktemp)"
 wrong_signed_upload_location_evidence="$(mktemp)"
+wrong_signed_upload_archive_path_evidence="$(mktemp)"
+wrong_signed_upload_archive_path_artifact="$(mktemp)"
+wrong_signed_upload_method_evidence="$(mktemp)"
+wrong_signed_upload_method_artifact="$(mktemp)"
 bad_local_gate_pointer_evidence="$(mktemp)"
 bad_local_gate_artifact="$(mktemp)"
 local_gate_artifact="$(mktemp)"
@@ -54,7 +58,7 @@ repo_screenshots_artifact="$ROOT_DIR/AppStore/ReleaseEvidence/.tmp-public-releas
 repo_metadata_artifact="$ROOT_DIR/AppStore/ReleaseEvidence/.tmp-public-release-metadata-$$.md"
 repo_privacy_answers_artifact="$ROOT_DIR/AppStore/ReleaseEvidence/.tmp-public-release-privacy-answers-$$.md"
 repo_wrong_signed_upload_artifact="$ROOT_DIR/Artifacts/AppStoreUpload/.tmp-public-release-signed-upload-$$.md"
-trap 'rm -f "$complete_evidence" "$wrong_build_evidence" "$missing_artifact_evidence" "$missing_support_url_evidence" "$wrong_metadata_url_evidence" "$example_url_evidence" "$missing_metadata_reviewer_evidence" "$missing_metadata_reviewer_artifact" "$wrong_privacy_build_evidence" "$wrong_privacy_build_artifact" "$bad_privacy_date_evidence" "$bad_privacy_date_artifact" "$incomplete_testflight_pointer_evidence" "$incomplete_testflight_evidence" "$missing_testflight_checklist_pointer_evidence" "$missing_testflight_checklist_evidence" "$missing_public_checklist_evidence" "$wrong_signed_upload_location_evidence" "$bad_local_gate_pointer_evidence" "$bad_local_gate_artifact" "$local_gate_artifact" "$signed_upload_artifact" "$testflight_artifact" "$screenshots_artifact" "$metadata_artifact" "$wrong_metadata_url_artifact" "$missing_metadata_reviewer_artifact" "$wrong_privacy_build_artifact" "$bad_privacy_date_artifact" "$privacy_answers_artifact" "$repo_local_gate_artifact" "$repo_signed_upload_artifact" "$repo_testflight_artifact" "$repo_screenshots_artifact" "$repo_metadata_artifact" "$repo_privacy_answers_artifact" "$repo_wrong_signed_upload_artifact"' EXIT
+trap 'rm -f "$complete_evidence" "$wrong_build_evidence" "$missing_artifact_evidence" "$missing_support_url_evidence" "$wrong_metadata_url_evidence" "$example_url_evidence" "$missing_metadata_reviewer_evidence" "$missing_metadata_reviewer_artifact" "$wrong_privacy_build_evidence" "$wrong_privacy_build_artifact" "$bad_privacy_date_evidence" "$bad_privacy_date_artifact" "$incomplete_testflight_pointer_evidence" "$incomplete_testflight_evidence" "$missing_testflight_checklist_pointer_evidence" "$missing_testflight_checklist_evidence" "$missing_public_checklist_evidence" "$wrong_signed_upload_location_evidence" "$wrong_signed_upload_archive_path_evidence" "$wrong_signed_upload_archive_path_artifact" "$wrong_signed_upload_method_evidence" "$wrong_signed_upload_method_artifact" "$bad_local_gate_pointer_evidence" "$bad_local_gate_artifact" "$local_gate_artifact" "$signed_upload_artifact" "$testflight_artifact" "$screenshots_artifact" "$metadata_artifact" "$wrong_metadata_url_artifact" "$missing_metadata_reviewer_artifact" "$wrong_privacy_build_artifact" "$bad_privacy_date_artifact" "$privacy_answers_artifact" "$repo_local_gate_artifact" "$repo_signed_upload_artifact" "$repo_testflight_artifact" "$repo_screenshots_artifact" "$repo_metadata_artifact" "$repo_privacy_answers_artifact" "$repo_wrong_signed_upload_artifact"' EXIT
 
 cat >"$local_gate_artifact" <<EOF
 # CalPal $version Local Release Gate Evidence
@@ -85,7 +89,7 @@ cat >"$signed_upload_artifact" <<EOF
 Result: PASS
 Build: $build
 Date: 2026-05-31
-Archive path: /tmp/CalPal.xcarchive
+Archive path: Artifacts/AppStoreUpload/CalPal-$version-$build.xcarchive
 Upload method: xcodebuild -exportArchive
 App Store Connect evidence: Build processing record
 Uploader: Release owner
@@ -272,6 +276,20 @@ sed \
 sed -i '' "s|^Signed archive upload evidence: ${repo_signed_upload_artifact#$ROOT_DIR/}$|Signed archive upload evidence: ${repo_wrong_signed_upload_artifact#$ROOT_DIR/}|" "$wrong_signed_upload_location_evidence"
 if EVIDENCE_FILE="$wrong_signed_upload_location_evidence" bash Scripts/verify_public_release_readiness.sh >/dev/null 2>&1; then
   echo "Expected public release verifier to reject repo-local signed upload evidence outside AppStore/ReleaseEvidence." >&2
+  exit 1
+fi
+
+sed 's|^Archive path: Artifacts/AppStoreUpload/CalPal-.*$|Archive path: /tmp/CalPal.xcarchive|' "$signed_upload_artifact" >"$wrong_signed_upload_archive_path_artifact"
+sed "s|^Signed archive upload evidence: $signed_upload_artifact$|Signed archive upload evidence: $wrong_signed_upload_archive_path_artifact|" "$complete_evidence" >"$wrong_signed_upload_archive_path_evidence"
+if ALLOW_EXTERNAL_RELEASE_ARTIFACTS=1 EVIDENCE_FILE="$wrong_signed_upload_archive_path_evidence" bash Scripts/verify_public_release_readiness.sh >/dev/null 2>&1; then
+  echo "Expected public release verifier to reject a signed upload artifact with a non-canonical archive path." >&2
+  exit 1
+fi
+
+sed 's|^Upload method: xcodebuild -exportArchive$|Upload method: Xcode Organizer|' "$signed_upload_artifact" >"$wrong_signed_upload_method_artifact"
+sed "s|^Signed archive upload evidence: $signed_upload_artifact$|Signed archive upload evidence: $wrong_signed_upload_method_artifact|" "$complete_evidence" >"$wrong_signed_upload_method_evidence"
+if ALLOW_EXTERNAL_RELEASE_ARTIFACTS=1 EVIDENCE_FILE="$wrong_signed_upload_method_evidence" bash Scripts/verify_public_release_readiness.sh >/dev/null 2>&1; then
+  echo "Expected public release verifier to reject a signed upload artifact without the prepared xcodebuild export method." >&2
   exit 1
 fi
 

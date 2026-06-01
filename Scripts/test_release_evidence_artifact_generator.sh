@@ -70,6 +70,17 @@ for artifact in "${artifacts[@]}"; do
   fi
 done
 
+signed_upload_artifact="AppStore/ReleaseEvidence/$TEST_DATE-signed-upload.md"
+if ! grep -Fq "Archive path: Artifacts/AppStoreUpload/CalPal-$version-$build.xcarchive" "$signed_upload_artifact"; then
+  echo "Generated signed upload artifact does not include the canonical archive path." >&2
+  exit 1
+fi
+
+if ! grep -Fq "Upload method: xcodebuild -exportArchive" "$signed_upload_artifact"; then
+  echo "Generated signed upload artifact does not include the canonical upload method." >&2
+  exit 1
+fi
+
 if bash Scripts/create_release_evidence_artifacts.sh --date "$TEST_DATE" >/dev/null 2>&1; then
   echo "Expected generator to refuse overwriting existing artifacts without --force." >&2
   exit 1

@@ -3,8 +3,8 @@
 Result: TODO
 Build: 10
 Date: 2026-05-31
-Archive path: TODO
-Upload method: TODO
+Archive path: Artifacts/AppStoreUpload/CalPal-1.0-10.xcarchive
+Upload method: xcodebuild -exportArchive
 App Store Connect evidence: TODO
 Uploader: TODO
 

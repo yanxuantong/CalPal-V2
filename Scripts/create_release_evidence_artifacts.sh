@@ -83,6 +83,8 @@ replace_placeholders() {
     -e "s/CalPal 1.0/CalPal $version/g" \
     -e "s/^Build: TODO$/Build: $build/" \
     -e "s/^Date: TODO$/Date: $RELEASE_DATE/" \
+    -e "s|^Archive path: TODO$|Archive path: Artifacts/AppStoreUpload/CalPal-$version-$build.xcarchive|" \
+    -e "s|^Upload method: TODO$|Upload method: xcodebuild -exportArchive|" \
     "$template"
 }
 

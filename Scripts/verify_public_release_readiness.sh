@@ -133,6 +133,18 @@ artifact_field_value() {
   awk -F': ' -v field="$field" '$1 == field { print $2 }' "$path"
 }
 
+artifact_field_path() {
+  local path="$1"
+  local field="$2"
+  local value
+  value="$(artifact_field_value "$path" "$field")"
+  if [[ "$value" = /* ]]; then
+    printf '%s\n' "$value"
+  else
+    printf '%s/%s\n' "$ROOT_DIR" "$value"
+  fi
+}
+
 require_artifact_field_value() {
   local path="$1"
   local field="$2"
@@ -181,6 +193,22 @@ require_signed_upload_checklist() {
   require_checked_artifact_item "$path" 'The uploaded build number matches the Xcode project build.'
   require_checked_artifact_item "$path" 'App Store Connect shows the build as uploaded or processing.'
   require_checked_artifact_item "$path" 'No unexpected export, signing, validation, or upload warnings remain.'
+}
+
+require_signed_upload_fields() {
+  local path="$1"
+  local archive_path upload_method expected_archive_path
+  archive_path="$(artifact_field_path "$path" "Archive path")"
+  upload_method="$(artifact_field_value "$path" "Upload method")"
+  expected_archive_path="$ROOT_DIR/Artifacts/AppStoreUpload/CalPal-$expected_version-$expected_build.xcarchive"
+
+  if [[ "$archive_path" != "$expected_archive_path" ]]; then
+    fail "Signed upload artifact Archive path must match the prepared App Store archive path: ${expected_archive_path#$ROOT_DIR/}"
+  fi
+
+  if [[ "$upload_method" != "xcodebuild -exportArchive" ]]; then
+    fail "Signed upload artifact Upload method must be: xcodebuild -exportArchive"
+  fi
 }
 
 require_testflight_checklist() {
@@ -369,6 +397,7 @@ require_artifact_field_value "$signed_upload_artifact" "Archive path"
 require_artifact_field_value "$signed_upload_artifact" "Upload method"
 require_artifact_field_value "$signed_upload_artifact" "App Store Connect evidence"
 require_artifact_field_value "$signed_upload_artifact" "Uploader"
+require_signed_upload_fields "$signed_upload_artifact"
 require_signed_upload_checklist "$signed_upload_artifact"
 
 require_artifact_line "$testflight_artifact" "Result: PASS"
