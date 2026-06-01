@@ -29,6 +29,7 @@ This repository is now moving toward the `1.0` launch-readiness baseline. The ap
 - `CalPalTests/` - Unit tests for parsing, mutation policy, and preference storage.
 - `IMPLEMENTATION_NOTES.md` - MVP assumptions, verification notes, and known follow-ups.
 - `AppStore/` - 1.0 App Store launch materials, including readiness, submission, public-release evidence, and privacy policy drafts.
+- `AppStore/APP_REVIEW_READINESS_RUNBOOK.md` - ordered App Store review submission runbook and launch-owner task list.
 - `AppStore/ProductionPolish/` - Competitive references, production-polish notes, and verification boundaries for post-MVP hardening passes.
 
 ## Requirements

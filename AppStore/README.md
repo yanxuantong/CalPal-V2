@@ -3,6 +3,7 @@
 This folder contains the 1.0 App Store and TestFlight release materials.
 
 - `APP_STORE_READINESS.md` - 1.0 launch-readiness checklist and release gates.
+- `APP_REVIEW_READINESS_RUNBOOK.md` - ordered launch-owner runbook for the remaining App Store review submission steps.
 - `APP_STORE_CONNECT_SUBMISSION.md` - App Store Connect copy, review notes, privacy answer draft, and screenshot references.
 - `APP_STORE_PUBLIC_RELEASE_EVIDENCE.md` - final public-submission evidence record.
 - `PRIVACY_POLICY.md` - privacy policy draft to publish before final submission.
