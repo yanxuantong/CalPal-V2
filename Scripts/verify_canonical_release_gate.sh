@@ -57,6 +57,8 @@ for required in \
   "test_public_support_page_artifact.sh" \
   "verify_public_static_artifacts.sh" \
   "test_public_static_artifacts_verifier.sh" \
+  "verify_public_url_publication.sh" \
+  "test_public_url_publication_verifier.sh" \
   "verify_app_store_submission_consistency.sh" \
   "test_app_store_submission_consistency.sh" \
   "verify_app_store_metadata_fields.sh" \
@@ -67,7 +69,8 @@ for required in \
   "test_release_evidence_artifact_generator.sh" \
   "verify_local_only_runtime.sh" \
   "test_local_only_runtime_verifier.sh" \
-  "generate_release_handoff_report.sh --check"; do
+  "generate_release_handoff_report.sh --check" \
+  "generate_release_bundle_manifest.sh --check"; do
   if ! grep -Fq "$required" "$CANONICAL_GATE"; then
     fail "Canonical gate is missing required check: $required"
   fi
