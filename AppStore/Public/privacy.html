@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CalPal Privacy Policy</title>
+  <meta name="description" content="CalPal 1.0 privacy policy for App Store review and public publication.">
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #fbfaf7;
+      --fg: #171717;
+      --muted: #5f6368;
+      --rule: #dad7ce;
+      --accent: #165f58;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #141412;
+        --fg: #f4f0e8;
+        --muted: #c2bdb1;
+        --rule: #3c3932;
+        --accent: #8ed7ca;
+      }
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.6;
+    }
+
+    main {
+      width: min(760px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 56px 0 72px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(2rem, 5vw, 3.25rem);
+      line-height: 1.08;
+    }
+
+    h2 {
+      margin: 36px 0 10px;
+      padding-top: 22px;
+      border-top: 1px solid var(--rule);
+      font-size: 1.25rem;
+    }
+
+    p {
+      margin: 0 0 14px;
+    }
+
+    .effective-date {
+      color: var(--muted);
+      font-size: 1rem;
+      margin-bottom: 32px;
+    }
+
+    .summary {
+      border-left: 4px solid var(--accent);
+      padding-left: 16px;
+      font-size: 1.08rem;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.92em;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>CalPal Privacy Policy</h1>
+    <p class="effective-date">Effective date: May 22, 2026</p>
+
+    <p class="summary">CalPal is a private calendar assistant for Apple Calendar users. This policy describes the current 1.0 implementation.</p>
+
+    <h2>Data Collection</h2>
+    <p>CalPal does not collect data from this app in 1.0.</p>
+    <p>CalPal does not operate a developer-hosted backend, account system, advertising SDK, or third-party analytics SDK. Calendar content, voice input, speech transcripts, command text, and local preferences are not uploaded to a CalPal server.</p>
+
+    <h2>Calendar Data</h2>
+    <p>CalPal requests Calendar Full Access so it can show your agenda and create, modify, or delete calendar events when you ask it to.</p>
+    <p>Your Apple Calendar remains the source of truth. CalPal asks you to review sensitive create, update, and delete actions before applying them.</p>
+
+    <h2>Voice And Speech</h2>
+    <p>CalPal uses the microphone and Apple's Speech Recognition framework for optional voice calendar commands.</p>
+    <p>Speech input is used to transcribe calendar commands for the current action. Text entry and manual entry remain available if speech access is denied or unavailable.</p>
+
+    <h2>On-Device Intelligence</h2>
+    <p>CalPal may use Apple on-device intelligence when it is available on your device. When it is unavailable, CalPal uses a deterministic local parser fallback.</p>
+
+    <h2>Local Preferences</h2>
+    <p>CalPal stores lightweight preferences on device, such as onboarding state, permission-initialization state, and the preferred writable calendar. These preferences are stored with UserDefaults.</p>
+    <p>The app bundle includes <code>PrivacyInfo.xcprivacy</code> declaring UserDefaults required-reason API usage with reason <code>CA92.1</code>.</p>
+
+    <h2>Tracking</h2>
+    <p>CalPal does not track users in 1.0.</p>
+    <p>CalPal does not sell data, does not use advertising identifiers, and does not share app data with data brokers or advertising networks.</p>
+
+    <h2>Changes</h2>
+    <p>Re-check this policy before each release. If CalPal adds accounts, sync, cloud AI, analytics, crash reporting, subscriptions, push notifications, or third-party SDKs, this policy and the App Store privacy answers must be updated before submission.</p>
+
+    <h2>Contact</h2>
+    <p>For privacy questions, use the support contact listed on CalPal's App Store product page.</p>
+  </main>
+</body>
+</html>

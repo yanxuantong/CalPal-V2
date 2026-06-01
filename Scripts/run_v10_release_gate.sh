@@ -17,8 +17,43 @@ fi
 
 bash -n Scripts/capture_demo_screenshots.sh
 bash -n Scripts/verify_app_store_metadata.sh
+bash -n Scripts/test_app_store_metadata_verifier.sh
 bash -n Scripts/verify_archive_build.sh
+bash -n Scripts/test_archive_build_verifier.sh
 bash -n Scripts/verify_smoke_automation_contract.sh
+bash -n Scripts/test_smoke_automation_contract_verifier.sh
+bash -n Scripts/verify_public_release_readiness.sh
+bash -n Scripts/test_public_release_readiness_verifier.sh
+bash -n Scripts/run_simulator_ui_smoke.sh
+bash -n Scripts/prepare_app_store_upload.sh
+bash -n Scripts/test_prepare_app_store_upload.sh
+bash -n Scripts/run_app_store_submission_preflight.sh
+bash -n Scripts/test_app_store_submission_preflight.sh
+bash -n Scripts/verify_public_privacy_policy_artifact.sh
+bash -n Scripts/test_public_privacy_policy_artifact.sh
+bash -n Scripts/verify_public_support_page_artifact.sh
+bash -n Scripts/test_public_support_page_artifact.sh
+bash -n Scripts/verify_public_static_artifacts.sh
+bash -n Scripts/test_public_static_artifacts_verifier.sh
+bash -n Scripts/verify_public_url_publication.sh
+bash -n Scripts/test_public_url_publication_verifier.sh
+bash -n Scripts/verify_app_store_submission_consistency.sh
+bash -n Scripts/test_app_store_submission_consistency.sh
+bash -n Scripts/verify_app_store_metadata_fields.sh
+bash -n Scripts/test_app_store_metadata_fields.sh
+bash -n Scripts/verify_release_placeholder_boundaries.sh
+bash -n Scripts/test_release_placeholder_boundaries.sh
+bash -n Scripts/create_release_evidence_artifacts.sh
+bash -n Scripts/test_release_evidence_artifact_generator.sh
+bash -n Scripts/verify_local_only_runtime.sh
+bash -n Scripts/test_local_only_runtime_verifier.sh
+bash -n Scripts/verify_built_app_privacy_surface.sh
+bash -n Scripts/test_built_app_privacy_surface.sh
+bash -n Scripts/generate_release_handoff_report.sh
+bash -n Scripts/generate_release_bundle_manifest.sh
+bash -n Scripts/verify_canonical_release_gate.sh
+bash -n Scripts/verify_demo_screenshot_artifacts.sh
+bash -n Scripts/test_demo_screenshot_artifacts_verifier.sh
 
 if [[ ! -s "$PRIVACY_POLICY_PATH" ]]; then
   echo "Missing AppStore/PRIVACY_POLICY.md." >&2
@@ -44,8 +79,38 @@ xcodebuild \
   CODE_SIGNING_ALLOWED=NO
 
 bash Scripts/verify_app_store_metadata.sh
+bash Scripts/test_app_store_metadata_verifier.sh
 bash Scripts/verify_archive_build.sh
+bash Scripts/test_archive_build_verifier.sh
 bash Scripts/verify_smoke_automation_contract.sh
+bash Scripts/test_smoke_automation_contract_verifier.sh
+bash Scripts/test_public_release_readiness_verifier.sh
+bash Scripts/prepare_app_store_upload.sh >/dev/null
+bash Scripts/test_prepare_app_store_upload.sh
+bash Scripts/run_app_store_submission_preflight.sh >/dev/null
+bash Scripts/test_app_store_submission_preflight.sh
+bash Scripts/verify_public_privacy_policy_artifact.sh
+bash Scripts/test_public_privacy_policy_artifact.sh
+bash Scripts/verify_public_support_page_artifact.sh
+bash Scripts/test_public_support_page_artifact.sh
+bash Scripts/verify_public_static_artifacts.sh
+bash Scripts/test_public_static_artifacts_verifier.sh
+bash Scripts/test_public_url_publication_verifier.sh
+bash Scripts/verify_app_store_submission_consistency.sh
+bash Scripts/test_app_store_submission_consistency.sh
+bash Scripts/verify_app_store_metadata_fields.sh
+bash Scripts/test_app_store_metadata_fields.sh
+bash Scripts/verify_release_placeholder_boundaries.sh
+bash Scripts/test_release_placeholder_boundaries.sh
+bash Scripts/create_release_evidence_artifacts.sh --check --date 2026-05-31 >/dev/null
+bash Scripts/test_release_evidence_artifact_generator.sh
+bash Scripts/verify_local_only_runtime.sh
+bash Scripts/test_local_only_runtime_verifier.sh
+bash Scripts/verify_built_app_privacy_surface.sh
+bash Scripts/test_built_app_privacy_surface.sh
+bash Scripts/generate_release_handoff_report.sh --check
+bash Scripts/generate_release_bundle_manifest.sh --check
+bash Scripts/verify_canonical_release_gate.sh
 
 screenshots_missing=0
 for screenshot in calpal-demo-home.png calpal-demo-home-dark.png; do
@@ -58,24 +123,7 @@ if [[ "$CAPTURE_SCREENSHOTS" == "1" || ( "$CAPTURE_SCREENSHOTS" == "auto" && "$s
   bash Scripts/capture_demo_screenshots.sh
 fi
 
-for screenshot in calpal-demo-home.png calpal-demo-home-dark.png; do
-  path="$SCREENSHOT_DIR/$screenshot"
-  if [[ ! -s "$path" ]]; then
-    echo "Missing non-empty screenshot artifact: $path" >&2
-    echo "Run CAPTURE_SCREENSHOTS=1 bash Scripts/run_v10_release_gate.sh or bash Scripts/capture_demo_screenshots.sh." >&2
-    exit 1
-  fi
-  dimensions="$(sips -g pixelWidth -g pixelHeight "$path")"
-  if ! grep -q "pixelWidth:" <<<"$dimensions" || ! grep -q "pixelHeight:" <<<"$dimensions"; then
-    echo "Could not read screenshot dimensions for $path" >&2
-    exit 1
-  fi
-  width="$(awk '/pixelWidth:/ { print $2 }' <<<"$dimensions")"
-  height="$(awk '/pixelHeight:/ { print $2 }' <<<"$dimensions")"
-  if (( width < 390 || height < 800 )); then
-    echo "Screenshot artifact is too small for App Store review evidence: $path is ${width}x${height}." >&2
-    exit 1
-  fi
-done
+bash Scripts/verify_demo_screenshot_artifacts.sh
+bash Scripts/test_demo_screenshot_artifacts_verifier.sh
 
 echo "CalPal 1.0 local release gate passed."

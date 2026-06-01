@@ -46,13 +46,14 @@ struct CommandOrb: View {
             }
             .frame(width: Self.touchFieldSize, height: Self.touchFieldSize)
             .contentShape(Circle())
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(accessibilityLabel)
+            .accessibilityHint(accessibilityHint)
+            .accessibilityIdentifier("commandOrb")
         }
         .buttonStyle(.plain)
         .frame(width: Self.touchFieldSize, height: Self.touchFieldSize)
         .simultaneousGesture(TapGesture(count: 2).onEnded(handleDoubleTap))
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(accessibilityLabel)
-        .accessibilityHint(accessibilityHint)
         .accessibilityAction(named: "Type command", onDoubleTap)
         .modifier(RecordingCancelAccessibilityAction(isRecording: isRecording, onCancel: onCancel))
     }

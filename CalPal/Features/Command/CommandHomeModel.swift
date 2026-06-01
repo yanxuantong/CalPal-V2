@@ -42,6 +42,7 @@ final class CommandHomeModel: ObservableObject {
         agendaState = .loading
         guard dependencies.calendarRepository.authorizationStatus() == .allowed else {
             guard isCurrentAgendaLoad(requestID) else { return }
+            dependencies.diagnosticsStore.record(.calendarAccessDenied)
             agendaState = .denied(ErrorPresentation(title: "Connect Calendars", message: "Allow full calendar access when you are ready to show and update your agenda.", recovery: "Open iOS Settings to grant Calendar access, then try again."))
             return
         }
@@ -57,6 +58,7 @@ final class CommandHomeModel: ObservableObject {
             agendaState = .loaded
         } catch CalendarRepositoryError.accessDenied {
             guard isCurrentAgendaLoad(requestID) else { return }
+            dependencies.diagnosticsStore.record(.calendarAccessDenied)
             agendaState = .denied(ErrorPresentation(title: "Calendar Access Needed", message: "Allow full calendar access to show and update your agenda.", recovery: "Open iOS Settings to grant Calendar access, then try again."))
         } catch {
             guard isCurrentAgendaLoad(requestID) else { return }
@@ -98,6 +100,7 @@ final class CommandHomeModel: ObservableObject {
             let status = await dependencies.speechService.requestAuthorization()
             guard activeRecordingID == recordingID, case .recording = commandState else { return }
             guard status == .allowed else {
+                dependencies.diagnosticsStore.record(.speechDenied)
                 commandState = .failed(ErrorPresentation(title: "Speech Permission Needed", message: "Allow speech recognition to use voice commands.", recovery: "Double-tap the orb to type instead."))
                 sheetPresenter?(.speechUnavailable(UnavailableContext(title: "Speech Permission Needed", message: "Speech recognition was not authorized. Text input remains available.", primaryAction: .openTextEntry, secondaryAction: .openSystemSettings)))
                 return
@@ -158,6 +161,7 @@ final class CommandHomeModel: ObservableObject {
             return
         }
         let requestID = beginCommandStage(.parsing(trimmedText))
+        dependencies.diagnosticsStore.record(.commandSubmitted)
         let output = await dependencies.commandPipeline.process(text: trimmedText)
         guard isCurrentCommand(requestID) else { return }
         await handle(output)
@@ -274,30 +278,55 @@ final class CommandHomeModel: ObservableObject {
     private func handle(_ output: CalendarCommandPipelineOutput) async {
         switch output {
         case .result(let result):
+            dependencies.diagnosticsStore.record(.commandSucceeded)
+            record(parseRoute: result.parseRoute)
             latestError = nil
             latestResult = result
             commandState = .completed(result)
             scheduleResultDismissal()
             await loadAgenda()
         case .correction(let context):
+            dependencies.diagnosticsStore.record(.correctionShown)
+            record(parseRoute: context.parseRoute)
             commandState = .idle
             sheetPresenter?(.correction(context))
         case .confirmation(let context):
+            dependencies.diagnosticsStore.record(.confirmationShown)
+            record(parseRoute: context.parseRoute)
             commandState = .idle
             sheetPresenter?(.confirmation(context))
         case .candidateSelection(let context):
+            dependencies.diagnosticsStore.record(.candidateSelectionShown)
+            record(parseRoute: context.parseRoute)
             commandState = .idle
             sheetPresenter?(.candidateSelection(context))
         case .calendarChooser(let context):
             commandState = .idle
             sheetPresenter?(.calendarChooser(context))
         case .unavailable(let context):
+            dependencies.diagnosticsStore.record(.unavailableShown)
+            dependencies.diagnosticsStore.record(.commandFailed)
+            if context.title.localizedCaseInsensitiveContains("Calendar Access") {
+                dependencies.diagnosticsStore.record(.calendarAccessDenied)
+            }
             commandState = .failed(ErrorPresentation(title: context.title, message: context.message, recovery: context.primaryAction.title))
             sheetPresenter?(.modelUnavailable(context))
         case .failure(let error):
+            dependencies.diagnosticsStore.record(.commandFailed)
             latestResult = nil
             latestError = error
             commandState = .failed(error)
+        }
+    }
+
+    private func record(parseRoute: CalendarParseRoute?) {
+        switch parseRoute {
+        case .foundationModelsGenerated, .remoteAIGenerated:
+            dependencies.diagnosticsStore.record(.foundationModelsGenerated)
+        case .deterministicFallback, .foundationModelsUnavailable, .foundationModelsFailedOver, .foundationModelsLocaleUnsupported, .remoteAIFailedOver:
+            dependencies.diagnosticsStore.record(.foundationModelsFallback)
+        case .none:
+            break
         }
     }
 

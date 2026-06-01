@@ -98,6 +98,64 @@ final class NaturalLanguageCalendarParserTests: XCTestCase {
         XCTAssertEqual(parsed.parseRoute, .foundationModelsFailedOver)
     }
 
+    func testRemoteAIParserDoesNotCallClientWhenPolicyIsLocalOnly() async {
+        let client = RecordingRemoteCalendarAIClient()
+        let parser = RemoteCalendarAIParser(
+            fallback: NaturalLanguageCalendarParser(now: { self.now }),
+            client: client,
+            policy: .localOnly,
+            now: { self.now }
+        )
+
+        let parsed = await parser.parseCommand("Meeting with Alex tomorrow at 3 PM")
+
+        XCTAssertTrue(client.requests.isEmpty)
+        XCTAssertEqual(parsed.parseRoute, .deterministicFallback)
+        guard case .create = parsed.intent else { return XCTFail("Expected local fallback create") }
+    }
+
+    func testRemoteAIParserRequiresExplicitTextUploadPermission() async throws {
+        let client = RecordingRemoteCalendarAIClient()
+        let endpoint = try XCTUnwrap(URL(string: "https://api.example.test/calendar/parse"))
+        let parser = RemoteCalendarAIParser(
+            fallback: NaturalLanguageCalendarParser(now: { self.now }),
+            client: client,
+            policy: RemoteCalendarAIPolicy(isEnabled: true, endpoint: endpoint, allowsCommandTextUpload: false),
+            now: { self.now }
+        )
+
+        let parsed = await parser.parseCommand("Meeting with Alex tomorrow at 3 PM")
+
+        XCTAssertTrue(client.requests.isEmpty)
+        XCTAssertEqual(parsed.parseRoute, .remoteAIFailedOver)
+    }
+
+    func testRemoteAIParserSendsExplicitOptInRequestAndMarksRemoteRoute() async throws {
+        let client = RecordingRemoteCalendarAIClient()
+        let endpoint = try XCTUnwrap(URL(string: "https://api.example.test/calendar/parse"))
+        let remoteStart = try XCTUnwrap(Calendar.current.date(from: DateComponents(year: 2026, month: 5, day: 1, hour: 11)))
+        let remoteDraft = EventDraft(title: "Remote parsed meeting", startDate: remoteStart, endDate: remoteStart.addingTimeInterval(1800), calendarID: nil, calendarName: nil, location: nil, notes: nil)
+        client.response = RemoteCalendarAIResponse(parsedCommand: ParsedCalendarCommand(originalText: "remote", localeIdentifier: "en-US", intent: .create(remoteDraft), confidence: 0.91, missingFields: [], warnings: []))
+        let parser = RemoteCalendarAIParser(
+            fallback: NaturalLanguageCalendarParser(now: { self.now }),
+            client: client,
+            policy: .explicitOptIn(endpoint: endpoint),
+            localeIdentifier: { "en-US" },
+            timeZone: TimeZone(identifier: "America/Los_Angeles")!,
+            now: { self.now }
+        )
+
+        let parsed = await parser.parseCommand("Meeting with Alex tomorrow at 3 PM")
+
+        XCTAssertEqual(client.requests.count, 1)
+        XCTAssertEqual(client.requests.first?.commandText, "Meeting with Alex tomorrow at 3 PM")
+        XCTAssertEqual(client.requests.first?.localeIdentifier, "en-US")
+        XCTAssertEqual(client.requests.first?.timeZoneIdentifier, "America/Los_Angeles")
+        XCTAssertEqual(parsed.parseRoute, .remoteAIGenerated)
+        guard case .create(let draft) = parsed.intent else { return XCTFail("Expected remote create") }
+        XCTAssertEqual(draft.title, "Remote parsed meeting")
+    }
+
     func testCreateWithoutDateNeedsCorrection() {
         let parsed = parser.parse("Schedule a meeting")
         guard case .create = parsed.intent else { return XCTFail("Expected create") }
@@ -171,6 +229,19 @@ private struct FixedModelProvider: ModelProviderProtocol {
 
     func availability() -> PermissionStatus {
         status
+    }
+}
+
+private final class RecordingRemoteCalendarAIClient: RemoteCalendarAIClientProtocol {
+    private(set) var requests: [RemoteCalendarAIRequest] = []
+    var response: RemoteCalendarAIResponse?
+    var error: Error?
+
+    func parse(_ request: RemoteCalendarAIRequest, endpoint: URL) async throws -> RemoteCalendarAIResponse {
+        requests.append(request)
+        if let error { throw error }
+        guard let response else { throw RemoteCalendarAIError.disabled }
+        return response
     }
 }
 

@@ -24,6 +24,8 @@ This contract lists the stable accessibility identifiers that release smoke test
 
 ## Command Processing
 
+- id: `commandOrb`
+  purpose: Open voice or typed command entry from the primary command control.
 - id: `processingCard`
   purpose: Confirm command work is visibly in progress.
 - id: `processingCancel`
@@ -93,12 +95,22 @@ This contract lists the stable accessibility identifiers that release smoke test
   purpose: Refresh capability diagnostics in place.
 - id: `readinessSummary`
   purpose: Confirm aggregate readiness summary.
+- id: `privacyBoundarySummary`
+  purpose: Confirm local-only privacy boundary details are visible in Settings.
+- id: `localDiagnosticsSummary`
+  purpose: Confirm local diagnostics counters are visible without external telemetry.
+- id: `resetLocalPreferences`
+  purpose: Clear local preference summaries without deleting calendar events.
+- id: `resetLocalDiagnostics`
+  purpose: Clear device-local diagnostic counters without deleting events or preferences.
 - id: `safetyModeAutoReview`
   purpose: Confirm the truthful safety-mode row.
 - id: `readinessItem-calendar-access`
   purpose: Confirm Calendar access readiness row.
 - id: `readinessItem-foundation-models`
   purpose: Confirm Foundation Models route readiness row.
+- id: `readinessItem-remote-ai-boundary`
+  purpose: Confirm remote AI text-upload readiness remains gated by the privacy boundary.
 - id: `readinessItem-calendar-open`
   purpose: Confirm Apple Calendar opening manual gate.
 - id: `readinessItem-store-assets`

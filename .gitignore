@@ -8,6 +8,9 @@ DerivedData/
 *.xcscmblueprint
 xcuserdata/
 
+# Local release/export artifacts
+Artifacts/AppStoreUpload/
+
 # Swift Package Manager
 .build/
 .swiftpm/

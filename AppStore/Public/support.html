@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CalPal Support</title>
+  <meta name="description" content="CalPal 1.0 support page for App Store review and public publication.">
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #fbfaf7;
+      --fg: #171717;
+      --muted: #5f6368;
+      --rule: #dad7ce;
+      --accent: #165f58;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #141412;
+        --fg: #f4f0e8;
+        --muted: #c2bdb1;
+        --rule: #3c3932;
+        --accent: #8ed7ca;
+      }
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.6;
+    }
+
+    main {
+      width: min(760px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 56px 0 72px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(2rem, 5vw, 3.25rem);
+      line-height: 1.08;
+    }
+
+    h2 {
+      margin: 36px 0 10px;
+      padding-top: 22px;
+      border-top: 1px solid var(--rule);
+      font-size: 1.25rem;
+    }
+
+    p,
+    li {
+      margin: 0 0 14px;
+    }
+
+    ul {
+      padding-left: 1.2rem;
+    }
+
+    .summary {
+      border-left: 4px solid var(--accent);
+      padding-left: 16px;
+      font-size: 1.08rem;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    a {
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>CalPal Support</h1>
+    <p class="muted">Support page for CalPal 1.0.</p>
+
+    <p class="summary">CalPal is a private calendar assistant for Apple Calendar users. This page covers common setup, permission, and calendar-command recovery paths.</p>
+
+    <h2>Getting Started</h2>
+    <p>CalPal uses Apple Calendar as the source of truth. Complete onboarding, grant Calendar Full Access, then speak or type a calendar command and review the proposed change before it is saved.</p>
+
+    <h2>Calendar Access</h2>
+    <p>If your agenda does not load or CalPal cannot save an event, open iOS Settings and confirm Calendar Full Access is enabled for CalPal. CalPal needs full calendar access to show, create, modify, and delete events only when you ask.</p>
+
+    <h2>Voice Commands</h2>
+    <p>Voice commands use Microphone and Speech Recognition permissions. If either permission is denied or unavailable, text entry and manual event creation remain available.</p>
+
+    <h2>Review Before Save</h2>
+    <p>CalPal asks you to review sensitive create, update, and delete actions before applying them. Recurring-event updates and deletes require an explicit recurrence scope.</p>
+
+    <h2>Privacy</h2>
+    <p>CalPal 1.0 does not operate a developer-hosted backend, does not track users, does not sell data, and does not upload calendar content to a CalPal server.</p>
+    <p>Read the public privacy policy at <a href="privacy.html">CalPal Privacy Policy</a>.</p>
+
+    <h2>Before Contacting Support</h2>
+    <ul>
+      <li>Confirm Calendar Full Access is enabled in iOS Settings.</li>
+      <li>Confirm at least one writable calendar is available in Apple Calendar.</li>
+      <li>Try text entry if Speech Recognition or Microphone access is unavailable.</li>
+      <li>Open CalPal Settings and review the 1.0 Launch Readiness section.</li>
+    </ul>
+
+    <h2>Contact</h2>
+    <p>For app support, use the support contact configured on CalPal's App Store product page. Include your iOS version, device model, whether Calendar Full Access is enabled, and the command you were trying to complete.</p>
+  </main>
+</body>
+</html>

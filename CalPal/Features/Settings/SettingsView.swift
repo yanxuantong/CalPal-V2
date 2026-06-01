@@ -1,9 +1,15 @@
 import SwiftUI
 
+enum SettingsAutomationIdentifiers {
+    static let resetLocalPreferences = "resetLocalPreferences"
+    static let resetLocalDiagnostics = "resetLocalDiagnostics"
+}
+
 struct SettingsView: View {
     @EnvironmentObject private var appModel: AppModel
     @Environment(\.dismiss) private var dismiss
-    @State private var confirmReset = false
+    @State private var confirmResetPreferences = false
+    @State private var confirmResetDiagnostics = false
     @State private var didScrollToStartSection = false
     let startSection: SettingsSection?
 
@@ -35,7 +41,7 @@ struct SettingsView: View {
                             .accessibilityIdentifier(SheetDismissAutomation.settingsDone)
                     }
                 }
-                .confirmationDialog("Reset local preferences?", isPresented: $confirmReset, titleVisibility: .visible) {
+                .confirmationDialog("Reset local preferences?", isPresented: $confirmResetPreferences, titleVisibility: .visible) {
                     Button("Reset Preferences", role: .destructive) {
                         appModel.dependencies.preferenceSummaryStore.reset(accountID: nil)
                         appModel.commandHomeModel.clearDefaultCalendar()
@@ -43,6 +49,14 @@ struct SettingsView: View {
                     Button("Cancel", role: .cancel) {}
                 } message: {
                     Text("This clears local preferences. Calendar events are not deleted.")
+                }
+                .confirmationDialog("Reset local diagnostics?", isPresented: $confirmResetDiagnostics, titleVisibility: .visible) {
+                    Button("Reset Diagnostics", role: .destructive) {
+                        appModel.dependencies.diagnosticsStore.reset()
+                    }
+                    Button("Cancel", role: .cancel) {}
+                } message: {
+                    Text("This clears local diagnostic counters on this device. Calendar events and preferences are not deleted.")
                 }
             }
         }
@@ -138,7 +152,14 @@ struct SettingsView: View {
 
     private var localPreferencesSection: some View {
         Section {
-            Button("Reset Local Preferences", role: .destructive) { confirmReset = true }
+            Button("Reset Local Preferences", role: .destructive) { confirmResetPreferences = true }
+                .accessibilityIdentifier(SettingsAutomationIdentifiers.resetLocalPreferences)
+            PrivacyBoundaryCard(configuration: appModel.dependencies.privacyConfiguration)
+                .accessibilityIdentifier("privacyBoundarySummary")
+            LocalDiagnosticsCard(snapshot: appModel.dependencies.diagnosticsStore.snapshot())
+                .accessibilityIdentifier("localDiagnosticsSummary")
+            Button("Reset Local Diagnostics", role: .destructive) { confirmResetDiagnostics = true }
+                .accessibilityIdentifier(SettingsAutomationIdentifiers.resetLocalDiagnostics)
         } header: {
             settingsHeader(.privacy)
         }
@@ -157,7 +178,8 @@ struct SettingsView: View {
         AppStoreReadinessChecklist.items(
             summary: appModel.capabilitySummary,
             writableCalendarCount: writableCalendars.count,
-            selectedCalendar: appModel.commandHomeModel.selectedCalendar
+            selectedCalendar: appModel.commandHomeModel.selectedCalendar,
+            privacyConfiguration: appModel.dependencies.privacyConfiguration
         )
     }
 
@@ -250,7 +272,12 @@ struct ReadinessChecklistItem: Identifiable, Equatable {
 }
 
 enum AppStoreReadinessChecklist {
-    static func items(summary: CapabilitySummary, writableCalendarCount: Int, selectedCalendar: CalendarInfo?) -> [ReadinessChecklistItem] {
+    static func items(
+        summary: CapabilitySummary,
+        writableCalendarCount: Int,
+        selectedCalendar: CalendarInfo?,
+        privacyConfiguration: ProductionPrivacyConfiguration = .appStoreLocalOnly
+    ) -> [ReadinessChecklistItem] {
         [
             ReadinessChecklistItem(
                 id: "calendar-access",
@@ -287,6 +314,12 @@ enum AppStoreReadinessChecklist {
                 title: "Privacy manifest",
                 detail: "Bundled manifest declares local preference storage and no tracking domains.",
                 state: .ready
+            ),
+            ReadinessChecklistItem(
+                id: "remote-ai-boundary",
+                title: "Remote AI boundary",
+                detail: privacyConfiguration.releaseSummary,
+                state: privacyConfiguration.keepsCommandTextOnDevice ? .ready : .manualGate
             ),
             ReadinessChecklistItem(
                 id: "calendar-open",
@@ -388,6 +421,54 @@ private struct ReadinessChecklistRow: View {
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier(item.accessibilityIdentifier)
         .accessibilityLabel("\(item.title), \(item.state.rawValue), \(item.detail)")
+    }
+}
+
+private struct PrivacyBoundaryCard: View {
+    let configuration: ProductionPrivacyConfiguration
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: CalPalTheme.Spacing.sm) {
+            Label("Privacy boundary", systemImage: "lock.shield")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(CalPalTheme.Colors.textPrimary)
+            Text(configuration.releaseSummary)
+                .font(.caption)
+                .foregroundStyle(CalPalTheme.Colors.textSecondary)
+            Text(configuration.telemetrySummary)
+                .font(.caption)
+                .foregroundStyle(CalPalTheme.Colors.textSecondary)
+        }
+        .padding(.vertical, 4)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Privacy boundary. \(configuration.releaseSummary). \(configuration.telemetrySummary)")
+    }
+}
+
+private struct LocalDiagnosticsCard: View {
+    let snapshot: ProductionDiagnosticsSnapshot
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: CalPalTheme.Spacing.sm) {
+            Label("Local diagnostics", systemImage: "waveform.path.ecg")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(CalPalTheme.Colors.textPrimary)
+            Text(snapshot.resultSummary)
+                .font(.caption)
+                .foregroundStyle(CalPalTheme.Colors.textSecondary)
+            Text(snapshot.aiRouteSummary)
+                .font(.caption)
+                .foregroundStyle(CalPalTheme.Colors.textSecondary)
+            Text(snapshot.releaseRiskSummary)
+                .font(.caption)
+                .foregroundStyle(CalPalTheme.Colors.textSecondary)
+            Text("Stored only on this device. No calendar text, transcripts, event titles, or personal data are recorded.")
+                .font(.caption2)
+                .foregroundStyle(CalPalTheme.Colors.textSecondary)
+        }
+        .padding(.vertical, 4)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Local diagnostics. \(snapshot.resultSummary). \(snapshot.aiRouteSummary). \(snapshot.releaseRiskSummary). Stored only on this device.")
     }
 }
 

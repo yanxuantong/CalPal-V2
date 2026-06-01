@@ -2,35 +2,45 @@
 
 This file is the human-verifiable release record for the final public App Store submission gate.
 
-Do not replace `TODO` or unchecked checklist items until the evidence exists. `Scripts/verify_public_release_readiness.sh` treats this file as incomplete while any required item remains open.
+Do not replace `TODO` or unchecked checklist items until the evidence exists. `Scripts/verify_public_release_readiness.sh` treats this file as incomplete while any required item remains open. Evidence fields must point to completed, dated, repo-local artifacts created from the templates in `AppStore/ReleaseEvidence/` and `AppStore/SmokeTests/REAL_DEVICE_SMOKE_TEMPLATE.md`; do not point final evidence fields at template files or paths outside this repository.
+
+Publish `AppStore/Public/privacy.html` to the public HTTPS privacy-policy URL and `AppStore/Public/support.html` to the public HTTPS support and marketing URL before completing the App Store Connect metadata evidence.
 
 ## Release Candidate
 
 Version: 1.0
-Build: 3
+Build: 10
 
 ## Required Evidence
 
-Local release gate result: TODO
+Local release gate result: PASS
 Local release gate command: bash Scripts/run_v10_release_gate.sh
-Local release gate date: TODO
+Local release gate date: 2026-05-31
+Local release gate artifact: AppStore/SmokeTests/2026-05-31-local-release-gate/README.md
 
 Signed archive upload result: TODO
 Signed archive upload build: TODO
 Signed archive upload date: TODO
+Signed archive upload evidence: TODO
 
 TestFlight real-device smoke result: TODO
 TestFlight real-device smoke device: TODO
 TestFlight real-device smoke iOS version: TODO
 TestFlight real-device smoke date: TODO
+TestFlight real-device smoke evidence: TODO
 
 Public privacy policy URL: TODO
+Public support URL: TODO
+Public marketing URL: TODO
 
 Final screenshot review result: TODO
 Final screenshot review date: TODO
+Final screenshot review evidence: TODO
 
 App Store Connect metadata result: TODO
+App Store Connect metadata evidence: TODO
 App Store Connect privacy answers result: TODO
+App Store Connect privacy answers evidence: TODO
 
 Open release blockers: TODO
 
@@ -68,3 +78,11 @@ Use these exact values when each item is genuinely complete:
 - `App Store Connect metadata result: PASS`
 - `App Store Connect privacy answers result: PASS`
 - `Open release blockers: NONE`
+
+Use these templates for manually completed evidence artifacts:
+
+- `AppStore/ReleaseEvidence/SIGNED_UPLOAD_TEMPLATE.md`
+- `AppStore/SmokeTests/REAL_DEVICE_SMOKE_TEMPLATE.md`
+- `AppStore/ReleaseEvidence/SCREENSHOT_REVIEW_TEMPLATE.md`
+- `AppStore/ReleaseEvidence/APP_STORE_CONNECT_METADATA_TEMPLATE.md`
+- `AppStore/ReleaseEvidence/APP_STORE_PRIVACY_ANSWERS_TEMPLATE.md`

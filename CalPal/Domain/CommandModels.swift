@@ -24,6 +24,8 @@ enum CalendarParseRoute: String, Equatable, Codable, Hashable {
     case foundationModelsUnavailable
     case foundationModelsFailedOver
     case foundationModelsLocaleUnsupported
+    case remoteAIGenerated
+    case remoteAIFailedOver
 
     var resultLabel: String {
         switch self {
@@ -37,6 +39,10 @@ enum CalendarParseRoute: String, Equatable, Codable, Hashable {
             return "Local parser - AI fallback"
         case .foundationModelsLocaleUnsupported:
             return "Local parser - locale fallback"
+        case .remoteAIGenerated:
+            return "Remote AI"
+        case .remoteAIFailedOver:
+            return "Local parser - remote AI fallback"
         }
     }
 
@@ -52,6 +58,10 @@ enum CalendarParseRoute: String, Equatable, Codable, Hashable {
             return "Parsed locally after Apple Intelligence failed"
         case .foundationModelsLocaleUnsupported:
             return "Parsed locally because this locale was unsupported by Apple Intelligence"
+        case .remoteAIGenerated:
+            return "Parsed by remote AI"
+        case .remoteAIFailedOver:
+            return "Parsed locally after remote AI failed or was not allowed"
         }
     }
 }

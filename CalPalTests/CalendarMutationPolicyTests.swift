@@ -30,6 +30,16 @@ final class CalendarMutationPolicyTests: XCTestCase {
         XCTAssertFalse(runtime.preloadsAgenda)
     }
 
+    func testLiveRuntimeKeepsRemoteAIAndTelemetryDisabledForOnePointZero() {
+        let runtime = AppRuntimeConfiguration.current(arguments: ["CalPal"])
+        let privacy = runtime.dependencies.privacyConfiguration
+
+        XCTAssertEqual(privacy.remoteAIPolicy, .localOnly)
+        XCTAssertFalse(privacy.remoteAIPolicy.canSendRequests)
+        XCTAssertTrue(privacy.keepsCommandTextOnDevice)
+        XCTAssertFalse(privacy.allowsTelemetryExport)
+    }
+
     @MainActor
     func testDemoAppModelPreloadsAgendaWithoutShowingOnboarding() async {
         let launchDay = Date()
@@ -49,6 +59,49 @@ final class CalendarMutationPolicyTests: XCTestCase {
         XCTAssertNil(app.activeSheet)
         XCTAssertEqual(app.commandHomeModel.agendaState, .loaded)
         XCTAssertFalse(app.commandHomeModel.events.isEmpty)
+    }
+
+    @MainActor
+    func testCommandDiagnosticsRecordSuccessfulLocalFallbackCommand() async {
+        let diagnostics = InMemoryProductionDiagnosticsStore()
+        var dependencies = DependencyContainer.mock(now: PreviewFixtures.now)
+        dependencies.diagnosticsStore = diagnostics
+        let model = CommandHomeModel(dependencies: dependencies, selectedDay: PreviewFixtures.now)
+
+        await model.submit(text: "Meeting with Alex tomorrow at 3 PM")
+
+        let snapshot = diagnostics.snapshot()
+        XCTAssertEqual(snapshot.count(.commandSubmitted), 1)
+        XCTAssertEqual(snapshot.count(.commandSucceeded), 1)
+        XCTAssertEqual(snapshot.count(.foundationModelsFallback), 1)
+        XCTAssertEqual(snapshot.count(.commandFailed), 0)
+    }
+
+    @MainActor
+    func testSpeechPermissionDenialRecordsLocalDiagnosticSignal() async throws {
+        let repo = MockCalendarRepository()
+        let speech = MockSpeechService(authorization: .denied)
+        let diagnostics = InMemoryProductionDiagnosticsStore()
+        let modelProvider = MockModelProvider()
+        let dependencies = DependencyContainer(
+            calendarRepository: repo,
+            commandPipeline: CalendarCommandPipeline(
+                parser: NaturalLanguageCalendarParser(now: { PreviewFixtures.now }),
+                policy: CalendarMutationPolicy(now: { PreviewFixtures.now }),
+                repository: repo
+            ),
+            speechService: speech,
+            modelProvider: modelProvider,
+            preferenceSummaryStore: InMemoryPreferenceSummaryStore(),
+            capabilityService: DefaultCapabilityService(calendarRepository: repo, speechService: speech, modelProvider: modelProvider),
+            diagnosticsStore: diagnostics
+        )
+        let model = CommandHomeModel(dependencies: dependencies, selectedDay: PreviewFixtures.now)
+
+        model.beginRecording()
+        try await Task.sleep(nanoseconds: 50_000_000)
+
+        XCTAssertEqual(diagnostics.snapshot().count(.speechDenied), 1)
     }
 
     func testHighConfidenceCreateAutoApplies() async {
@@ -1325,6 +1378,7 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertEqual(readyItems.first { $0.id == "foundation-models" }?.state, .ready)
         XCTAssertEqual(readyItems.first { $0.id == "deterministic-parser" }?.state, .ready)
         XCTAssertEqual(readyItems.first { $0.id == "privacy-manifest" }?.state, .ready)
+        XCTAssertEqual(readyItems.first { $0.id == "remote-ai-boundary" }?.state, .ready)
         XCTAssertEqual(readyItems.first { $0.id == "calendar-open" }?.state, .manualGate)
         XCTAssertEqual(readyItems.first { $0.id == "store-assets" }?.state, .manualGate)
 
@@ -1340,6 +1394,7 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertEqual(blockedItems.first { $0.id == "foundation-models" }?.state, .needsAttention)
         XCTAssertEqual(blockedItems.first { $0.id == "deterministic-parser" }?.state, .ready)
         XCTAssertEqual(blockedItems.first { $0.id == "privacy-manifest" }?.state, .ready)
+        XCTAssertEqual(blockedItems.first { $0.id == "remote-ai-boundary" }?.state, .ready)
     }
 
     func testReadinessSummarySeparatesManualGatesFromReadyItems() {
@@ -1352,11 +1407,11 @@ final class V2UsabilityRegressionTests: XCTestCase {
 
         let summary = ReadinessChecklistSummary(items: items)
 
-        XCTAssertEqual(summary.readyCount, 6)
+        XCTAssertEqual(summary.readyCount, 7)
         XCTAssertEqual(summary.manualGateCount, 2)
         XCTAssertEqual(summary.needsAttentionCount, 0)
         XCTAssertEqual(summary.statusTitle, "Manual release gates remain")
-        XCTAssertTrue(summary.detail.contains("6 automated item(s) are ready"))
+        XCTAssertTrue(summary.detail.contains("7 automated item(s) are ready"))
         XCTAssertTrue(summary.detail.contains("2 manual gate(s)"))
     }
 
@@ -1439,6 +1494,11 @@ final class V2UsabilityRegressionTests: XCTestCase {
         XCTAssertEqual(CommandHomeAutomation.settingsButtonIdentifier, "commandHomeSettings")
     }
 
+    func testSettingsPrivacyActionsExposeStableAutomationIdentifiers() {
+        XCTAssertEqual(SettingsAutomationIdentifiers.resetLocalPreferences, "resetLocalPreferences")
+        XCTAssertEqual(SettingsAutomationIdentifiers.resetLocalDiagnostics, "resetLocalDiagnostics")
+    }
+
     func testReadinessItemsExposeStableAutomationIdentifiers() {
         let items = AppStoreReadinessChecklist.items(
             summary: CapabilitySummary(calendar: .allowed, speech: .allowed, model: .allowed, preferredLocales: ["en-US"], runsOnDevice: true),
@@ -1448,8 +1508,23 @@ final class V2UsabilityRegressionTests: XCTestCase {
 
         XCTAssertEqual(items.first { $0.id == "calendar-access" }?.accessibilityIdentifier, "readinessItem-calendar-access")
         XCTAssertEqual(items.first { $0.id == "foundation-models" }?.accessibilityIdentifier, "readinessItem-foundation-models")
+        XCTAssertEqual(items.first { $0.id == "remote-ai-boundary" }?.accessibilityIdentifier, "readinessItem-remote-ai-boundary")
         XCTAssertEqual(items.first { $0.id == "calendar-open" }?.accessibilityIdentifier, "readinessItem-calendar-open")
         XCTAssertEqual(items.first { $0.id == "store-assets" }?.accessibilityIdentifier, "readinessItem-store-assets")
+    }
+
+    func testRemoteAIReadinessBecomesManualGateWhenTextUploadIsEnabled() throws {
+        let endpoint = try XCTUnwrap(URL(string: "https://api.example.test/calendar/parse"))
+        let items = AppStoreReadinessChecklist.items(
+            summary: CapabilitySummary(calendar: .allowed, speech: .allowed, model: .allowed, preferredLocales: ["en-US"], runsOnDevice: true),
+            writableCalendarCount: 1,
+            selectedCalendar: CalendarInfo(id: "work", title: "Work Calendar", accountName: "iCloud", allowsContentModifications: true, colorHex: nil),
+            privacyConfiguration: ProductionPrivacyConfiguration(remoteAIPolicy: .explicitOptIn(endpoint: endpoint), allowsTelemetryExport: false)
+        )
+
+        let remoteAI = try XCTUnwrap(items.first { $0.id == "remote-ai-boundary" })
+        XCTAssertEqual(remoteAI.state, .manualGate)
+        XCTAssertTrue(remoteAI.detail.contains("privacy answers"))
     }
 
     func testOpeningTextEntryHidesPersistentHint() {

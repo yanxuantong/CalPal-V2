@@ -13,6 +13,10 @@
 		611FC5062FA46C7F00C267C2 /* AppRuntimeConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 611FC5082FA46C7F00C267C2 /* AppRuntimeConfiguration.swift */; };
 		611FC5072FA46C7F00C267C2 /* AppRuntimeConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 611FC5082FA46C7F00C267C2 /* AppRuntimeConfiguration.swift */; };
 		611FC4B42FA46C7F00C267C2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 611FC4B12FA46C7F00C267C2 /* Assets.xcassets */; };
+		611FC5092FA46C7F00C267C2 /* ProductionDiagnosticsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 611FC50B2FA46C7F00C267C2 /* ProductionDiagnosticsStore.swift */; };
+		611FC50A2FA46C7F00C267C2 /* ProductionDiagnosticsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 611FC50B2FA46C7F00C267C2 /* ProductionDiagnosticsStore.swift */; };
+		611FC50C2FA46C7F00C267C2 /* RemoteAIProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 611FC50E2FA46C7F00C267C2 /* RemoteAIProvider.swift */; };
+		611FC50D2FA46C7F00C267C2 /* RemoteAIProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 611FC50E2FA46C7F00C267C2 /* RemoteAIProvider.swift */; };
 		611FC4B52FA46C7F00C267C2 /* PreferenceSummaryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 611FC4AC2FA46C7F00C267C2 /* PreferenceSummaryStore.swift */; };
 		611FC4B62FA46C7F00C267C2 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 611FC4802FA46C7F00C267C2 /* AppModel.swift */; };
 		611FC4B72FA46C7F00C267C2 /* CorrectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 611FC4972FA46C7F00C267C2 /* CorrectionView.swift */; };
@@ -85,10 +89,18 @@
 		7A1000040000000000000004 /* CalendarMutationPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000010000000000000001 /* CalendarMutationPolicyTests.swift */; };
 		7A1000050000000000000005 /* NaturalLanguageCalendarParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000020000000000000002 /* NaturalLanguageCalendarParserTests.swift */; };
 		7A1000060000000000000006 /* PreferenceSummaryStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1000030000000000000003 /* PreferenceSummaryStoreTests.swift */; };
+		7B2000040000000000000004 /* CalPalSmokeUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B2000010000000000000001 /* CalPalSmokeUITests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
 		6463DA41F95BAA8E589D80AD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 936D0FF3C6B296CE50735CD5 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 02CACFE040323C1B45C64DC5;
+			remoteInfo = CalPal;
+		};
+		7B2000050000000000000005 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 936D0FF3C6B296CE50735CD5 /* Project object */;
 			proxyType = 1;
@@ -132,6 +144,8 @@
 		611FC4AA2FA46C7F00C267C2 /* ModelProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelProvider.swift; sourceTree = "<group>"; };
 		611FC4AB2FA46C7F00C267C2 /* NaturalLanguageCalendarParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NaturalLanguageCalendarParser.swift; sourceTree = "<group>"; };
 		611FC4AC2FA46C7F00C267C2 /* PreferenceSummaryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferenceSummaryStore.swift; sourceTree = "<group>"; };
+		611FC50B2FA46C7F00C267C2 /* ProductionDiagnosticsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductionDiagnosticsStore.swift; sourceTree = "<group>"; };
+		611FC50E2FA46C7F00C267C2 /* RemoteAIProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteAIProvider.swift; sourceTree = "<group>"; };
 		611FC4AD2FA46C7F00C267C2 /* SpeechService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechService.swift; sourceTree = "<group>"; };
 		611FC4AF2FA46C7F00C267C2 /* PreviewFixtures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewFixtures.swift; sourceTree = "<group>"; };
 		611FC4B12FA46C7F00C267C2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -140,11 +154,20 @@
 		7A1000010000000000000001 /* CalendarMutationPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarMutationPolicyTests.swift; sourceTree = "<group>"; };
 		7A1000020000000000000002 /* NaturalLanguageCalendarParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NaturalLanguageCalendarParserTests.swift; sourceTree = "<group>"; };
 		7A1000030000000000000003 /* PreferenceSummaryStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferenceSummaryStoreTests.swift; sourceTree = "<group>"; };
+		7B2000010000000000000001 /* CalPalSmokeUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalPalSmokeUITests.swift; sourceTree = "<group>"; };
+		7B2000020000000000000002 /* CalPalUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CalPalUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A49119CFD85DB7CA2AF98708 /* CalPalTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CalPalTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		21ABD01B35CD93575274DD48 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7B2000060000000000000006 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -313,6 +336,8 @@
 				611FC4AA2FA46C7F00C267C2 /* ModelProvider.swift */,
 				611FC4AB2FA46C7F00C267C2 /* NaturalLanguageCalendarParser.swift */,
 				611FC4AC2FA46C7F00C267C2 /* PreferenceSummaryStore.swift */,
+				611FC50B2FA46C7F00C267C2 /* ProductionDiagnosticsStore.swift */,
+				611FC50E2FA46C7F00C267C2 /* RemoteAIProvider.swift */,
 				611FC4AD2FA46C7F00C267C2 /* SpeechService.swift */,
 			);
 			path = Services;
@@ -352,12 +377,22 @@
 			path = CalPalTests;
 			sourceTree = "<group>";
 		};
+		7B2000030000000000000003 /* CalPalUITests */ = {
+			isa = PBXGroup;
+			children = (
+				7B2000010000000000000001 /* CalPalSmokeUITests.swift */,
+			);
+			path = CalPalUITests;
+			sourceTree = "<group>";
+		};
 		8519E18173E369CD5260BDD1 = {
 			isa = PBXGroup;
 			children = (
 				611FC4B32FA46C7F00C267C2 /* CalPal */,
 				7A1000070000000000000007 /* CalPalTests */,
+				7B2000030000000000000003 /* CalPalUITests */,
 				611FC4FA2FA4744E00C267C2 /* CalPal.app */,
+				7B2000020000000000000002 /* CalPalUITests.xctest */,
 			);
 			sourceTree = "<group>";
 		};
@@ -399,6 +434,24 @@
 			productReference = A49119CFD85DB7CA2AF98708 /* CalPalTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		7B2000070000000000000007 /* CalPalUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7B20000C000000000000000C /* Build configuration list for PBXNativeTarget "CalPalUITests" */;
+			buildPhases = (
+				7B2000080000000000000008 /* Sources */,
+				7B2000060000000000000006 /* Frameworks */,
+				7B2000090000000000000009 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				7B20000A000000000000000A /* PBXTargetDependency */,
+			);
+			name = CalPalUITests;
+			productName = CalPalUITests;
+			productReference = 7B2000020000000000000002 /* CalPalUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -413,6 +466,10 @@
 						CreatedOnToolsVersion = 15.4;
 					};
 					963F8EFB270F19B630721397 = {
+						CreatedOnToolsVersion = 15.4;
+						TestTargetID = 02CACFE040323C1B45C64DC5;
+					};
+					7B2000070000000000000007 = {
 						CreatedOnToolsVersion = 15.4;
 						TestTargetID = 02CACFE040323C1B45C64DC5;
 					};
@@ -433,6 +490,7 @@
 			targets = (
 				02CACFE040323C1B45C64DC5 /* CalPal */,
 				963F8EFB270F19B630721397 /* CalPalTests */,
+				7B2000070000000000000007 /* CalPalUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -455,6 +513,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		7B2000090000000000000009 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -463,6 +528,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				611FC4B52FA46C7F00C267C2 /* PreferenceSummaryStore.swift in Sources */,
+				611FC5092FA46C7F00C267C2 /* ProductionDiagnosticsStore.swift in Sources */,
+				611FC50C2FA46C7F00C267C2 /* RemoteAIProvider.swift in Sources */,
 				611FC4B62FA46C7F00C267C2 /* AppModel.swift in Sources */,
 				611FC4B72FA46C7F00C267C2 /* CorrectionView.swift in Sources */,
 				611FC4B82FA46C7F00C267C2 /* EventKitCalendarRepository.swift in Sources */,
@@ -509,6 +576,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				611FC4D82FA46C7F00C267C2 /* PreferenceSummaryStore.swift in Sources */,
+				611FC50A2FA46C7F00C267C2 /* ProductionDiagnosticsStore.swift in Sources */,
+				611FC50D2FA46C7F00C267C2 /* RemoteAIProvider.swift in Sources */,
 				611FC4D92FA46C7F00C267C2 /* AppModel.swift in Sources */,
 				611FC4DA2FA46C7F00C267C2 /* CorrectionView.swift in Sources */,
 				611FC4DB2FA46C7F00C267C2 /* EventKitCalendarRepository.swift in Sources */,
@@ -547,6 +616,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		7B2000080000000000000008 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7B2000040000000000000004 /* CalPalSmokeUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -554,6 +631,11 @@
 			isa = PBXTargetDependency;
 			target = 02CACFE040323C1B45C64DC5 /* CalPal */;
 			targetProxy = 6463DA41F95BAA8E589D80AD /* PBXContainerItemProxy */;
+		};
+		7B20000A000000000000000A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 02CACFE040323C1B45C64DC5 /* CalPal */;
+			targetProxy = 7B2000050000000000000005 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -766,6 +848,48 @@
 			};
 			name = Release;
 		};
+		7B20000D000000000000000D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 10;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.calpal.mvp.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = CalPal;
+			};
+			name = Debug;
+		};
+		7B20000E000000000000000E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 10;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.calpal.mvp.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = CalPal;
+			};
+			name = Release;
+		};
 		D25A6DF51BA1D8811AE0F1B0 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -805,6 +929,15 @@
 			buildConfigurations = (
 				78779A4D7BAAD87404DF1C80 /* Debug */,
 				052915DFBD1F0459D78ECBF4 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7B20000C000000000000000C /* Build configuration list for PBXNativeTarget "CalPalUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7B20000D000000000000000D /* Debug */,
+				7B20000E000000000000000E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
