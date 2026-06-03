@@ -18,6 +18,7 @@ struct ConfirmationView: View {
                 VStack(alignment: .leading, spacing: CalPalTheme.Spacing.lg) {
                     header
                     if let before = context.before { EventSummaryCard(title: "Before", event: before) }
+                    if let draft = context.afterDraft { DraftSummaryCard(title: "Event to create", draft: draft) }
                     if let patch = context.patch { PatchSummaryCard(patch: patch) }
                     if context.recurrenceScope != nil {
                         recurrencePicker
@@ -142,6 +143,57 @@ struct EventSummaryDetail: Identifiable, Equatable {
     var value: String
     var systemImage: String
     var isWarning: Bool = false
+}
+
+struct DraftSummaryCard: View {
+    let title: String
+    let draft: EventDraft
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title.uppercased()).font(.caption.bold()).foregroundStyle(CalPalTheme.Colors.textSecondary)
+            Text(draft.title).font(.headline).foregroundStyle(CalPalTheme.Colors.textPrimary)
+            ForEach(draft.confirmationSummaryDetails) { detail in
+                Label(detail.value, systemImage: detail.systemImage)
+                    .font(.caption)
+                    .foregroundStyle(detail.isWarning ? CalPalTheme.Colors.warning : CalPalTheme.Colors.textSecondary)
+            }
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .elevatedCard()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(draft.confirmationAccessibilitySummary(prefix: title))
+        .accessibilityIdentifier("confirmationDraftSummary")
+    }
+}
+
+extension EventDraft {
+    var confirmationSummaryDetails: [EventSummaryDetail] {
+        var details = [
+            EventSummaryDetail(id: "time", value: formattedRange, systemImage: "clock"),
+            EventSummaryDetail(id: "calendar", value: targetCalendarSummary, systemImage: "calendar")
+        ]
+        if let location = location?.trimmedConfirmationDetail, !location.isEmpty {
+            details.append(EventSummaryDetail(id: "location", value: location, systemImage: "location"))
+        }
+        if let notes = notes?.trimmedConfirmationDetail, !notes.isEmpty {
+            details.append(EventSummaryDetail(id: "notes", value: notes, systemImage: "note.text"))
+        }
+        return details
+    }
+
+    var formattedRange: String {
+        let f = DateFormatter()
+        f.dateStyle = .none
+        f.timeStyle = .short
+        return "\(f.string(from: startDate))–\(f.string(from: endDate))"
+    }
+
+    func confirmationAccessibilitySummary(prefix: String) -> String {
+        let details = confirmationSummaryDetails.map(\.value).joined(separator: ", ")
+        return "\(prefix), \(title), \(details)"
+    }
 }
 
 extension CalendarEvent {

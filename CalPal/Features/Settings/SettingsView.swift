@@ -115,7 +115,7 @@ struct SettingsView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Auto Review")
                         .foregroundStyle(CalPalTheme.Colors.textPrimary)
-                    Text("Modify, delete, recurring, and ambiguous changes require confirmation before EventKit is mutated.")
+                    Text("Created, modified, deleted, recurring, and ambiguous changes require confirmation before EventKit is mutated.")
                         .font(.caption)
                         .foregroundStyle(CalPalTheme.Colors.textSecondary)
                 }

@@ -62,19 +62,25 @@ final class CalendarMutationPolicyTests: XCTestCase {
     }
 
     @MainActor
-    func testCommandDiagnosticsRecordSuccessfulLocalFallbackCommand() async {
+    func testCommandDiagnosticsRecordReviewedLocalFallbackCommand() async {
         let diagnostics = InMemoryProductionDiagnosticsStore()
         var dependencies = DependencyContainer.mock(now: PreviewFixtures.now)
         dependencies.diagnosticsStore = diagnostics
         let model = CommandHomeModel(dependencies: dependencies, selectedDay: PreviewFixtures.now)
+        var presented: AppSheet?
+        model.sheetPresenter = { presented = $0 }
 
         await model.submit(text: "Meeting with Alex tomorrow at 3 PM")
 
         let snapshot = diagnostics.snapshot()
         XCTAssertEqual(snapshot.count(.commandSubmitted), 1)
-        XCTAssertEqual(snapshot.count(.commandSucceeded), 1)
+        XCTAssertEqual(snapshot.count(.commandSucceeded), 0)
+        XCTAssertEqual(snapshot.count(.confirmationShown), 1)
         XCTAssertEqual(snapshot.count(.foundationModelsFallback), 1)
         XCTAssertEqual(snapshot.count(.commandFailed), 0)
+        guard case .confirmation(let context)? = presented else { return XCTFail("Expected create confirmation") }
+        XCTAssertEqual(context.operation, .create)
+        XCTAssertNotNil(context.afterDraft)
     }
 
     @MainActor
@@ -104,7 +110,7 @@ final class CalendarMutationPolicyTests: XCTestCase {
         XCTAssertEqual(diagnostics.snapshot().count(.speechDenied), 1)
     }
 
-    func testHighConfidenceCreateAutoApplies() async {
+    func testHighConfidenceCreateNeedsConfirmationBeforeSaving() async {
         let repo = MockCalendarRepository(now: Date())
         let calendars: [CalendarInfo]
         do {
@@ -116,8 +122,11 @@ final class CalendarMutationPolicyTests: XCTestCase {
         let draft = EventDraft(title: "Meeting", startDate: now.addingTimeInterval(3600), endDate: now.addingTimeInterval(7200), calendarID: nil, calendarName: nil, location: nil, notes: nil)
         let parsed = ParsedCalendarCommand(originalText: "Meeting", localeIdentifier: "en-US", intent: .create(draft), confidence: 0.9, missingFields: [], warnings: [])
         let decision = await CalendarMutationPolicy(now: { now }).decide(parsed: parsed, calendars: calendars, repository: repo)
-        guard case .autoApply(let result) = decision else { return XCTFail("Expected auto apply") }
-        XCTAssertEqual(result.calendarID, "work")
+        guard case .needsConfirmation(let context) = decision else { return XCTFail("Expected confirmation") }
+        XCTAssertEqual(context.operation, .create)
+        XCTAssertEqual(context.afterDraft?.calendarID, "work")
+        XCTAssertNil(context.targetEventID)
+        XCTAssertNil(context.patch)
     }
 
     func testLowConfidenceCreateNeedsCorrection() async {
@@ -381,7 +390,8 @@ final class MVPBugFixRegressionTests: XCTestCase {
         model.finishRecording()
         try await Task.sleep(nanoseconds: 200_000_000)
         XCTAssertEqual(speech.finishTranscriptionCount, 1, "Duplicate release/end events must finish at most once.")
-        XCTAssertEqual(repo.createdDrafts.count, 1)
+        XCTAssertEqual(repo.createdDrafts.count, 0)
+        XCTAssertEqual(model.commandState, .idle)
     }
 
     func testInitialPermissionInitializationWaitsForOnboardingAndRequestsCalendarOnce() async throws {
@@ -603,7 +613,7 @@ final class MVPBugFixRegressionTests: XCTestCase {
         XCTAssertEqual(model.commandState, .idle)
     }
 
-    func testDefaultCalendarPreferenceDrivesAutoReviewWriteTarget() async throws {
+    func testDefaultCalendarPreferenceDrivesReviewedCreateWriteTarget() async throws {
         let repo = MockCalendarRepository()
         let prefs = InMemoryPreferenceSummaryStore()
         prefs.saveDefaultCalendarID("personal")
@@ -612,7 +622,14 @@ final class MVPBugFixRegressionTests: XCTestCase {
         let pipeline = CalendarCommandPipeline(parser: parser, policy: policy, repository: repo)
 
         let output = await pipeline.process(text: "Standup tomorrow at 9 am")
-        guard case .result(let result) = output else { return XCTFail("Expected successful auto-apply result") }
+        guard case .confirmation(let context) = output else { return XCTFail("Expected create confirmation") }
+        XCTAssertEqual(context.operation, .create)
+        XCTAssertEqual(context.afterDraft?.calendarID, "personal")
+        XCTAssertEqual(context.afterDraft?.targetCalendarSummary, "Personal · Google")
+        XCTAssertTrue(repo.createdDrafts.isEmpty)
+
+        let resultOutput = await pipeline.confirm(context, decision: .confirm(recurrenceScope: nil))
+        guard case .result(let result) = resultOutput else { return XCTFail("Expected successful create result") }
         XCTAssertEqual(result.event?.calendarID, "personal")
         XCTAssertTrue(result.message.contains("Personal · Google"))
         XCTAssertEqual(repo.createdDrafts.first?.calendarID, "personal")
@@ -972,7 +989,9 @@ final class V2UsabilityRegressionTests: XCTestCase {
 
         let output = await pipeline.process(text: "Standup tomorrow at 9am")
 
-        guard case .result(let result) = output else { return XCTFail("Expected successful create result") }
+        guard case .confirmation(let context) = output else { return XCTFail("Expected create confirmation") }
+        let confirmed = await pipeline.confirm(context, decision: .confirm(recurrenceScope: nil))
+        guard case .result(let result) = confirmed else { return XCTFail("Expected successful create result") }
         let url = try XCTUnwrap(result.actionURL)
         XCTAssertEqual(result.actionTitle, "Open in Calendar")
         XCTAssertEqual(url.scheme, "calshow")

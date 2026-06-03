@@ -30,7 +30,7 @@ final class CalendarMutationPolicy {
             if !parsed.warnings.isEmpty {
                 return .needsCorrection(CorrectionContext(title: "Check Date", message: parsed.warnings.joined(separator: "\n"), draft: prepared, missingFields: parsed.warnings, sourceText: parsed.originalText, parseRoute: parsed.parseRoute))
             }
-            return .autoApply(prepared)
+            return .needsConfirmation(createConfirmationContext(draft: prepared, parseRoute: parsed.parseRoute))
         case .modify(let query, let patch):
             return await candidateDecision(operation: .modify, query: query, patch: patch, sourceText: parsed.originalText, parseRoute: parsed.parseRoute, calendars: calendars, repository: repository)
         case .delete(let query):
@@ -80,6 +80,20 @@ final class CalendarMutationPolicy {
             patch: patch,
             targetEventID: target.id,
             recurrenceScope: target.isRecurring ? .thisEvent : nil,
+            parseRoute: parseRoute
+        )
+    }
+
+    private func createConfirmationContext(draft: EventDraft, parseRoute: CalendarParseRoute?) -> ConfirmationContext {
+        ConfirmationContext(
+            operation: .create,
+            title: "Review Event",
+            message: "Confirm before adding this event to your calendar.",
+            before: nil,
+            afterDraft: draft,
+            patch: nil,
+            targetEventID: nil,
+            recurrenceScope: nil,
             parseRoute: parseRoute
         )
     }
